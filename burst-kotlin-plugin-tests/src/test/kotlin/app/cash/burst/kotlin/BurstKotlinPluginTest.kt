@@ -16,7 +16,6 @@
 package app.cash.burst.kotlin
 
 import assertk.assertThat
-import assertk.assertions.containsExactly
 import assertk.assertions.isNotNull
 import com.tschuchort.compiletesting.JvmCompilationResult
 import com.tschuchort.compiletesting.KotlinCompilation
@@ -39,6 +38,7 @@ class BurstKotlinPluginTest {
         import app.cash.burst.Burst
         import kotlin.test.Test
 
+        @Burst
         class LunchTest {
           @Test
           fun test() {
@@ -51,7 +51,7 @@ class BurstKotlinPluginTest {
 
     val adapterClass = result.classLoader.loadClass("app.cash.burst.testing.LunchTest")
     assertThat(adapterClass).isNotNull()
-    assertThat(adapterClass.interfaces).containsExactly(Comparable::class.java)
+    assertThat(adapterClass.getMethod("test_2")).isNotNull()
   }
 }
 

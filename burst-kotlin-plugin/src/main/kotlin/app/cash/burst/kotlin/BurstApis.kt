@@ -16,7 +16,9 @@
 package app.cash.burst.kotlin
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
+import org.jetbrains.kotlin.ir.declarations.IrAnnotationContainer
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
+import org.jetbrains.kotlin.ir.util.hasAnnotation
 
 /** Looks up APIs used by the code rewriters. */
 internal class BurstApis private constructor(
@@ -30,11 +32,23 @@ internal class BurstApis private constructor(
       }
       return BurstApis(pluginContext)
     }
-
-    private val burstFqPackage = FqPackageName("app.cash.burst")
-    private val burstAnnotationClassId = burstFqPackage.classId("Burst")
   }
 
   val burstAnnotationClassSymbol: IrClassSymbol
     get() = pluginContext.referenceClass(burstAnnotationClassId)!!
 }
+
+private val burstFqPackage = FqPackageName("app.cash.burst")
+private val burstAnnotationClassId = burstFqPackage.classId("Burst")
+
+private val kotlinTestFqPackage = FqPackageName("kotlin.test")
+private val kotlinTestTestClassId = kotlinTestFqPackage.classId("Test")
+
+private val orgJunitFqPackage = FqPackageName("org.junit")
+private val orgJunitTestClassId = orgJunitFqPackage.classId("Test")
+
+internal val IrAnnotationContainer.hasAtTest: Boolean
+  get() = hasAnnotation(orgJunitTestClassId) || hasAnnotation(kotlinTestTestClassId)
+
+internal val IrAnnotationContainer.hasAtBurst: Boolean
+  get() = hasAnnotation(burstAnnotationClassId)

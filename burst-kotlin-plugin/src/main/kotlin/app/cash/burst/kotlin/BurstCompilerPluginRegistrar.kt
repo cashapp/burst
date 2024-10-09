@@ -22,8 +22,12 @@ import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 
-@OptIn(ExperimentalCompilerApi::class)
+@OptIn(
+  ExperimentalCompilerApi::class,
+  UnsafeDuringIrConstructionAPI::class,
+)
 @AutoService(CompilerPluginRegistrar::class)
 class BurstCompilerPluginRegistrar : CompilerPluginRegistrar() {
   override val supportsK2: Boolean

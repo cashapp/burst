@@ -18,60 +18,50 @@ package app.cash.burst.kotlin
 import org.jetbrains.kotlin.backend.common.IrElementTransformerVoidWithContext
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
-import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.ir.IrStatement
 import org.jetbrains.kotlin.ir.declarations.IrClass
+import org.jetbrains.kotlin.ir.declarations.IrDeclaration
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
+import org.jetbrains.kotlin.ir.util.functions
 
+@UnsafeDuringIrConstructionAPI // To use IrDeclarationContainer.declarations.
 class BurstIrGenerationExtension(
   private val messageCollector: MessageCollector,
 ) : IrGenerationExtension {
   override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
-    // Compiler plugin targeting is coarse grained. If we are operating in a context without our
-    // runtime APIs, simply no-op rather than crash. This is required to allow new targets we don't
-    // support, or to allow processing only test source sets and not main, for example.
+    // Skip the rewrite if the Burst APIs aren't loaded. We don't expect to find @Burst anywhere.
     val burstApis = BurstApis.maybeCreate(pluginContext) ?: return
 
     val transformer = object : IrElementTransformerVoidWithContext() {
       override fun visitClassNew(declaration: IrClass): IrStatement {
-        messageCollector.report(CompilerMessageSeverity.WARNING, "discovered ${declaration.name.identifier}", currentFile.locationOf(declaration))
+        val classDeclaration = super.visitClassNew(declaration) as IrClass
+        val classHasAtBurst = classDeclaration.hasAtBurst
 
-        val declaration = super.visitClassNew(declaration) as IrClass
+        val addedDeclarations = mutableListOf<IrDeclaration>()
 
-//        val outboundServiceFunction = declaration.addFunction {
-////          initDefaults(original)
-//          name = Name.identifier("hello")
-////          returnType = bridgedInterfaceT
-//        }.apply {
-//          addDispatchReceiver {
-////            initDefaults(original)
-////            type = declaration.symbol.defaultDispatchReceiver
-//          }
-////          addValueParameter {
-////            initDefaults(original)
-////            name = Name.identifier("callHandler")
-////            type = ziplineApis.outboundCallHandler.defaultType
-////          }
-////          overriddenSymbols = listOf(ziplineApis.ziplineServiceAdapterOutboundService)
-//        }
-//        outboundServiceFunction.irFunctionBody(
-//          context = pluginContext,
-//          scopeOwnerSymbol = outboundServiceFunction.symbol,
-//        ) {
-////          +irReturn(
-////            irCallConstructor(
-////              callee = outboundServiceClass.constructors.single().symbol,
-////              typeArguments = adapterClass.typeParameters.map { it.defaultType },
-////            ).apply {
-////              putValueArgument(0, irGet(outboundServiceFunction.valueParameters[0]))
-////              type = bridgedInterfaceT
-////            },
-////          )
-//        }
-//        return outboundServiceFunction
-//
-        return declaration
+        for (function in classDeclaration.functions) {
+          if (!function.hasAtTest) continue
+
+          if (classHasAtBurst || function.hasAtBurst) {
+            val rewriter = BurstRewriter(
+              messageCollector = messageCollector,
+              pluginContext = pluginContext,
+              burstApis = burstApis,
+              file = currentFile,
+              original = function,
+            )
+            addedDeclarations += rewriter.rewrite()
+          }
+        }
+
+        for (added in addedDeclarations) {
+          classDeclaration.declarations.add(added)
+          added.parent = classDeclaration
+        }
+
+        return classDeclaration
       }
     }
 
