@@ -23,32 +23,45 @@ import org.jetbrains.kotlin.ir.util.hasAnnotation
 /** Looks up APIs used by the code rewriters. */
 internal class BurstApis private constructor(
   private val pluginContext: IrPluginContext,
+  private val testPackage: FqPackageName,
 ) {
   companion object {
     fun maybeCreate(pluginContext: IrPluginContext): BurstApis? {
+      // If we don't have @Burst, we don't have the runtime. Abort!
       if (pluginContext.referenceClass(burstAnnotationClassId) == null) {
-        // If we don't have @Burst, we don't have the runtime. Abort!
         return null
       }
-      return BurstApis(pluginContext)
+
+      if (pluginContext.referenceClass(junitTestClassId) != null) {
+        return BurstApis(pluginContext, junitPackage)
+      }
+
+      if (pluginContext.referenceClass(kotlinTestClassId) != null) {
+        return BurstApis(pluginContext, kotlinTestPackage)
+      }
+
+      // No kotlin.test and no org.junit. No Burst for you.
+      return null
     }
   }
 
-  val burstAnnotationClassSymbol: IrClassSymbol
-    get() = pluginContext.referenceClass(burstAnnotationClassId)!!
+  val testClassSymbol: IrClassSymbol
+    get() = pluginContext.referenceClass(testPackage.classId("Test"))!!
+
+  val ignoreClassSymbol: IrClassSymbol
+    get() = pluginContext.referenceClass(testPackage.classId("Ignore"))!!
 }
 
 private val burstFqPackage = FqPackageName("app.cash.burst")
 private val burstAnnotationClassId = burstFqPackage.classId("Burst")
 
-private val kotlinTestFqPackage = FqPackageName("kotlin.test")
-private val kotlinTestTestClassId = kotlinTestFqPackage.classId("Test")
-
-private val orgJunitFqPackage = FqPackageName("org.junit")
-private val orgJunitTestClassId = orgJunitFqPackage.classId("Test")
+val junitPackage = FqPackageName("org.junit")
+val junitTestClassId = junitPackage.classId("Test")
+val kotlinTestPackage = FqPackageName("kotlin.text")
+val kotlinTestClassId = kotlinTestPackage.classId("Test")
 
 internal val IrAnnotationContainer.hasAtTest: Boolean
-  get() = hasAnnotation(orgJunitTestClassId) || hasAnnotation(kotlinTestTestClassId)
+  get() = hasAnnotation(junitTestClassId) || hasAnnotation(kotlinTestClassId)
 
 internal val IrAnnotationContainer.hasAtBurst: Boolean
   get() = hasAnnotation(burstAnnotationClassId)
