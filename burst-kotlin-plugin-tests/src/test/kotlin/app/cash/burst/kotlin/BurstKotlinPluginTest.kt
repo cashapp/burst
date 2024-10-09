@@ -62,10 +62,9 @@ class BurstKotlinPluginTest {
     val adapterInstance = adapterClass.constructors.single().newInstance()
     val log = adapterClass.getMethod("getLog").invoke(adapterInstance) as MutableList<*>
 
-    // Burst adds @Ignore to the original test.
+    // Burst drops @Test from the original test.
     val originalTest = adapterClass.methods.single { it.name == "test" && it.parameterCount == 2 }
-    assertThat(originalTest.isAnnotationPresent(Test::class.java)).isTrue()
-    assertThat(originalTest.isAnnotationPresent(Ignore::class.java)).isTrue()
+    assertThat(originalTest.isAnnotationPresent(Test::class.java)).isFalse()
 
     // Burst adds a variant for each combination of parameters.
     val sampleVariant = adapterClass.getMethod("test_Decaf_None")
