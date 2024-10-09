@@ -18,6 +18,8 @@ package app.cash.burst.gradle
 
 import assertk.assertThat
 import assertk.assertions.contains
+import assertk.assertions.containsExactlyInAnyOrder
+import assertk.assertions.isFalse
 import assertk.assertions.isTrue
 import java.io.File
 import org.gradle.testkit.runner.GradleRunner
@@ -29,13 +31,34 @@ class BurstGradlePluginTest {
   fun happyPath() {
     val projectDir = File("src/test/projects/basic")
 
-    val taskName = ":lib:compileProductionExecutableKotlinJsZipline"
+    val taskName = ":lib:jvmTest"
     val result = createRunner(projectDir, "clean", taskName).build()
     assertThat(SUCCESS_OUTCOMES)
       .contains(result.task(taskName)!!.outcome)
 
-    val ziplineOut = projectDir.resolve("lib/build/zipline/Production")
-    assertThat(ziplineOut.resolve("basic-lib.zipline").exists()).isTrue()
+    val testResults = projectDir.resolve("lib/build/test-results")
+    val jvmTestXmlFile = testResults.resolve("jvmTest/TEST-CoffeeTest.xml")
+
+    val testSuite = readTestSuite(jvmTestXmlFile)
+
+    assertThat(testSuite.testCases.map { it.name }).containsExactlyInAnyOrder(
+      "test[jvm]",
+      "test_Decaf_Oat[jvm]",
+      "test_Regular_Milk[jvm]",
+      "test_Regular_None[jvm]",
+      "test_Decaf_Milk[jvm]",
+      "test_Decaf_None[jvm]",
+      "test_Double_Milk[jvm]",
+      "test_Double_None[jvm]",
+      "test_Regular_Oat[jvm]",
+      "test_Double_Oat[jvm]",
+    )
+
+    val originalTest = testSuite.testCases.single { it.name == "test[jvm]" }
+    assertThat(originalTest.skipped).isTrue()
+
+    val sampleVariant = testSuite.testCases.single { it.name == "test_Decaf_Oat[jvm]" }
+    assertThat(sampleVariant.skipped).isFalse()
   }
 
   private fun createRunner(

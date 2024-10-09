@@ -36,6 +36,7 @@ import org.jetbrains.kotlin.ir.expressions.impl.IrGetEnumValueImpl
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrType
+import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.types.starProjectedType
 import org.jetbrains.kotlin.ir.util.classId
@@ -87,9 +88,10 @@ internal class BurstRewriter(
       createVariant(originalDispatchReceiver, variantArguments)
     }
 
-    // Side-effect: add `@Ignore`
-    // TODO: if its' absent!
-    original.annotations += burstApis.ignoreClassSymbol.asAnnotation()
+    // Side-effect: drop `@Test` from the original's annotations.
+    original.annotations = original.annotations.filter {
+      it.type.classFqName != burstApis.testClassSymbol.starProjectedType.classFqName
+    }
 
     val result = mutableListOf<IrDeclaration>()
     result += createFunctionThatCallsAllVariants(originalDispatchReceiver, variants)
