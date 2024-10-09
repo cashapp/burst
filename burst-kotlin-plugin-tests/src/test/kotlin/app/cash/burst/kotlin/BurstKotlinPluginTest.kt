@@ -39,7 +39,6 @@ class BurstKotlinPluginTest {
         package app.cash.burst.testing
 
         import app.cash.burst.Burst
-        import kotlin.test.Ignore
         import kotlin.test.Test
 
         @Burst
@@ -49,19 +48,6 @@ class BurstKotlinPluginTest {
           @Test
           fun test(espresso: Espresso, dairy: Dairy) {
             log += "running ${'$'}espresso ${'$'}dairy"
-          }
-
-          // Generate this
-          @Test
-          @Ignore
-          fun x_test() {
-            x_test_Decaf_None()
-          }
-
-          // Generate this
-          @Test
-          fun x_test_Decaf_None() {
-            test(Espresso.Decaf, Dairy.None)
           }
         }
 
