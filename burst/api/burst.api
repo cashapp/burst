@@ -1,0 +1,3 @@
+public abstract interface annotation class app/cash/burst/Burst : java/lang/annotation/Annotation {
+}
+

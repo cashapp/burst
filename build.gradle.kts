@@ -10,9 +10,6 @@ import org.jetbrains.dokka.gradle.DokkaMultiModuleTask
 import org.jetbrains.dokka.gradle.DokkaTaskPartial
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
-import org.jetbrains.kotlin.gradle.targets.js.testing.KotlinJsTest
-import org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest
-import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
 
 buildscript {
   repositories {
@@ -53,7 +50,7 @@ configure<SpotlessExtension> {
 }
 
 allprojects {
-  group = "app.cash.zipline"
+  group = "app.cash.burst"
   version = project.property("VERSION_NAME") as String
 
   repositories {
@@ -74,7 +71,7 @@ subprojects {
 }
 
 tasks.named("dokkaHtmlMultiModule", DokkaMultiModuleTask::class.java).configure {
-  moduleName.set("Zipline")
+  moduleName.set("Burst")
 }
 
 allprojects {
@@ -88,17 +85,12 @@ allprojects {
       jdkVersion.set(11)
 
       perPackageOption {
-        matchingRegex.set("app\\.cash\\.zipline\\.internal\\..*")
+        matchingRegex.set("app\\.cash\\.burst\\.internal\\..*")
         suppress.set(true)
       }
-      perPackageOption {
-        matchingRegex.set("app\\.cash\\.zipline\\.loader\\.internal\\..*")
-        suppress.set(true)
-      }
-
       sourceLink {
         localDirectory.set(rootProject.projectDir)
-        remoteUrl.set(URL("https://github.com/cashapp/zipline/tree/trunk/"))
+        remoteUrl.set(URL("https://github.com/cashapp/burst/tree/main/"))
         remoteLineSuffix.set("#L")
       }
     }
@@ -167,9 +159,9 @@ allprojects {
       publishToMavenCentral(SonatypeHost.DEFAULT, automaticRelease = true)
       signAllPublications()
       pom {
-        description.set("Runs Kotlin/JS libraries in Kotlin/JVM and Kotlin/Native programs")
+        description.set("Adds parameters to tests")
         name.set(project.name)
-        url.set("https://github.com/cashapp/zipline/")
+        url.set("https://github.com/cashapp/burst/")
         licenses {
           license {
             name.set("The Apache Software License, Version 2.0")
@@ -184,27 +176,11 @@ allprojects {
           }
         }
         scm {
-          url.set("https://github.com/cashapp/zipline/")
-          connection.set("scm:git:https://github.com/cashapp/zipline.git")
-          developerConnection.set("scm:git:ssh://git@github.com/cashapp/zipline.git")
+          url.set("https://github.com/cashapp/burst/")
+          connection.set("scm:git:https://github.com/cashapp/burst.git")
+          developerConnection.set("scm:git:ssh://git@github.com/cashapp/burst.git")
         }
       }
     }
   }
 }
-
-allprojects {
-  tasks.withType<KotlinJvmTest>().configureEach {
-    environment("ZIPLINE_ROOT", rootDir)
-  }
-
-  tasks.withType<KotlinNativeTest>().configureEach {
-    environment("SIMCTL_CHILD_ZIPLINE_ROOT", rootDir)
-    environment("ZIPLINE_ROOT", rootDir)
-  }
-
-  tasks.withType<KotlinJsTest>().configureEach {
-    environment("ZIPLINE_ROOT", rootDir.toString())
-  }
-}
-
