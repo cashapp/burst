@@ -1,0 +1,88 @@
+name: release
+
+on:
+  push:
+    tags:
+      - '**'
+
+env:
+  GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false -Dkotlin.incremental=false"
+  ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL: 60
+
+jobs:
+  native-library:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        arch: [amd64]
+        cmake-arch: [x86_64]
+        include:
+          - os: macos-latest-large
+            arch: x86_64
+            cmake-arch: x86_64
+          - os: macos-latest
+            arch: aarch64
+            cmake-arch: arm64
+          # TODO: build on 'windows-latest'
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: 20
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jvm-native-libraries-${{ matrix.os }}-${{ matrix.arch }}
+          path: zipline/src/jvmMain/resources/*
+          if-no-files-found: error
+
+  publish:
+    runs-on: macos-latest
+    needs:
+      - native-library
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: 20
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: jvm-native-libraries-*
+          path: zipline/src/jvmMain/resources
+          merge-multiple: true
+
+      - run: ./gradlew publishToMavenCentral :dokkaHtmlMultiModule
+        if: ${{ github.repository == 'cashapp/zipline' }}
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.SONATYPE_NEXUS_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.SONATYPE_NEXUS_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.ARTIFACT_SIGNING_PRIVATE_KEY }}
+
+      - uses: ffurrer2/extract-release-notes@v2
+        id: release_notes
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          body: ${{ steps.release_notes.outputs.release_notes }}
+          files: |
+            zipline-cli/build/distributions/zipline-cli-*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy docs to website
+        if: ${{ github.repository == 'cashapp/zipline' }}
+        uses: JamesIves/github-pages-deploy-action@releases/v3
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: site
+          FOLDER: build/dokka/htmlMultiModule/
+          TARGET_FOLDER: docs/1.x/
+          CLEAN: true
