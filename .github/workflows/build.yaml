@@ -5,7 +5,7 @@ on:
   workflow_dispatch: {}
   push:
     branches:
-      - 'trunk'
+      - 'main'
     tags-ignore:
       - '**'
 
@@ -14,79 +14,6 @@ env:
 
 jobs:
   build:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest]
-        arch: [amd64]
-        cmake-arch: [x86_64]
-        include:
-          - os: macos-latest-large
-            arch: x86_64
-            cmake-arch: x86_64
-          - os: macos-latest
-            arch: aarch64
-            cmake-arch: arm64
-          # TODO: build on 'windows-latest'
-
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: 20
-
-      - name: Zipline tests
-        run: ./gradlew :zipline:check --stacktrace
-
-      - name: Build all Zipline
-        if: matrix.os == 'macos-latest'
-        run: ./gradlew build --stacktrace
-
-      - name: Build samples
-        if: matrix.os == 'macos-latest'
-        run: ./gradlew -p samples check --stacktrace
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: jvm-native-libraries-${{ matrix.os }}-${{ matrix.arch }}
-          path: zipline/src/jvmMain/resources/*
-          if-no-files-found: error
-
-      - uses: actions/upload-artifact@v4
-        if: ${{ always() }}
-        with:
-          name: test-report-${{ matrix.os }}-${{ matrix.arch }}
-          path: '**/build/reports/tests/**'
-          retention-days: 1
-
-  android:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: 20
-
-      - name: Enable KVM
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-
-      - run: ./gradlew assembleAndroidTest
-
-      - uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 29
-          emulator-boot-timeout: 20000
-          script: ./gradlew connectedCheck
-
-  ios:
     runs-on: macos-latest
 
     steps:
@@ -94,67 +21,12 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: 20
+          java-version: 21
 
-      - name: Build Xcode samples
-        run: |
-          cd samples/world-clock/ios/app
-          pod install
-          xcodebuild -workspace WorldClock.xcworkspace -scheme WorldClock -destination 'platform=iOS Simulator,name=iPhone 13,OS=latest'
+      - run: ./gradlew build
 
-  publish:
-    runs-on: macos-latest
-    needs:
-      - build
-      - android
-      - ios
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: 20
-
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: jvm-native-libraries-*
-          path: zipline/src/jvmMain/resources
-          merge-multiple: true
-
-      - run: ./gradlew assemble :dokkaHtmlMultiModule
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: zipline-jvm.jar
-          path: zipline/build/libs/zipline-jvm-*.jar
-          if-no-files-found: error
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: zipline-android.aar
-          path: zipline/build/outputs/aar/*-release.aar
-          if-no-files-found: error
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: zipline-cli.zip
-          path: zipline-cli/build/distributions/zipline-cli-*.zip
-          if-no-files-found: error
-
-      - run: ./gradlew publishToMavenCentral
-        if: ${{ github.ref == 'refs/heads/trunk' && github.repository == 'cashapp/zipline' }}
+      - run: ./gradlew publish
+        if: ${{ github.ref == 'refs/heads/main' && github.repository == 'cashapp/burst' }}
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.SONATYPE_NEXUS_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.SONATYPE_NEXUS_PASSWORD }}
-          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.ARTIFACT_SIGNING_PRIVATE_KEY }}
-
-      - name: Deploy docs to website
-        if: ${{ github.ref == 'refs/heads/trunk' && github.repository == 'cashapp/zipline' }}
-        uses: JamesIves/github-pages-deploy-action@releases/v3
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: site
-          FOLDER: build/dokka/htmlMultiModule/
-          TARGET_FOLDER: docs/latest/
-          CLEAN: true
