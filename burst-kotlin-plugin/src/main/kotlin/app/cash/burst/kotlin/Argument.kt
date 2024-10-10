@@ -40,7 +40,7 @@ internal class Argument(
 /** Returns a name like `orderCoffee_Decaf_Oat` with each argument value inline. */
 internal fun name(
   prefix: String,
-  arguments: List<Argument>
+  arguments: List<Argument>,
 ): String {
   return arguments.joinToString(
     prefix = prefix,
@@ -52,7 +52,7 @@ internal fun name(
 
 /** Returns null if we can't compute all possible arguments for this parameter. */
 internal fun IrPluginContext.allPossibleArguments(
-  parameter: IrValueParameter
+  parameter: IrValueParameter,
 ): List<Argument>? {
   val classId = parameter.type.getClass()?.classId ?: return null
   val referenceClass = referenceClass(classId)?.owner ?: return null
@@ -60,4 +60,3 @@ internal fun IrPluginContext.allPossibleArguments(
   val enumEntries = referenceClass.declarations.filterIsInstance<IrEnumEntry>()
   return enumEntries.map { Argument(parameter, parameter.type, it) }
 }
-

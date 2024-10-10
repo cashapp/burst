@@ -68,7 +68,7 @@ internal class FunctionSpecializer(
       originalParent.addDeclaration(specialization)
     }
     originalParent.addDeclaration(
-      createFunctionThatCallsAllSpecializations(originalDispatchReceiver, specializations)
+      createFunctionThatCallsAllSpecializations(originalDispatchReceiver, specializations),
     )
   }
 
