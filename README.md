@@ -1,7 +1,105 @@
-# Burst
+Burst
+=====
+
+Burst is a unit testing library that uses enums to parameterize unit tests.
+
+It is similar to [TestParameterInjector] in usage, but Burst is implemented as a Kotlin compiler
+plug-in. Burst supports all Kotlin platforms and works great in multiplatform projects.
 
 
-### License
+Usage
+-----
+
+Define an enum for the property you wish to vary.
+
+```kotlin
+enum class Soda {
+  Pepsi, Coke
+}
+```
+
+The enum can be simple as above, or contain data and methods specific to what you are testing.
+
+```kotlin
+enum class Collections {
+  MutableSetOf {
+    override fun <T> create(): MutableCollection<T> {
+      return mutableSetOf()
+    }
+  },
+  MutableListOf {
+    override fun <T> create(): MutableCollection<T> {
+      return mutableListOf()
+    }
+  },
+  NewArrayDeque {
+    override fun <T> create(): MutableCollection<T> {
+      return ArrayDeque()
+    }
+  };
+
+  abstract fun <T> create(): MutableCollection<T>?
+}
+```
+
+Annotate your test class to use Burst.
+```kotlin
+@Burst
+class DrinkSodaTest {
+  ...
+}
+```
+
+When you use an enum in a test function, Burst will specialize that test for each value in the enum.
+
+```kotlin
+@Test
+fun drinkFavoriteSodas(soda: Soda) {
+  ...
+}
+```
+
+Combine multiple enums for the combination of their variations.
+
+```kotlin
+@Test
+fun collectSodas(soda: Soda, collectionsFactory: CollectionFactory) {
+  ...
+}
+```
+
+The test will be specialized for each combination of arguments.
+
+[`Pepsi` & `MutableSetOf`, `Pepsi` & `MutableListOf`, `Pepsi` & `NewArrayDeque`, `Code` & `MutableSetOf`, ...].
+
+Gradle Setup
+------------
+
+Add Burst to your root project's buildscript dependencies:
+
+```kotlin
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+    classpath("app.cash.burst:burst-gradle-plugin:0.1.0}")
+  }
+}
+```
+
+Then add the plugin to a module's `build.gradle`:
+
+```kotlin
+plugins {
+  id("app.cash.burst")
+  ...
+}
+```
+
+
+License
+-------
 
     Copyright (C) 2024 Cash App
 
@@ -17,3 +115,4 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 
+[TestParameterInjector]: https://github.com/google/TestParameterInjector
