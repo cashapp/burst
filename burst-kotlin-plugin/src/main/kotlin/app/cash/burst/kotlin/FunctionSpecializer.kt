@@ -17,95 +17,73 @@ package app.cash.burst.kotlin
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.ir.addDispatchReceiver
-import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
-import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.ir.builders.declarations.buildFun
 import org.jetbrains.kotlin.ir.builders.irCall
 import org.jetbrains.kotlin.ir.builders.irGet
 import org.jetbrains.kotlin.ir.builders.irTemporary
+import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrDeclaration
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
-import org.jetbrains.kotlin.ir.declarations.IrEnumEntry
-import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
-import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
-import org.jetbrains.kotlin.ir.expressions.IrExpression
-import org.jetbrains.kotlin.ir.expressions.impl.IrConstructorCallImpl
-import org.jetbrains.kotlin.ir.expressions.impl.IrGetEnumValueImpl
-import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
-import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.classFqName
-import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.types.starProjectedType
-import org.jetbrains.kotlin.ir.util.classId
-import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.name.Name
 
 @OptIn(UnsafeDuringIrConstructionAPI::class)
-internal class BurstRewriter(
-  private val messageCollector: MessageCollector,
+internal class FunctionSpecializer(
   private val pluginContext: IrPluginContext,
   private val burstApis: BurstApis,
-  private val file: IrFile,
+  private val originalParent: IrClass,
   private val original: IrSimpleFunction,
 ) {
-  /** Returns a list of additional declarations. */
-  fun rewrite(): List<IrDeclaration> {
+  fun generateSpecializations() {
     val originalValueParameters = original.valueParameters
-    if (originalValueParameters.isEmpty()) {
-      return listOf()
-    }
+    if (originalValueParameters.isEmpty()) return // Nothing to do.
 
     val originalDispatchReceiver = original.dispatchReceiverParameter
-    if (originalDispatchReceiver == null) {
-      messageCollector.report(
-        CompilerMessageSeverity.ERROR,
-        "Unexpected dispatch receiver",
-        file.locationOf(original),
-      )
-      return listOf()
-    }
+      ?: throw BurstCompilationException("Unexpected dispatch receiver", original)
 
     val parameterArguments = mutableListOf<List<Argument>>()
     for (parameter in originalValueParameters) {
-      val expanded = parameter.allPossibleArguments()
-      if (expanded == null) {
-        messageCollector.report(
-          CompilerMessageSeverity.ERROR,
-          "Expected an enum for @Burst test parameter",
-          file.locationOf(parameter),
-        )
-        return listOf()
-      }
+      val expanded = pluginContext.allPossibleArguments(parameter)
+        ?: throw BurstCompilationException("Expected an enum for @Burst test parameter", parameter)
       parameterArguments += expanded
     }
 
     val cartesianProduct = parameterArguments.cartesianProduct()
 
-    val variants = cartesianProduct.map { variantArguments ->
-      createVariant(originalDispatchReceiver, variantArguments)
+    val specializations = cartesianProduct.map { arguments ->
+      createSpecialization(originalDispatchReceiver, arguments)
     }
 
-    // Side-effect: drop `@Test` from the original's annotations.
+    // Drop `@Test` from the original's annotations.
     original.annotations = original.annotations.filter {
       it.type.classFqName != burstApis.testClassSymbol.starProjectedType.classFqName
     }
 
-    val result = mutableListOf<IrDeclaration>()
-    result += createFunctionThatCallsAllVariants(originalDispatchReceiver, variants)
-    result += variants
-    return result
+    // Add new declarations.
+    for (specialization in specializations) {
+      originalParent.addDeclaration(specialization)
+    }
+    originalParent.addDeclaration(
+      createFunctionThatCallsAllSpecializations(originalDispatchReceiver, specializations)
+    )
   }
 
-  private fun createVariant(
+  private fun IrClass.addDeclaration(declaration: IrDeclaration) {
+    declarations.add(declaration)
+    declaration.parent = this
+  }
+
+  private fun createSpecialization(
     originalDispatchReceiver: IrValueParameter,
     arguments: List<Argument>,
   ): IrSimpleFunction {
     val result = original.factory.buildFun {
       initDefaults(original)
-      name = Name.identifier(name(arguments))
+      name = Name.identifier(name("${original.name.identifier}_", arguments))
       returnType = original.returnType
     }.apply {
       addDispatchReceiver {
@@ -141,10 +119,10 @@ internal class BurstRewriter(
     return result
   }
 
-  /** Creates a function with no arguments that calls each variant. */
-  private fun createFunctionThatCallsAllVariants(
+  /** Creates an @Test @Ignore no-args function that calls each specialization. */
+  private fun createFunctionThatCallsAllSpecializations(
     originalDispatchReceiver: IrValueParameter,
-    variants: List<IrSimpleFunction>,
+    specializations: List<IrSimpleFunction>,
   ): IrSimpleFunction {
     val result = original.factory.buildFun {
       initDefaults(original)
@@ -172,9 +150,9 @@ internal class BurstRewriter(
         origin = IrDeclarationOrigin.DEFINED
       }
 
-      for (variant in variants) {
+      for (specialization in specializations) {
         +irCall(
-          callee = variant.symbol,
+          callee = specialization.symbol,
         ).apply {
           this.dispatchReceiver = irGet(receiverLocal)
         }
@@ -182,40 +160,5 @@ internal class BurstRewriter(
     }
 
     return result
-  }
-
-  private inner class Argument(
-    val type: IrType,
-    val value: IrEnumEntry,
-  )
-
-  /** Returns a name like `orderCoffee_Decaf_Oat` with each argument value inline. */
-  private fun name(arguments: List<Argument>): String {
-    return arguments.joinToString(
-      prefix = "${original.name.identifier}_",
-      separator = "_",
-    ) { argument ->
-      argument.value.name.identifier
-    }
-  }
-
-  /** Returns an expression that looks up this argument. */
-  private fun Argument.get(): IrExpression {
-    return IrGetEnumValueImpl(original.startOffset, original.endOffset, type, value.symbol)
-  }
-
-  /** Returns null if we can't compute all possible arguments for this parameter. */
-  private fun IrValueParameter.allPossibleArguments(): List<Argument>? {
-    val classId = type.getClass()?.classId ?: return null
-    val referenceClass = pluginContext.referenceClass(classId)?.owner ?: return null
-    val enumEntries = referenceClass.declarations.filterIsInstance<IrEnumEntry>()
-    return enumEntries.map { Argument(type, it) }
-  }
-
-  private fun IrClassSymbol.asAnnotation(): IrConstructorCall {
-    return IrConstructorCallImpl.fromSymbolOwner(
-      type = starProjectedType,
-      constructorSymbol = constructors.single(),
-    )
   }
 }
