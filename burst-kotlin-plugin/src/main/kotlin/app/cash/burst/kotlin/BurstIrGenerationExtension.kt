@@ -43,6 +43,15 @@ class BurstIrGenerationExtension(
           return classDeclaration
         }
 
+        if (classHasAtBurst) {
+          ClassSpecializer(
+            pluginContext = pluginContext,
+            burstApis = burstApis,
+            originalParent = currentFile,
+            original = classDeclaration,
+          ).generateSpecializations()
+        }
+
         // Snapshot the original functions because the loop mutates them.
         val originalFunctions = classDeclaration.functions.toList()
 
