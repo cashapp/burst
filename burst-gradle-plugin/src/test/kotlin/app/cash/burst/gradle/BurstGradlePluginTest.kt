@@ -57,8 +57,8 @@ class BurstGradlePluginTest {
     val originalTest = testSuite.testCases.single { it.name == "test[jvm]" }
     assertThat(originalTest.skipped).isTrue()
 
-    val sampleVariant = testSuite.testCases.single { it.name == "test_Decaf_Oat[jvm]" }
-    assertThat(sampleVariant.skipped).isFalse()
+    val sampleSpecialization = testSuite.testCases.single { it.name == "test_Decaf_Oat[jvm]" }
+    assertThat(sampleSpecialization.skipped).isFalse()
   }
 
   @Test

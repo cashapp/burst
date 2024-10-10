@@ -16,6 +16,7 @@
 package app.cash.burst.kotlin
 
 import assertk.assertThat
+import assertk.assertions.contains
 import assertk.assertions.containsExactly
 import assertk.assertions.isFalse
 import assertk.assertions.isTrue
@@ -36,8 +37,6 @@ class BurstKotlinPluginTest {
       sourceFile = SourceFile.kotlin(
         "CoffeeTest.kt",
         """
-        package app.cash.burst.testing
-
         import app.cash.burst.Burst
         import kotlin.test.Test
 
@@ -58,7 +57,7 @@ class BurstKotlinPluginTest {
     )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
-    val adapterClass = result.classLoader.loadClass("app.cash.burst.testing.CoffeeTest")
+    val adapterClass = result.classLoader.loadClass("CoffeeTest")
     val adapterInstance = adapterClass.constructors.single().newInstance()
     val log = adapterClass.getMethod("getLog").invoke(adapterInstance) as MutableList<*>
 
@@ -90,6 +89,29 @@ class BurstKotlinPluginTest {
       "running Double Milk",
       "running Double Oat",
     )
+  }
+
+  @Test
+  fun unexpectedArgumentType() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "CoffeeTest.kt",
+        """
+        import app.cash.burst.Burst
+        import kotlin.test.Test
+
+        @Burst
+        class CoffeeTest {
+          @Test
+          fun test(espresso: String) {
+          }
+        }
+        """,
+      ),
+    )
+    assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
+    assertThat(result.messages)
+      .contains("CoffeeTest.kt:7:12 Expected an enum for @Burst test parameter")
   }
 }
 

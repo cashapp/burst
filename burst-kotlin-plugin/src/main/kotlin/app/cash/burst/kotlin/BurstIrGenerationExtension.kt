@@ -21,7 +21,6 @@ import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.ir.IrStatement
 import org.jetbrains.kotlin.ir.declarations.IrClass
-import org.jetbrains.kotlin.ir.declarations.IrDeclaration
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.util.functions
@@ -39,26 +38,29 @@ class BurstIrGenerationExtension(
         val classDeclaration = super.visitClassNew(declaration) as IrClass
         val classHasAtBurst = classDeclaration.hasAtBurst
 
-        val addedDeclarations = mutableListOf<IrDeclaration>()
-
-        for (function in classDeclaration.functions) {
-          if (!function.hasAtTest) continue
-
-          if (classHasAtBurst || function.hasAtBurst) {
-            val rewriter = BurstRewriter(
-              messageCollector = messageCollector,
-              pluginContext = pluginContext,
-              burstApis = burstApis,
-              file = currentFile,
-              original = function,
-            )
-            addedDeclarations += rewriter.rewrite()
-          }
+        // Return early if there's no @Burst anywhere.
+        if (!classHasAtBurst && classDeclaration.functions.none { it.hasAtBurst }) {
+          return classDeclaration
         }
 
-        for (added in addedDeclarations) {
-          classDeclaration.declarations.add(added)
-          added.parent = classDeclaration
+        // Snapshot the original functions because the loop mutates them.
+        val originalFunctions = classDeclaration.functions.toList()
+
+        for (function in originalFunctions) {
+          if (!function.hasAtTest) continue
+          if (!classHasAtBurst && !function.hasAtBurst) continue
+
+          try {
+            val specializer = FunctionSpecializer(
+              pluginContext = pluginContext,
+              burstApis = burstApis,
+              originalParent = classDeclaration,
+              original = function,
+            )
+            specializer.generateSpecializations()
+          } catch (e: BurstCompilationException) {
+            messageCollector.report(e.severity, e.message, currentFile.locationOf(e.element))
+          }
         }
 
         return classDeclaration
