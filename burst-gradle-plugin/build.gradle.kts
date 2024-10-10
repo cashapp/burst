@@ -4,6 +4,7 @@ import com.vanniktech.maven.publish.MavenPublishBaseExtension
 
 plugins {
   id("java-gradle-plugin")
+  `kotlin-dsl`
   kotlin("jvm")
   id("com.github.gmazzo.buildconfig")
   id("org.jetbrains.dokka")

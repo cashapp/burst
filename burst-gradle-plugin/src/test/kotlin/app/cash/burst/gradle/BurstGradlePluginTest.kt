@@ -28,8 +28,8 @@ import org.junit.Test
 
 class BurstGradlePluginTest {
   @Test
-  fun happyPath() {
-    val projectDir = File("src/test/projects/basic")
+  fun multiplatform() {
+    val projectDir = File("src/test/projects/multiplatform")
 
     val taskName = ":lib:jvmTest"
     val result = createRunner(projectDir, "clean", taskName).build()
@@ -58,6 +58,40 @@ class BurstGradlePluginTest {
     assertThat(originalTest.skipped).isTrue()
 
     val sampleVariant = testSuite.testCases.single { it.name == "test_Decaf_Oat[jvm]" }
+    assertThat(sampleVariant.skipped).isFalse()
+  }
+
+  @Test
+  fun jvm() {
+    val projectDir = File("src/test/projects/jvm")
+
+    val taskName = ":lib:test"
+    val result = createRunner(projectDir, "clean", taskName).build()
+    assertThat(SUCCESS_OUTCOMES)
+      .contains(result.task(taskName)!!.outcome)
+
+    val testResults = projectDir.resolve("lib/build/test-results")
+    val testXmlFile = testResults.resolve("test/TEST-CoffeeTest.xml")
+
+    val testSuite = readTestSuite(testXmlFile)
+
+    assertThat(testSuite.testCases.map { it.name }).containsExactlyInAnyOrder(
+      "test",
+      "test_Decaf_Oat",
+      "test_Regular_Milk",
+      "test_Regular_None",
+      "test_Decaf_Milk",
+      "test_Decaf_None",
+      "test_Double_Milk",
+      "test_Double_None",
+      "test_Regular_Oat",
+      "test_Double_Oat",
+    )
+
+    val originalTest = testSuite.testCases.single { it.name == "test" }
+    assertThat(originalTest.skipped).isTrue()
+
+    val sampleVariant = testSuite.testCases.single { it.name == "test_Decaf_Oat" }
     assertThat(sampleVariant.skipped).isFalse()
   }
 
