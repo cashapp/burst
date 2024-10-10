@@ -15,9 +15,18 @@
  */
 package app.cash.burst.gradle
 
+import app.cash.burst.gradle.BuildConfig.burstVersion
+import org.gradle.api.Project
 import org.gradle.api.provider.Provider
+import org.gradle.kotlin.dsl.configure
+import org.gradle.kotlin.dsl.dependencies
+import org.gradle.kotlin.dsl.invoke
+import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
+import org.jetbrains.kotlin.gradle.plugin.KotlinMultiplatformPluginWrapper
+import org.jetbrains.kotlin.gradle.plugin.KotlinPluginWrapper
 import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 
@@ -32,6 +41,30 @@ class BurstPlugin : KotlinCompilerPluginSupportPlugin {
     artifactId = BuildConfig.KOTLIN_PLUGIN_NAME,
     version = BuildConfig.KOTLIN_PLUGIN_VERSION,
   )
+
+  override fun apply(target: Project) {
+    super.apply(target)
+
+    // kotlin("multiplatform") targeting Java platforms.
+    target.plugins.withType<KotlinMultiplatformPluginWrapper> {
+      target.configure<KotlinMultiplatformExtension> {
+        sourceSets {
+          commonTest {
+            dependencies {
+              implementation("app.cash.burst:burst:$burstVersion")
+            }
+          }
+        }
+      }
+    }
+
+    // kotlin("jvm")
+    target.plugins.withType<KotlinPluginWrapper> {
+      target.dependencies {
+        add("testImplementation", "app.cash.burst:burst:$burstVersion")
+      }
+    }
+  }
 
   override fun applyToCompilation(
     kotlinCompilation: KotlinCompilation<*>,
