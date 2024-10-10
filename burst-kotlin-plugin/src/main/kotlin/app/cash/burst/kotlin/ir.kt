@@ -31,17 +31,22 @@ import org.jetbrains.kotlin.ir.builders.declarations.IrClassBuilder
 import org.jetbrains.kotlin.ir.builders.declarations.IrFunctionBuilder
 import org.jetbrains.kotlin.ir.builders.declarations.IrValueParameterBuilder
 import org.jetbrains.kotlin.ir.declarations.IrConstructor
+import org.jetbrains.kotlin.ir.declarations.IrDeclaration
+import org.jetbrains.kotlin.ir.declarations.IrDeclarationContainer
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.createBlockBody
 import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
 import org.jetbrains.kotlin.ir.expressions.IrDelegatingConstructorCall
+import org.jetbrains.kotlin.ir.expressions.IrInstanceInitializerCall
 import org.jetbrains.kotlin.ir.expressions.impl.IrConstructorCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrDelegatingConstructorCallImpl
+import org.jetbrains.kotlin.ir.expressions.impl.IrInstanceInitializerCallImpl
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrConstructorSymbol
 import org.jetbrains.kotlin.ir.symbols.IrSymbol
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.symbols.impl.IrSimpleFunctionSymbolImpl
 import org.jetbrains.kotlin.ir.types.starProjectedType
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
@@ -151,6 +156,18 @@ fun DeclarationIrBuilder.irDelegatingConstructorCall(
   return result
 }
 
+fun DeclarationIrBuilder.irInstanceInitializerCall(
+  context: IrGeneratorContext,
+  classSymbol: IrClassSymbol,
+): IrInstanceInitializerCall {
+  return IrInstanceInitializerCallImpl(
+    startOffset = startOffset,
+    endOffset = endOffset,
+    classSymbol = classSymbol,
+    type = context.irBuiltIns.unitType,
+  )
+}
+
 fun IrSimpleFunction.irFunctionBody(
   context: IrGeneratorContext,
   scopeOwnerSymbol: IrSymbol,
@@ -165,4 +182,10 @@ fun IrSimpleFunction.irFunctionBody(
   body = bodyBuilder.blockBody {
     blockBody()
   }
+}
+
+@UnsafeDuringIrConstructionAPI
+internal fun IrDeclarationContainer.addDeclaration(declaration: IrDeclaration) {
+  declarations.add(declaration)
+  declaration.parent = this
 }

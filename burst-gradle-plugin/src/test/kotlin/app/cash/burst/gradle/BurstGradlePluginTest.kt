@@ -19,6 +19,7 @@ package app.cash.burst.gradle
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.containsExactlyInAnyOrder
+import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isTrue
 import java.io.File
@@ -93,6 +94,35 @@ class BurstGradlePluginTest {
 
     val sampleVariant = testSuite.testCases.single { it.name == "test_Decaf_Oat" }
     assertThat(sampleVariant.skipped).isFalse()
+  }
+
+  @Test
+  fun classParameters() {
+    val projectDir = File("src/test/projects/classParameters")
+
+    val taskName = ":lib:test"
+    val result = createRunner(projectDir, "clean", taskName).build()
+    assertThat(SUCCESS_OUTCOMES)
+      .contains(result.task(taskName)!!.outcome)
+
+    val testResults = projectDir.resolve("lib/build/test-results")
+
+    val coffeeTest = readTestSuite(testResults.resolve("test/TEST-CoffeeTest.xml"))
+    val coffeeTestTest = coffeeTest.testCases.single()
+    assertThat(coffeeTestTest.name).isEqualTo("test")
+    assertThat(coffeeTestTest.skipped).isTrue()
+
+    val sampleTest = readTestSuite(testResults.resolve("test/TEST-CoffeeTest_Decaf_None.xml"))
+    val sampleTestTest = sampleTest.testCases.single()
+    assertThat(sampleTestTest.name).isEqualTo("test")
+    assertThat(sampleTestTest.skipped).isFalse()
+    assertThat(sampleTest.systemOut).isEqualTo(
+      """
+      |set up Decaf None
+      |running Decaf None
+      |
+      """.trimMargin(),
+    )
   }
 
   private fun createRunner(

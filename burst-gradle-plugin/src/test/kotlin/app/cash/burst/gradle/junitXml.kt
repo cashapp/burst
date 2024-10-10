@@ -27,15 +27,21 @@ fun readTestSuite(xmlFile: File): TestSuite {
 
 internal fun Element.toTestSuite(): TestSuite {
   val testCases = mutableListOf<TestCase>()
+  val systemOut = StringBuilder()
   for (i in 0 until childNodes.length) {
     val item = childNodes.item(i)
-    if (item !is Element || item.tagName != "testcase") continue
-    testCases += item.toTestCase()
+    if (item is Element && item.tagName == "testcase") {
+      testCases += item.toTestCase()
+    }
+    if (item is Element && item.tagName == "system-out") {
+      systemOut.append(item.textContent)
+    }
   }
 
   return TestSuite(
     name = getAttribute("name"),
     testCases = testCases,
+    systemOut = systemOut.toString(),
   )
 }
 
@@ -57,6 +63,7 @@ internal fun Element.toTestCase(): TestCase {
 class TestSuite(
   val name: String,
   val testCases: List<TestCase>,
+  val systemOut: String,
 )
 
 class TestCase(

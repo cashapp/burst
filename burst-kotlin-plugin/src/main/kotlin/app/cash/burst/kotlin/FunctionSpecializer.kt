@@ -22,7 +22,6 @@ import org.jetbrains.kotlin.ir.builders.irCall
 import org.jetbrains.kotlin.ir.builders.irGet
 import org.jetbrains.kotlin.ir.builders.irTemporary
 import org.jetbrains.kotlin.ir.declarations.IrClass
-import org.jetbrains.kotlin.ir.declarations.IrDeclaration
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
@@ -31,6 +30,43 @@ import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.types.starProjectedType
 import org.jetbrains.kotlin.name.Name
 
+/**
+ * Given a test function that has parameters:
+ *
+ * ```
+ * @Test
+ * fun test(espresso: Espresso, dairy: Dairy) {
+ *   ...
+ * }
+ * ```
+ *
+ * This drops `@Test` from that test.
+ *
+ * It generates a new function for each specialization:
+ *
+ * ```
+ * @Test fun test_Decaf_None() { test(Espresso.Decaf, Dairy.None) }
+ * @Test fun test_Decaf_Milk() { test(Espresso.Decaf, Dairy.Milk) }
+ * @Test fun test_Decaf_Oat() { test(Espresso.Decaf, Dairy.Oat) }
+ * @Test fun test_Regular_Oat() { test(Espresso.Regular, Dairy.Oat) }
+ * @Test fun test_Regular_Milk() { test(Espresso.Regular, Dairy.Milk) }
+ * @Test fun test_Regular_None() { test(Espresso.Regular, Dairy.None) }
+ * ```
+ *
+ * And it adds a new function that calls each specialization.
+ *
+ * ```
+ * @Test
+ * @Ignore
+ * fun test() {
+ *   test_Decaf_None()
+ *   test_Decaf_Milk()
+ *   test_Decaf_Oat()
+ *   test_Regular_Oat()
+ *   ...
+ * }
+ * ```
+ */
 @OptIn(UnsafeDuringIrConstructionAPI::class)
 internal class FunctionSpecializer(
   private val pluginContext: IrPluginContext,
@@ -39,17 +75,15 @@ internal class FunctionSpecializer(
   private val original: IrSimpleFunction,
 ) {
   fun generateSpecializations() {
-    val originalValueParameters = original.valueParameters
-    if (originalValueParameters.isEmpty()) return // Nothing to do.
+    val valueParameters = original.valueParameters
+    if (valueParameters.isEmpty()) return // Nothing to do.
 
     val originalDispatchReceiver = original.dispatchReceiverParameter
       ?: throw BurstCompilationException("Unexpected dispatch receiver", original)
 
-    val parameterArguments = mutableListOf<List<Argument>>()
-    for (parameter in originalValueParameters) {
-      val expanded = pluginContext.allPossibleArguments(parameter)
+    val parameterArguments = valueParameters.map { parameter ->
+      pluginContext.allPossibleArguments(parameter)
         ?: throw BurstCompilationException("Expected an enum for @Burst test parameter", parameter)
-      parameterArguments += expanded
     }
 
     val cartesianProduct = parameterArguments.cartesianProduct()
@@ -70,11 +104,6 @@ internal class FunctionSpecializer(
     originalParent.addDeclaration(
       createFunctionThatCallsAllSpecializations(originalDispatchReceiver, specializations),
     )
-  }
-
-  private fun IrClass.addDeclaration(declaration: IrDeclaration) {
-    declarations.add(declaration)
-    declaration.parent = this
   }
 
   private fun createSpecialization(
