@@ -42,15 +42,20 @@ enum class Collections {
 }
 ```
 
-Annotate your test class to use Burst.
+Annotate your test class with `@Burst`, and accept an enum as a constructor parameter:
+
 ```kotlin
 @Burst
-class DrinkSodaTest {
+class DrinkSodaTest(
+  val soda: Soda,
+) {
   ...
 }
 ```
 
-When you use an enum in a test function, Burst will specialize that test for each value in the enum.
+Burst will specialize the test class for each value in the enum.
+
+Burst can also specialize individual test functions:
 
 ```kotlin
 @Test
@@ -59,7 +64,7 @@ fun drinkFavoriteSodas(soda: Soda) {
 }
 ```
 
-Combine multiple enums for the combination of their variations.
+Use multiple enums for the combination of their variations.
 
 ```kotlin
 @Test
@@ -70,7 +75,12 @@ fun collectSodas(soda: Soda, collectionsFactory: CollectionFactory) {
 
 The test will be specialized for each combination of arguments.
 
-[`Pepsi` & `MutableSetOf`, `Pepsi` & `MutableListOf`, `Pepsi` & `NewArrayDeque`, `Code` & `MutableSetOf`, ...].
+ * `collectSodas(Soda.Pepsi, CollectionFactory.MutableSetOf)`
+ * `collectSodas(Soda.Pepsi, CollectionFactory.MutableListOf)`
+ * `collectSodas(Soda.Pepsi, CollectionFactory.NewArrayDeque)`
+ * `collectSodas(Soda.Coke, CollectionFactory.MutableSetOf)`
+ * `collectSodas(Soda.Coke, CollectionFactory.MutableListOf)`
+ * `collectSodas(Soda.Coke, CollectionFactory.NewArrayDeque)`
 
 Gradle Setup
 ------------
