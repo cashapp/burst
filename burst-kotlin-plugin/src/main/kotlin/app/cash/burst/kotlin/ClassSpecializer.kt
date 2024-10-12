@@ -145,7 +145,7 @@ internal class ClassSpecializer(
     superConstructor: IrConstructor,
     arguments: List<Argument>,
   ) {
-    val constructor = original.addConstructor {
+    original.addConstructor {
       initDefaults(original)
     }.apply {
       irConstructorBody(pluginContext) { statements ->
@@ -160,7 +160,5 @@ internal class ClassSpecializer(
         }
       }
     }
-
-    originalParent.addDeclaration(constructor)
   }
 }
