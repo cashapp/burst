@@ -93,7 +93,7 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-    classpath("app.cash.burst:burst-gradle-plugin:0.2.0")
+    classpath("app.cash.burst:burst-gradle-plugin:0.3.0")
   }
 }
 ```
