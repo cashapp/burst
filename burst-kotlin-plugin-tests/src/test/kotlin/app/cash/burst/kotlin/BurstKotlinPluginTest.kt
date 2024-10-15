@@ -33,7 +33,7 @@ import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 @OptIn(ExperimentalCompilerApi::class)
 class BurstKotlinPluginTest {
   @Test
-  fun happyPath() {
+  fun functionParameters() {
     val result = compile(
       sourceFile = SourceFile.kotlin(
         "CoffeeTest.kt",
@@ -71,29 +71,27 @@ class BurstKotlinPluginTest {
     assertThat(originalTest.isAnnotationPresent(Test::class.java)).isFalse()
 
     // Burst adds a specialization for each combination of parameters.
-    val sampleFunction = testClass.getMethod("test_Decaf_None")
-    assertThat(sampleFunction.isAnnotationPresent(Test::class.java)).isTrue()
-    assertThat(sampleFunction.isAnnotationPresent(Ignore::class.java)).isFalse()
-    sampleFunction.invoke(adapterInstance)
+    val sampleSpecialization = testClass.getMethod("test_Regular_Milk")
+    assertThat(sampleSpecialization.isAnnotationPresent(Test::class.java)).isTrue()
+    assertThat(sampleSpecialization.isAnnotationPresent(Ignore::class.java)).isFalse()
+    sampleSpecialization.invoke(adapterInstance)
+    assertThat(log).containsExactly("running Regular Milk")
+    log.clear()
+
+    // The first specialization is also annotated `@Ignore`.
+    val firstSpecialization = testClass.getMethod("test_Decaf_None")
+    assertThat(firstSpecialization.isAnnotationPresent(Test::class.java)).isTrue()
+    assertThat(firstSpecialization.isAnnotationPresent(Ignore::class.java)).isTrue()
+    firstSpecialization.invoke(adapterInstance)
     assertThat(log).containsExactly("running Decaf None")
     log.clear()
 
-    // Burst adds a no-parameter function that calls each specialization in sequence.
+    // Burst adds a no-parameter function that calls the first specialization.
     val noArgsTest = testClass.getMethod("test")
     assertThat(noArgsTest.isAnnotationPresent(Test::class.java)).isTrue()
-    assertThat(noArgsTest.isAnnotationPresent(Ignore::class.java)).isTrue()
+    assertThat(noArgsTest.isAnnotationPresent(Ignore::class.java)).isFalse()
     noArgsTest.invoke(adapterInstance)
-    assertThat(log).containsExactly(
-      "running Decaf None",
-      "running Decaf Milk",
-      "running Decaf Oat",
-      "running Regular None",
-      "running Regular Milk",
-      "running Regular Oat",
-      "running Double None",
-      "running Double Milk",
-      "running Double Oat",
-    )
+    assertThat(log).containsExactly("running Decaf None")
   }
 
   @Test
@@ -156,9 +154,9 @@ class BurstKotlinPluginTest {
 
     val baseClass = result.classLoader.loadClass("CoffeeTest")
 
-    // Burst opens the class because it needs to subclass it. And it marks the entire class @Ignore.
+    // Burst opens the class because it needs to subclass it.
     assertThat(Modifier.isFinal(baseClass.modifiers)).isFalse()
-    assertThat(baseClass.isAnnotationPresent(Ignore::class.java)).isTrue()
+    assertThat(baseClass.isAnnotationPresent(Ignore::class.java)).isFalse()
 
     // Burst adds a no-args constructor that binds the first enum value.
     val baseConstructor = baseClass.constructors.single { it.parameterCount == 0 }
@@ -176,7 +174,8 @@ class BurstKotlinPluginTest {
     baseLog.clear()
 
     // It generates a subclass for each specialization.
-    val sampleClass = result.classLoader.loadClass("CoffeeTest_Regular_Oat")
+    val sampleClass = result.classLoader.loadClass("CoffeeTest_Regular_Milk")
+    assertThat(sampleClass.isAnnotationPresent(Ignore::class.java)).isFalse()
     val sampleConstructor = sampleClass.getConstructor()
     val sampleInstance = sampleConstructor.newInstance()
     val sampleLog = sampleClass.getMethod("getLog")
@@ -184,10 +183,14 @@ class BurstKotlinPluginTest {
     sampleClass.getMethod("setUp").invoke(sampleInstance)
     sampleClass.getMethod("test").invoke(sampleInstance)
     assertThat(sampleLog).containsExactly(
-      "set up Regular Oat",
-      "running Regular Oat",
+      "set up Regular Milk",
+      "running Regular Milk",
     )
     sampleLog.clear()
+
+    // The default specialization is annotated `@Ignore`.
+    val defaultClass = result.classLoader.loadClass("CoffeeTest_Decaf_None")
+    assertThat(defaultClass.isAnnotationPresent(Ignore::class.java)).isTrue()
   }
 }
 

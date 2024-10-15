@@ -19,6 +19,7 @@ package app.cash.burst.gradle
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.containsExactlyInAnyOrder
+import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isTrue
@@ -44,21 +45,24 @@ class BurstGradlePluginTest {
 
     assertThat(testSuite.testCases.map { it.name }).containsExactlyInAnyOrder(
       "test[jvm]",
-      "test_Decaf_Oat[jvm]",
-      "test_Regular_Milk[jvm]",
-      "test_Regular_None[jvm]",
       "test_Decaf_Milk[jvm]",
       "test_Decaf_None[jvm]",
+      "test_Decaf_Oat[jvm]",
       "test_Double_Milk[jvm]",
       "test_Double_None[jvm]",
-      "test_Regular_Oat[jvm]",
       "test_Double_Oat[jvm]",
+      "test_Regular_Milk[jvm]",
+      "test_Regular_None[jvm]",
+      "test_Regular_Oat[jvm]",
     )
 
     val originalTest = testSuite.testCases.single { it.name == "test[jvm]" }
-    assertThat(originalTest.skipped).isTrue()
+    assertThat(originalTest.skipped).isFalse()
 
-    val sampleSpecialization = testSuite.testCases.single { it.name == "test_Decaf_Oat[jvm]" }
+    val defaultSpecialization = testSuite.testCases.single { it.name == "test_Decaf_None[jvm]" }
+    assertThat(defaultSpecialization.skipped).isTrue()
+
+    val sampleSpecialization = testSuite.testCases.single { it.name == "test_Regular_Milk[jvm]" }
     assertThat(sampleSpecialization.skipped).isFalse()
   }
 
@@ -78,22 +82,25 @@ class BurstGradlePluginTest {
 
     assertThat(testSuite.testCases.map { it.name }).containsExactlyInAnyOrder(
       "test",
-      "test_Decaf_Oat",
-      "test_Regular_Milk",
-      "test_Regular_None",
       "test_Decaf_Milk",
       "test_Decaf_None",
+      "test_Decaf_Oat",
       "test_Double_Milk",
       "test_Double_None",
-      "test_Regular_Oat",
       "test_Double_Oat",
+      "test_Regular_Milk",
+      "test_Regular_None",
+      "test_Regular_Oat",
     )
 
     val originalTest = testSuite.testCases.single { it.name == "test" }
-    assertThat(originalTest.skipped).isTrue()
+    assertThat(originalTest.skipped).isFalse()
 
-    val sampleVariant = testSuite.testCases.single { it.name == "test_Decaf_Oat" }
-    assertThat(sampleVariant.skipped).isFalse()
+    val defaultSpecialization = testSuite.testCases.single { it.name == "test_Decaf_None" }
+    assertThat(defaultSpecialization.skipped).isTrue()
+
+    val sampleSpecialization = testSuite.testCases.single { it.name == "test_Regular_Milk" }
+    assertThat(sampleSpecialization.skipped).isFalse()
   }
 
   @Test
@@ -110,16 +117,28 @@ class BurstGradlePluginTest {
     val coffeeTest = readTestSuite(testResults.resolve("test/TEST-CoffeeTest.xml"))
     val coffeeTestTest = coffeeTest.testCases.single()
     assertThat(coffeeTestTest.name).isEqualTo("test")
-    assertThat(coffeeTestTest.skipped).isTrue()
+    assertThat(coffeeTest.systemOut).isEqualTo(
+      """
+      |set up Decaf None
+      |running Decaf None
+      |
+      """.trimMargin(),
+    )
 
-    val sampleTest = readTestSuite(testResults.resolve("test/TEST-CoffeeTest_Decaf_None.xml"))
+    val defaultTest = readTestSuite(testResults.resolve("test/TEST-CoffeeTest_Decaf_None.xml"))
+    val defaultTestTest = defaultTest.testCases.single()
+    assertThat(defaultTestTest.name).isEqualTo("test")
+    assertThat(defaultTestTest.skipped).isTrue()
+    assertThat(defaultTest.systemOut).isEmpty()
+
+    val sampleTest = readTestSuite(testResults.resolve("test/TEST-CoffeeTest_Regular_Milk.xml"))
     val sampleTestTest = sampleTest.testCases.single()
     assertThat(sampleTestTest.name).isEqualTo("test")
     assertThat(sampleTestTest.skipped).isFalse()
     assertThat(sampleTest.systemOut).isEqualTo(
       """
-      |set up Decaf None
-      |running Decaf None
+      |set up Regular Milk
+      |running Regular Milk
       |
       """.trimMargin(),
     )
