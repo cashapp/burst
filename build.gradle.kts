@@ -27,7 +27,7 @@ buildscript {
 }
 
 plugins {
-  id("com.github.gmazzo.buildconfig") version "3.1.0" apply false
+  alias(libs.plugins.buildconfig)
   alias(libs.plugins.spotless)
 }
 
@@ -41,9 +41,7 @@ configure<SpotlessExtension> {
     ktlint()
       .editorConfigOverride(
         mapOf(
-          "ktlint_standard_comment-spacing" to "disabled", // TODO Re-enable
           "ktlint_standard_filename" to "disabled",
-          "ktlint_standard_indent" to "disabled", // TODO Re-enable
         )
       )
   }
@@ -82,7 +80,7 @@ allprojects {
         Visibility.PROTECTED
       ))
       reportUndocumented.set(false)
-      jdkVersion.set(11)
+      jdkVersion.set(8)
 
       perPackageOption {
         matchingRegex.set("app\\.cash\\.burst\\.internal\\..*")
@@ -104,21 +102,13 @@ allprojects {
 
   plugins.withId("org.jetbrains.kotlin.multiplatform") {
     configure<KotlinMultiplatformExtension> {
-      jvmToolchain(11)
-      // https://youtrack.jetbrains.com/issue/KT-61573
-      targets.configureEach {
-        compilations.configureEach {
-          compilerOptions.configure {
-            freeCompilerArgs.addAll("-Xexpect-actual-classes")
-          }
-        }
-      }
+      jvmToolchain(8)
     }
   }
 
   plugins.withId("org.jetbrains.kotlin.jvm") {
     configure<KotlinJvmProjectExtension> {
-      jvmToolchain(11)
+      jvmToolchain(8)
     }
   }
 
