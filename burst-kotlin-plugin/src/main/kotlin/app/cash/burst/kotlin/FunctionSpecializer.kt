@@ -106,7 +106,7 @@ internal class FunctionSpecializer(
     originalParent.addDeclaration(
       createFunctionThatCallsDefaultSpecialization(
         originalDispatchReceiver = originalDispatchReceiver,
-        defaultSpecialization = specializations.first()
+        defaultSpecialization = specializations.first(),
       ),
     )
   }
