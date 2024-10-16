@@ -16,7 +16,8 @@
 package app.cash.burst.kotlin
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
-import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
+import org.jetbrains.kotlin.descriptors.DescriptorVisibilities.PROTECTED
+import org.jetbrains.kotlin.descriptors.DescriptorVisibilities.PUBLIC
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.ir.builders.declarations.addConstructor
 import org.jetbrains.kotlin.ir.builders.declarations.buildClass
@@ -96,7 +97,7 @@ internal class ClassSpecializer(
     // Add @Ignore and open the class
     // TODO: don't double-add @Ignore
     original.modality = Modality.OPEN
-    onlyConstructor.visibility = DescriptorVisibilities.PROTECTED
+    onlyConstructor.visibility = PROTECTED
 
     // Add a no-args constructor that calls the only constructor as the default specialization.
     createNoArgsConstructor(
@@ -121,6 +122,7 @@ internal class ClassSpecializer(
   ) {
     val specialization = original.factory.buildClass {
       initDefaults(original)
+      visibility = PUBLIC
       name = Name.identifier(name("${original.name.identifier}_", arguments))
     }.apply {
       superTypes = listOf(original.defaultType)
@@ -161,6 +163,7 @@ internal class ClassSpecializer(
   ) {
     original.addConstructor {
       initDefaults(original)
+      isPrimary = false
     }.apply {
       irConstructorBody(pluginContext) { statements ->
         statements += irDelegatingConstructorCall(
