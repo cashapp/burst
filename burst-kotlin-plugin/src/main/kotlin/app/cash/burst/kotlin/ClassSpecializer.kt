@@ -16,6 +16,7 @@
 package app.cash.burst.kotlin
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
+import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.ir.builders.declarations.addConstructor
 import org.jetbrains.kotlin.ir.builders.declarations.buildClass
@@ -43,13 +44,12 @@ import org.jetbrains.kotlin.name.Name
  * }
  * ```
  *
- * This opens the class, adds `@Ignore`, and adds a default constructor that calls the first
- * specialization:
+ * This opens the class, makes that constructor protected, and adds a default constructor that calls
+ * the first specialization:
  *
  * ```
  * @Burst
- * @Ignore
- * open class CoffeeTest(
+ * open class CoffeeTest protected constructor(
  *   private val espresso: Espresso,
  *   private val dairy: Dairy,
  * ) {
@@ -58,10 +58,11 @@ import org.jetbrains.kotlin.name.Name
  * }
  * ```
  *
- * And it generates a new test class for each specialization:
+ * And it generates a new test class for each specialization. The default specialization is also
+ * annotated `@Ignore`.
  *
  * ```
- * class CoffeeTest_Decaf_None : CoffeeTest(Espresso.Decaf, Dairy.None)
+ * @Ignore class CoffeeTest_Decaf_None : CoffeeTest(Espresso.Decaf, Dairy.None)
  * class CoffeeTest_Decaf_Milk : CoffeeTest(Espresso.Decaf, Dairy.Milk)
  * class CoffeeTest_Decaf_Oat : CoffeeTest(Espresso.Decaf, Dairy.Oat)
  * class CoffeeTest_Regular_None : CoffeeTest(Espresso.Regular, Dairy.None)
@@ -90,24 +91,33 @@ internal class ClassSpecializer(
     }
 
     val cartesianProduct = parameterArguments.cartesianProduct()
+    val defaultSpecialization = cartesianProduct.first()
 
     // Add @Ignore and open the class
     // TODO: don't double-add @Ignore
-    original.annotations += burstApis.ignoreClassSymbol.asAnnotation()
     original.modality = Modality.OPEN
+    onlyConstructor.visibility = DescriptorVisibilities.PROTECTED
 
-    // Add a no-args constructor that calls the only constructor.
-    createNoArgsConstructor(onlyConstructor, cartesianProduct.first())
+    // Add a no-args constructor that calls the only constructor as the default specialization.
+    createNoArgsConstructor(
+      superConstructor = onlyConstructor,
+      arguments = defaultSpecialization,
+    )
 
     // Add a subclass for each specialization.
     cartesianProduct.map { arguments ->
-      createSpecialization(onlyConstructor, arguments)
+      createSpecialization(
+        superConstructor = onlyConstructor,
+        arguments = arguments,
+        isDefaultSpecialization = arguments == defaultSpecialization,
+      )
     }
   }
 
   private fun createSpecialization(
     superConstructor: IrConstructor,
     arguments: List<Argument>,
+    isDefaultSpecialization: Boolean,
   ) {
     val specialization = original.factory.buildClass {
       initDefaults(original)
@@ -115,6 +125,10 @@ internal class ClassSpecializer(
     }.apply {
       superTypes = listOf(original.defaultType)
       createImplicitParameterDeclarationWithWrappedDescriptor()
+    }
+
+    if (isDefaultSpecialization) {
+      specialization.annotations += burstApis.ignoreClassSymbol.asAnnotation()
     }
 
     specialization.addConstructor {
