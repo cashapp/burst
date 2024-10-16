@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## Version 0.4.0 *(2024-10-16)*
+
+ * New: Require JDK 1.8+.
+ * New: Run the first specialization when launching from the IDE.
+
+
 ## Version 0.3.0 *(2024-10-15)*
 
  * Fix: Don't generate invalid bytecode by attaching a test class constructor to its enclosing file.
