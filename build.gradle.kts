@@ -8,8 +8,10 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.dokka.DokkaConfiguration.Visibility
 import org.jetbrains.dokka.gradle.DokkaMultiModuleTask
 import org.jetbrains.dokka.gradle.DokkaTaskPartial
-import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 buildscript {
   repositories {
@@ -100,15 +102,25 @@ allprojects {
     enabled = project.findProperty("signingInMemoryKey") != null
   }
 
+  val javaVersion = JavaVersion.VERSION_1_8
+
   plugins.withId("org.jetbrains.kotlin.multiplatform") {
-    configure<KotlinMultiplatformExtension> {
-      jvmToolchain(8)
+    val kotlin = extensions.getByName("kotlin") as KotlinMultiplatformExtension
+    kotlin.targets.withType(KotlinJvmTarget::class.java) {
+      compilerOptions {
+        freeCompilerArgs.add("-Xjdk-release=$javaVersion")
+      }
     }
   }
 
-  plugins.withId("org.jetbrains.kotlin.jvm") {
-    configure<KotlinJvmProjectExtension> {
-      jvmToolchain(8)
+  tasks.withType(JavaCompile::class.java).configureEach {
+    sourceCompatibility = javaVersion.toString()
+    targetCompatibility = javaVersion.toString()
+  }
+
+  tasks.withType(KotlinJvmCompile::class.java).configureEach {
+    compilerOptions {
+      jvmTarget.set(JvmTarget.fromTarget(javaVersion.toString()))
     }
   }
 
