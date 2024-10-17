@@ -5,6 +5,9 @@ plugins {
 
 kotlin {
   jvm()
+  js {
+    nodejs()
+  }
 
   sourceSets {
     commonTest {

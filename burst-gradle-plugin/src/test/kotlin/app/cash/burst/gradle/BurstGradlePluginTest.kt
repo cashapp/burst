@@ -30,45 +30,95 @@ import org.junit.Test
 
 class BurstGradlePluginTest {
   @Test
-  fun multiplatform() {
+  fun multiplatformJvm() {
+    multiplatform(
+      testTaskName = "jvmTest",
+      platformName = "jvm",
+    )
+  }
+
+  @Test
+  fun multiplatformJs() {
+    multiplatform(
+      testTaskName = "jsNodeTest",
+      platformName = "js, node",
+    )
+  }
+
+  private fun multiplatform(
+    testTaskName: String,
+    platformName: String,
+  ) {
     val projectDir = File("src/test/projects/multiplatform")
 
-    val taskName = ":lib:jvmTest"
+    val taskName = ":lib:$testTaskName"
     val result = createRunner(projectDir, "clean", taskName).build()
     assertThat(SUCCESS_OUTCOMES)
       .contains(result.task(taskName)!!.outcome)
 
     val testResults = projectDir.resolve("lib/build/test-results")
-    val jvmTestXmlFile = testResults.resolve("jvmTest/TEST-CoffeeTest.xml")
 
-    val testSuite = readTestSuite(jvmTestXmlFile)
+    // The original test class runs the default specialization.
+    with(readTestSuite(testResults.resolve("$testTaskName/TEST-CoffeeTest.xml"))) {
+      assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
+        "test[$platformName]",
+        "test_Milk[$platformName]",
+        "test_None[$platformName]",
+        "test_Oat[$platformName]",
+      )
 
-    assertThat(testSuite.testCases.map { it.name }).containsExactlyInAnyOrder(
-      "test[jvm]",
-      "test_Decaf_Milk[jvm]",
-      "test_Decaf_None[jvm]",
-      "test_Decaf_Oat[jvm]",
-      "test_Double_Milk[jvm]",
-      "test_Double_None[jvm]",
-      "test_Double_Oat[jvm]",
-      "test_Regular_Milk[jvm]",
-      "test_Regular_None[jvm]",
-      "test_Regular_Oat[jvm]",
-    )
+      val defaultFunction = testCases.single { it.name == "test[$platformName]" }
+      assertThat(defaultFunction.skipped).isFalse()
 
-    val originalTest = testSuite.testCases.single { it.name == "test[jvm]" }
-    assertThat(originalTest.skipped).isFalse()
+      val defaultSpecialization = testCases.single { it.name == "test_None[$platformName]" }
+      assertThat(defaultSpecialization.skipped).isTrue()
 
-    val defaultSpecialization = testSuite.testCases.single { it.name == "test_Decaf_None[jvm]" }
-    assertThat(defaultSpecialization.skipped).isTrue()
+      val sampleSpecialization = testCases.single { it.name == "test_Milk[$platformName]" }
+      assertThat(sampleSpecialization.skipped).isFalse()
+    }
 
-    val sampleSpecialization = testSuite.testCases.single { it.name == "test_Regular_Milk[jvm]" }
-    assertThat(sampleSpecialization.skipped).isFalse()
+    // The default test class is completely skipped.
+    with(readTestSuite(testResults.resolve("$testTaskName/TEST-CoffeeTest_Decaf.xml"))) {
+      assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
+        "test[$platformName]",
+        "test_Milk[$platformName]",
+        "test_None[$platformName]",
+        "test_Oat[$platformName]",
+      )
+
+      val defaultFunction = testCases.single { it.name == "test[$platformName]" }
+      assertThat(defaultFunction.skipped).isTrue()
+
+      val defaultSpecialization = testCases.single { it.name == "test_None[$platformName]" }
+      assertThat(defaultSpecialization.skipped).isTrue()
+
+      val sampleSpecialization = testCases.single { it.name == "test_Milk[$platformName]" }
+      assertThat(sampleSpecialization.skipped).isTrue()
+    }
+
+    // Another test class is executed normally with nothing skipped.
+    with(readTestSuite(testResults.resolve("$testTaskName/TEST-CoffeeTest_Regular.xml"))) {
+      assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
+        "test[$platformName]",
+        "test_Milk[$platformName]",
+        "test_None[$platformName]",
+        "test_Oat[$platformName]",
+      )
+
+      val defaultFunction = testCases.single { it.name == "test[$platformName]" }
+      assertThat(defaultFunction.skipped).isFalse()
+
+      val defaultSpecialization = testCases.single { it.name == "test_None[$platformName]" }
+      assertThat(defaultSpecialization.skipped).isTrue()
+
+      val sampleSpecialization = testCases.single { it.name == "test_Milk[$platformName]" }
+      assertThat(sampleSpecialization.skipped).isFalse()
+    }
   }
 
   @Test
-  fun jvm() {
-    val projectDir = File("src/test/projects/jvm")
+  fun functionParameters() {
+    val projectDir = File("src/test/projects/functionParameters")
 
     val taskName = ":lib:test"
     val result = createRunner(projectDir, "clean", taskName).build()

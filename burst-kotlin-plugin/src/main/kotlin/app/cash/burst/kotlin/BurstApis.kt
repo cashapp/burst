@@ -57,7 +57,7 @@ private val burstAnnotationClassId = burstFqPackage.classId("Burst")
 
 val junitPackage = FqPackageName("org.junit")
 val junitTestClassId = junitPackage.classId("Test")
-val kotlinTestPackage = FqPackageName("kotlin.text")
+val kotlinTestPackage = FqPackageName("kotlin.test")
 val kotlinTestClassId = kotlinTestPackage.classId("Test")
 
 internal val IrAnnotationContainer.hasAtTest: Boolean

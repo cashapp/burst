@@ -1,10 +1,18 @@
 import app.cash.burst.Burst
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 @Burst
-class CoffeeTest {
+class CoffeeTest(
+  private val espresso: Espresso,
+) {
+  @BeforeTest
+  fun setUp() {
+    println("set up $espresso")
+  }
+
   @Test
-  fun test(espresso: Espresso, dairy: Dairy) {
+  fun test(dairy: Dairy) {
     println("running $espresso $dairy")
   }
 }
