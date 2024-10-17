@@ -11,7 +11,8 @@ env:
 jobs:
   publish:
     runs-on: macos-latest
-
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -25,9 +26,13 @@ jobs:
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.SONATYPE_NEXUS_PASSWORD }}
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.ARTIFACT_SIGNING_PRIVATE_KEY }}
 
-      - uses: ffurrer2/extract-release-notes@v2
-        id: release_notes
-
-      - uses: ncipollo/release-action@v1
+      - name: Extract release notes
+        id: extract-release-notes
+        uses: ffurrer2/extract-release-notes@v2
         with:
-          body: ${{ steps.release_notes.outputs.release_notes }}
+          release_notes_file: RELEASE_NOTES.md
+
+      - name: Create GitHub release
+        run: gh release create ${{ github.ref_name }} --notes-file RELEASE_NOTES.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
