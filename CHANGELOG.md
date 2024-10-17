@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## Version 0.5.0 *(2024-10-17)*
+
+ * Fix: Apply specializations for Kotlin/JS and Kotlin/Native. We had bugs that caused our compiler
+   plug-in to skip non-JVM platforms.
+
+
 ## Version 0.4.0 *(2024-10-16)*
 
  * New: Require JDK 1.8+.
