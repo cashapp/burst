@@ -51,9 +51,13 @@ tasks {
     systemProperty("burstVersion", project.version)
     dependsOn(":burst-gradle-plugin:publishAllPublicationsToTestMavenRepository")
     dependsOn(":burst-kotlin-plugin:publishAllPublicationsToTestMavenRepository")
+
+    // Depend on the host platforms exercised by BurstGradlePluginTest.
     dependsOn(":burst:publishJsPublicationToTestMavenRepository")
     dependsOn(":burst:publishJvmPublicationToTestMavenRepository")
     dependsOn(":burst:publishKotlinMultiplatformPublicationToTestMavenRepository")
+    dependsOn(":burst:publishLinuxX64PublicationToTestMavenRepository")
+    dependsOn(":burst:publishMacosArm64PublicationToTestMavenRepository")
   }
 }
 

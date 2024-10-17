@@ -9,6 +9,10 @@ kotlin {
     nodejs()
   }
 
+  // Cover the host platforms where we run Burst tests.
+  linuxX64()
+  macosArm64()
+
   sourceSets {
     commonTest {
       dependencies {

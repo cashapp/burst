@@ -26,6 +26,8 @@ import assertk.assertions.isTrue
 import java.io.File
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
+import org.jetbrains.kotlin.konan.target.HostManager
+import org.jetbrains.kotlin.konan.target.presetName
 import org.junit.Test
 
 class BurstGradlePluginTest {
@@ -42,6 +44,16 @@ class BurstGradlePluginTest {
     multiplatform(
       testTaskName = "jsNodeTest",
       platformName = "js, node",
+    )
+  }
+
+  @Test
+  fun multiplatformNative() {
+    // Like 'linuxX64' or 'macosArm64'.
+    val platformName = HostManager.host.presetName
+    multiplatform(
+      testTaskName = "${platformName}Test",
+      platformName = platformName,
     )
   }
 
