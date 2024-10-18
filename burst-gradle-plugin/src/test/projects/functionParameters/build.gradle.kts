@@ -1,3 +1,6 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
+
 buildscript {
   repositories {
     maven {
@@ -8,7 +11,7 @@ buildscript {
   }
   dependencies {
     classpath("app.cash.burst:burst-gradle-plugin:${project.property("burstVersion")}")
-    classpath(libs.kotlin.gradle.plugin)
+    classpath(libs.kotlin.gradlePlugin)
   }
 }
 
@@ -19,5 +22,16 @@ allprojects {
     }
     mavenCentral()
     google()
+  }
+
+  tasks.withType(JavaCompile::class.java).configureEach {
+    sourceCompatibility = "1.8"
+    targetCompatibility = "1.8"
+  }
+
+  tasks.withType(KotlinJvmCompile::class.java).configureEach {
+    compilerOptions {
+      jvmTarget.set(JvmTarget.JVM_1_8)
+    }
   }
 }
