@@ -1,8 +1,11 @@
 # Change Log
 
 ## [Unreleased]
+[Unreleased]: https://github.com/cashapp/burst/compare/0.5.0...HEAD
+
 
 ## [0.5.0] *(2024-10-17)*
+[0.5.0]: https://github.com/cashapp/burst/releases/tag/0.4.0
 
 **Fixed**
 
@@ -11,6 +14,7 @@
 
 
 ## [0.4.0] *(2024-10-16)*
+[0.4.0]: https://github.com/cashapp/burst/releases/tag/0.4.0
 
 **Added**
 
@@ -19,6 +23,7 @@
 
 
 ## [0.3.0] *(2024-10-15)*
+[0.3.0]: https://github.com/cashapp/burst/releases/tag/0.3.0
 
 **Fixed**
 
@@ -26,6 +31,7 @@
 
 
 ## [0.2.0] *(2024-10-10)*
+[0.2.0]: https://github.com/cashapp/burst/releases/tag/0.2.0
 
 **Added**
 
@@ -33,15 +39,8 @@
 
 
 ## [0.1.0] *(2024-10-08)*
+[0.1.0]: https://github.com/cashapp/burst/releases/tag/0.1.0
 
 Initial release. We're rebooting the [Burst] project that released 1.0 ten years ago.
 
-
-
-[Unreleased]: https://github.com/cashapp/burst/compare/0.5.0...HEAD
-[0.5.0]: https://github.com/cashapp/burst/releases/tag/0.4.0
-[0.4.0]: https://github.com/cashapp/burst/releases/tag/0.4.0
-[0.3.0]: https://github.com/cashapp/burst/releases/tag/0.3.0
-[0.2.0]: https://github.com/cashapp/burst/releases/tag/0.2.0
-[0.1.0]: https://github.com/cashapp/burst/releases/tag/0.1.0
 [Burst]: https://github.com/square/burst
