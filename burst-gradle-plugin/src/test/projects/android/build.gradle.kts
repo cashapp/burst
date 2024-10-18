@@ -11,6 +11,7 @@ buildscript {
   }
   dependencies {
     classpath("app.cash.burst:burst-gradle-plugin:${project.property("burstVersion")}")
+    classpath(libs.android.gradlePlugin)
     classpath(libs.kotlin.gradlePlugin)
   }
 }

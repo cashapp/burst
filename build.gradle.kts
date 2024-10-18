@@ -22,7 +22,7 @@ buildscript {
   dependencies {
     classpath(libs.binary.compatibility.validator.gradle.plugin)
     classpath(libs.mavenPublish.gradle.plugin)
-    classpath(libs.kotlin.gradle.plugin)
+    classpath(libs.kotlin.gradlePlugin)
     classpath(libs.dokka.gradle.plugin)
     classpath(libs.google.ksp)
   }

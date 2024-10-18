@@ -22,6 +22,7 @@ import assertk.assertions.containsExactlyInAnyOrder
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
+import assertk.assertions.isIn
 import assertk.assertions.isTrue
 import java.io.File
 import org.gradle.testkit.runner.GradleRunner
@@ -65,8 +66,7 @@ class BurstGradlePluginTest {
 
     val taskName = ":lib:$testTaskName"
     val result = createRunner(projectDir, "clean", taskName).build()
-    assertThat(SUCCESS_OUTCOMES)
-      .contains(result.task(taskName)!!.outcome)
+    assertThat(result.task(taskName)!!.outcome).isIn(*SUCCESS_OUTCOMES)
 
     val testResults = projectDir.resolve("lib/build/test-results")
 
@@ -134,8 +134,7 @@ class BurstGradlePluginTest {
 
     val taskName = ":lib:test"
     val result = createRunner(projectDir, "clean", taskName).build()
-    assertThat(SUCCESS_OUTCOMES)
-      .contains(result.task(taskName)!!.outcome)
+    assertThat(result.task(taskName)!!.outcome).isIn(*SUCCESS_OUTCOMES)
 
     val testResults = projectDir.resolve("lib/build/test-results")
     val testXmlFile = testResults.resolve("test/TEST-CoffeeTest.xml")
@@ -171,8 +170,7 @@ class BurstGradlePluginTest {
 
     val taskName = ":lib:test"
     val result = createRunner(projectDir, "clean", taskName).build()
-    assertThat(SUCCESS_OUTCOMES)
-      .contains(result.task(taskName)!!.outcome)
+    assertThat(result.task(taskName)!!.outcome).isIn(*SUCCESS_OUTCOMES)
 
     val testResults = projectDir.resolve("lib/build/test-results")
 
@@ -206,6 +204,17 @@ class BurstGradlePluginTest {
     )
   }
 
+  @Test
+  fun android() {
+    val projectDir = File("src/test/projects/android")
+
+    val testTaskName = ":lib:test"
+    val androidTestTaskName = ":lib:assembleAndroidTest"
+    val result = createRunner(projectDir, "clean", testTaskName, androidTestTaskName).build()
+    assertThat(result.task(testTaskName)!!.outcome).isIn(*SUCCESS_OUTCOMES)
+    assertThat(result.task(androidTestTaskName)!!.outcome).isIn(*SUCCESS_OUTCOMES)
+  }
+
   private fun createRunner(
     projectDir: File,
     vararg taskNames: String,
@@ -222,7 +231,7 @@ class BurstGradlePluginTest {
   }
 
   companion object {
-    val SUCCESS_OUTCOMES = listOf(TaskOutcome.SUCCESS, TaskOutcome.UP_TO_DATE)
+    val SUCCESS_OUTCOMES = arrayOf(TaskOutcome.SUCCESS, TaskOutcome.UP_TO_DATE)
     val versionProperty = "-PburstVersion=${System.getProperty("burstVersion")}"
   }
 }
