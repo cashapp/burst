@@ -15,7 +15,7 @@ dependencies {
   implementation(kotlin("gradle-plugin-api"))
   implementation(projects.burst)
   implementation(projects.burstKotlinPlugin)
-  implementation(libs.kotlin.gradle.plugin)
+  implementation(libs.kotlin.gradlePlugin)
   testImplementation(libs.assertk)
   testImplementation(libs.junit)
   testImplementation(libs.kotlin.test)

@@ -23,6 +23,7 @@ import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.invoke
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.plugin.KotlinAndroidPluginWrapper
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
 import org.jetbrains.kotlin.gradle.plugin.KotlinMultiplatformPluginWrapper
@@ -45,7 +46,7 @@ class BurstPlugin : KotlinCompilerPluginSupportPlugin {
   override fun apply(target: Project) {
     super.apply(target)
 
-    // kotlin("multiplatform") targeting Java platforms.
+    // kotlin("multiplatform")
     target.plugins.withType<KotlinMultiplatformPluginWrapper> {
       target.configure<KotlinMultiplatformExtension> {
         sourceSets {
@@ -62,6 +63,14 @@ class BurstPlugin : KotlinCompilerPluginSupportPlugin {
     target.plugins.withType<KotlinPluginWrapper> {
       target.dependencies {
         add("testImplementation", "app.cash.burst:burst:$burstVersion")
+      }
+    }
+
+    // kotlin("android")
+    target.plugins.withType<KotlinAndroidPluginWrapper> {
+      target.dependencies {
+        add("testImplementation", "app.cash.burst:burst:$burstVersion")
+        add("androidTestImplementation", "app.cash.burst:burst:$burstVersion")
       }
     }
   }
