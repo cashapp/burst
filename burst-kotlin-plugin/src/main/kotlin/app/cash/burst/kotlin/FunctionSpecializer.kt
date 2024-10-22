@@ -35,32 +35,23 @@ import org.jetbrains.kotlin.name.Name
  *
  * ```
  * @Test
- * fun test(espresso: Espresso, dairy: Dairy) {
+ * fun test(espresso: Espresso = Espresso.Regular, dairy: Dairy = Dairy.Milk) {
  *   ...
  * }
  * ```
  *
  * This drops `@Test` from that test.
  *
- * It generates a new function for each specialization. The default specialization is also annotated
- * `@Ignore`.
+ * It generates a new function for each specialization. The default specialization gets the same
+ * name as the original test.
  *
  * ```
- * @Test @Ignore fun test_Decaf_None() { test(Espresso.Decaf, Dairy.None) }
+ * @Test fun test_Decaf_None() { test(Espresso.Decaf, Dairy.None) }
  * @Test fun test_Decaf_Milk() { test(Espresso.Decaf, Dairy.Milk) }
  * @Test fun test_Decaf_Oat() { test(Espresso.Decaf, Dairy.Oat) }
  * @Test fun test_Regular_Oat() { test(Espresso.Regular, Dairy.Oat) }
- * @Test fun test_Regular_Milk() { test(Espresso.Regular, Dairy.Milk) }
+ * @Test fun test() { test(Espresso.Regular, Dairy.Milk) }
  * @Test fun test_Regular_None() { test(Espresso.Regular, Dairy.None) }
- * ```
- *
- * And it adds a new function that calls that default specialization.
- *
- * ```
- * @Test
- * fun test() {
- *   test_Decaf_None()
- * }
  * ```
  *
  * This way, the default specialization is executed when you run the test in the IDE.
@@ -86,11 +77,15 @@ internal class FunctionSpecializer(
 
     val cartesianProduct = parameterArguments.cartesianProduct()
 
-    val specializations = cartesianProduct.map { arguments ->
+    val indexOfDefaultSpecialization = cartesianProduct.indexOfFirst { arguments ->
+      arguments.all { it.isDefault }
+    }
+
+    val specializations = cartesianProduct.mapIndexed { index, arguments ->
       createSpecialization(
         originalDispatchReceiver = originalDispatchReceiver,
         arguments = arguments,
-        isDefaultSpecialization = arguments == cartesianProduct.first(),
+        isDefaultSpecialization = index == indexOfDefaultSpecialization,
       )
     }
 
@@ -103,12 +98,6 @@ internal class FunctionSpecializer(
     for (specialization in specializations) {
       originalParent.addDeclaration(specialization)
     }
-    originalParent.addDeclaration(
-      createFunctionThatCallsDefaultSpecialization(
-        originalDispatchReceiver = originalDispatchReceiver,
-        defaultSpecialization = specializations.first(),
-      ),
-    )
   }
 
   private fun createSpecialization(
@@ -118,7 +107,10 @@ internal class FunctionSpecializer(
   ): IrSimpleFunction {
     val result = original.factory.buildFun {
       initDefaults(original)
-      name = Name.identifier(name("${original.name.identifier}_", arguments))
+      name = when {
+        isDefaultSpecialization -> original.name
+        else -> Name.identifier(name("${original.name.identifier}_", arguments))
+      }
       returnType = original.returnType
     }.apply {
       addDispatchReceiver {
@@ -128,9 +120,6 @@ internal class FunctionSpecializer(
     }
 
     result.annotations += burstApis.testClassSymbol.asAnnotation()
-    if (isDefaultSpecialization) {
-      result.annotations += burstApis.ignoreClassSymbol.asAnnotation()
-    }
 
     result.irFunctionBody(
       context = pluginContext,
@@ -151,46 +140,6 @@ internal class FunctionSpecializer(
         for ((index, argument) in arguments.withIndex()) {
           putValueArgument(index, argument.get())
         }
-      }
-    }
-
-    return result
-  }
-
-  /** Creates an @Test @Ignore no-args function that calls the default specialization. */
-  private fun createFunctionThatCallsDefaultSpecialization(
-    originalDispatchReceiver: IrValueParameter,
-    defaultSpecialization: IrSimpleFunction,
-  ): IrSimpleFunction {
-    val result = original.factory.buildFun {
-      initDefaults(original)
-      name = original.name
-      returnType = original.returnType
-    }.apply {
-      addDispatchReceiver {
-        initDefaults(originalDispatchReceiver)
-        type = originalDispatchReceiver.type
-      }
-    }
-
-    result.annotations += burstApis.testClassSymbol.asAnnotation()
-
-    result.irFunctionBody(
-      context = pluginContext,
-      scopeOwnerSymbol = original.symbol,
-    ) {
-      val receiverLocal = irTemporary(
-        value = irGet(result.dispatchReceiverParameter!!),
-        nameHint = "receiver",
-        isMutable = false,
-      ).apply {
-        origin = IrDeclarationOrigin.DEFINED
-      }
-
-      +irCall(
-        callee = defaultSpecialization.symbol,
-      ).apply {
-        this.dispatchReceiver = irGet(receiverLocal)
       }
     }
 

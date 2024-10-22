@@ -24,9 +24,9 @@ import com.tschuchort.compiletesting.JvmCompilationResult
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import java.lang.reflect.Modifier
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 
@@ -66,32 +66,21 @@ class BurstKotlinPluginTest {
     val adapterInstance = testClass.constructors.single().newInstance()
     val log = testClass.getMethod("getLog").invoke(adapterInstance) as MutableList<*>
 
-    // Burst drops @Test from the original test.
+    // Burst drops @Test from the original test function.
     val originalTest = testClass.methods.single { it.name == "test" && it.parameterCount == 2 }
     assertThat(originalTest.isAnnotationPresent(Test::class.java)).isFalse()
 
     // Burst adds a specialization for each combination of parameters.
     val sampleSpecialization = testClass.getMethod("test_Regular_Milk")
     assertThat(sampleSpecialization.isAnnotationPresent(Test::class.java)).isTrue()
-    assertThat(sampleSpecialization.isAnnotationPresent(Ignore::class.java)).isFalse()
     sampleSpecialization.invoke(adapterInstance)
     assertThat(log).containsExactly("running Regular Milk")
     log.clear()
 
-    // The first specialization is also annotated `@Ignore`.
-    val firstSpecialization = testClass.getMethod("test_Decaf_None")
-    assertThat(firstSpecialization.isAnnotationPresent(Test::class.java)).isTrue()
-    assertThat(firstSpecialization.isAnnotationPresent(Ignore::class.java)).isTrue()
-    firstSpecialization.invoke(adapterInstance)
-    assertThat(log).containsExactly("running Decaf None")
-    log.clear()
-
-    // Burst adds a no-parameter function that calls the first specialization.
-    val noArgsTest = testClass.getMethod("test")
-    assertThat(noArgsTest.isAnnotationPresent(Test::class.java)).isTrue()
-    assertThat(noArgsTest.isAnnotationPresent(Ignore::class.java)).isFalse()
-    noArgsTest.invoke(adapterInstance)
-    assertThat(log).containsExactly("running Decaf None")
+    // Burst doesn't add a no-parameter function because there's no default specialization.
+    assertFailsWith<NoSuchMethodException> {
+      testClass.getMethod("test")
+    }
   }
 
   @Test
@@ -156,26 +145,14 @@ class BurstKotlinPluginTest {
 
     // Burst opens the class because it needs to subclass it.
     assertThat(Modifier.isFinal(baseClass.modifiers)).isFalse()
-    assertThat(baseClass.isAnnotationPresent(Ignore::class.java)).isFalse()
 
-    // Burst adds a no-args constructor that binds the first enum value.
-    val baseConstructor = baseClass.constructors.single { it.parameterCount == 0 }
-    val baseInstance = baseConstructor.newInstance()
-    val baseLog = baseClass.getMethod("getLog").invoke(baseInstance) as MutableList<*>
-
-    // The setUp function gets the first value of each parameter.
-    baseClass.getMethod("setUp").invoke(baseInstance)
-    assertThat(baseLog).containsExactly("set up Decaf None")
-    baseLog.clear()
-
-    // The test function gets the same.
-    baseClass.getMethod("test").invoke(baseInstance)
-    assertThat(baseLog).containsExactly("running Decaf None")
-    baseLog.clear()
+    // Burst doesn't add a no-arg constructor because there's no default specialization.
+    assertFailsWith<NoSuchMethodException> {
+      baseClass.getConstructor()
+    }
 
     // It generates a subclass for each specialization.
     val sampleClass = result.classLoader.loadClass("CoffeeTest_Regular_Milk")
-    assertThat(sampleClass.isAnnotationPresent(Ignore::class.java)).isFalse()
     val sampleConstructor = sampleClass.getConstructor()
     val sampleInstance = sampleConstructor.newInstance()
     val sampleLog = sampleClass.getMethod("getLog")
@@ -187,10 +164,72 @@ class BurstKotlinPluginTest {
       "running Regular Milk",
     )
     sampleLog.clear()
+  }
 
-    // The default specialization is annotated `@Ignore`.
-    val defaultClass = result.classLoader.loadClass("CoffeeTest_Decaf_None")
-    assertThat(defaultClass.isAnnotationPresent(Ignore::class.java)).isTrue()
+  @Test
+  fun defaultArgumentsHonored() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "CoffeeTest.kt",
+        """
+        import app.cash.burst.Burst
+        import kotlin.test.BeforeTest
+        import kotlin.test.Test
+
+        @Burst
+        class CoffeeTest(
+          private val espresso: Espresso = Espresso.Regular,
+        ) {
+          val log = mutableListOf<String>()
+
+          @BeforeTest
+          fun setUp() {
+            log += "set up ${'$'}espresso"
+          }
+
+          @Test
+          fun test(dairy: Dairy = Dairy.Milk) {
+            log += "running ${'$'}espresso ${'$'}dairy"
+          }
+        }
+
+        enum class Espresso { Decaf, Regular, Double }
+        enum class Dairy { None, Milk, Oat }
+        """,
+      ),
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val baseClass = result.classLoader.loadClass("CoffeeTest")
+    val baseConstructor = baseClass.constructors.single { it.parameterCount == 0 }
+    val baseInstance = baseConstructor.newInstance()
+    val baseLog = baseClass.getMethod("getLog").invoke(baseInstance) as MutableList<*>
+
+    // The setUp function gets the default parameter value.
+    baseClass.getMethod("setUp").invoke(baseInstance)
+    assertThat(baseLog).containsExactly("set up Regular")
+    baseLog.clear()
+
+    // The test function gets its default parameter value.
+    baseClass.getMethod("test").invoke(baseInstance)
+    assertThat(baseLog).containsExactly("running Regular Milk")
+    baseLog.clear()
+
+    // The default specialization's subclass is not generated.
+    assertFailsWith<ClassNotFoundException> {
+      result.classLoader.loadClass("CoffeeTest_Regular")
+    }
+
+    // Other subclasses are available.
+    result.classLoader.loadClass("CoffeeTest_Double")
+
+    // The default test function is also not generated.
+    assertFailsWith<NoSuchMethodException> {
+      baseClass.getMethod("test_Milk")
+    }
+
+    // Other test functions are available.
+    baseClass.getMethod("test_Oat")
   }
 }
 

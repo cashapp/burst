@@ -46,7 +46,6 @@ class BurstIrGenerationExtension(
         if (classHasAtBurst) {
           ClassSpecializer(
             pluginContext = pluginContext,
-            burstApis = burstApis,
             originalParent = currentFile,
             original = classDeclaration,
           ).generateSpecializations()

@@ -20,6 +20,7 @@ import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.declarations.IrEnumEntry
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
 import org.jetbrains.kotlin.ir.expressions.IrExpression
+import org.jetbrains.kotlin.ir.expressions.IrGetEnumValue
 import org.jetbrains.kotlin.ir.expressions.impl.IrGetEnumValueImpl
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.getClass
@@ -29,6 +30,8 @@ import org.jetbrains.kotlin.ir.util.isEnumClass
 internal class Argument(
   private val original: IrElement,
   private val type: IrType,
+  /** True if this argument matches the default parameter value. */
+  internal val isDefault: Boolean,
   internal val value: IrEnumEntry,
 ) {
   /** Returns an expression that looks up this argument. */
@@ -58,5 +61,13 @@ internal fun IrPluginContext.allPossibleArguments(
   val referenceClass = referenceClass(classId)?.owner ?: return null
   if (!referenceClass.isEnumClass) return null
   val enumEntries = referenceClass.declarations.filterIsInstance<IrEnumEntry>()
-  return enumEntries.map { Argument(parameter, parameter.type, it) }
+  val defaultValueSymbol = (parameter.defaultValue?.expression as? IrGetEnumValue)?.symbol
+  return enumEntries.map {
+    Argument(
+      original = parameter,
+      type = parameter.type,
+      isDefault = it.symbol == defaultValueSymbol,
+      value = it,
+    )
+  }
 }
