@@ -16,6 +16,6 @@ kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test" }
 mavenPublish-gradle-plugin = { module = "com.vanniktech:gradle-maven-publish-plugin", version = "0.30.0" }
 
 [plugins]
-buildconfig = { id = "com.github.gmazzo.buildconfig", version = "3.1.0" }
+buildconfig = { id = "com.github.gmazzo.buildconfig", version = "5.5.0" }
 spotless = { id = "com.diffplug.spotless", version = "6.25.0" }
 burst-kotlin = { id = "app.cash.burst.kotlin" }
