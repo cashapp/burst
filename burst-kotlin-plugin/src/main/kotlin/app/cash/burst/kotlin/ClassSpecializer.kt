@@ -38,15 +38,16 @@ import org.jetbrains.kotlin.name.Name
  * ```
  * @Burst
  * class CoffeeTest(
- *   private val espresso: Espresso,
- *   private val dairy: Dairy,
+ *   private val espresso: Espresso = Espresso.Regular,
+ *   private val dairy: Dairy = Dairy.Milk,
  * ) {
  *   ...
  * }
  * ```
  *
- * This opens the class, makes that constructor protected, and adds a default constructor that calls
- * the first specialization:
+ * This opens the class, makes that constructor protected, and removes the default arguments.
+ *
+ * If there's a default specialization, it adds a no-args constructor that calls it:
  *
  * ```
  * @Burst
@@ -54,26 +55,26 @@ import org.jetbrains.kotlin.name.Name
  *   private val espresso: Espresso,
  *   private val dairy: Dairy,
  * ) {
- *   constructor() : this(Espresso.Decaf, Dairy.None)
+ *   constructor() : this(Espresso.Regular, Dairy.Milk)
  *   ...
  * }
  * ```
  *
- * And it generates a new test class for each specialization. The default specialization is also
- * annotated `@Ignore`.
+ * If there is no default specialization this makes the test class abstract.
+ *
+ * And it generates a new test class for each non-default specialization.
  *
  * ```
- * @Ignore class CoffeeTest_Decaf_None : CoffeeTest(Espresso.Decaf, Dairy.None)
+ * class CoffeeTest_Decaf_None : CoffeeTest(Espresso.Decaf, Dairy.None)
  * class CoffeeTest_Decaf_Milk : CoffeeTest(Espresso.Decaf, Dairy.Milk)
  * class CoffeeTest_Decaf_Oat : CoffeeTest(Espresso.Decaf, Dairy.Oat)
  * class CoffeeTest_Regular_None : CoffeeTest(Espresso.Regular, Dairy.None)
- * ...
+ * class CoffeeTest_Regular_Oat : CoffeeTest(Espresso.Regular, Dairy.Oat)
  * ```
  */
 @OptIn(UnsafeDuringIrConstructionAPI::class)
 internal class ClassSpecializer(
   private val pluginContext: IrPluginContext,
-  private val burstApis: BurstApis,
   private val originalParent: IrFile,
   private val original: IrClass,
 ) {
@@ -92,25 +93,39 @@ internal class ClassSpecializer(
     }
 
     val cartesianProduct = parameterArguments.cartesianProduct()
-    val defaultSpecialization = cartesianProduct.first()
 
-    // Add @Ignore and open the class
-    // TODO: don't double-add @Ignore
-    original.modality = Modality.OPEN
+    val indexOfDefaultSpecialization = cartesianProduct.indexOfFirst { arguments ->
+      arguments.all { it.isDefault }
+    }
+
+    // Make sure the constructor we're using is accessible. Drop the default arguments to prevent
+    // JUnit from using it.
     onlyConstructor.visibility = PROTECTED
+    for (valueParameter in onlyConstructor.valueParameters) {
+      valueParameter.defaultValue = null
+    }
 
-    // Add a no-args constructor that calls the only constructor as the default specialization.
-    createNoArgsConstructor(
-      superConstructor = onlyConstructor,
-      arguments = defaultSpecialization,
-    )
+    if (indexOfDefaultSpecialization != -1) {
+      original.modality = Modality.OPEN
+
+      // Add a no-args constructor that calls the only constructor as the default specialization.
+      createNoArgsConstructor(
+        superConstructor = onlyConstructor,
+        arguments = cartesianProduct[indexOfDefaultSpecialization],
+      )
+    } else {
+      // There's no default specialization. Make the class abstract so JUnit skips it.
+      original.modality = Modality.ABSTRACT
+    }
 
     // Add a subclass for each specialization.
-    cartesianProduct.map { arguments ->
+    cartesianProduct.mapIndexed { index, arguments ->
+      // Don't generate code for the default specialization; we only want to run it once.
+      if (index == indexOfDefaultSpecialization) return@mapIndexed
+
       createSpecialization(
         superConstructor = onlyConstructor,
         arguments = arguments,
-        isDefaultSpecialization = arguments == defaultSpecialization,
       )
     }
   }
@@ -118,7 +133,6 @@ internal class ClassSpecializer(
   private fun createSpecialization(
     superConstructor: IrConstructor,
     arguments: List<Argument>,
-    isDefaultSpecialization: Boolean,
   ) {
     val specialization = original.factory.buildClass {
       initDefaults(original)
@@ -127,10 +141,6 @@ internal class ClassSpecializer(
     }.apply {
       superTypes = listOf(original.defaultType)
       createImplicitParameterDeclarationWithWrappedDescriptor()
-    }
-
-    if (isDefaultSpecialization) {
-      specialization.annotations += burstApis.ignoreClassSymbol.asAnnotation()
     }
 
     specialization.addConstructor {

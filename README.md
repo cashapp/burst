@@ -47,19 +47,20 @@ Annotate your test class with `@Burst`, and accept an enum as a constructor para
 ```kotlin
 @Burst
 class DrinkSodaTest(
-  val soda: Soda,
+  val soda: Soda = Soda.Pepsi,
 ) {
   ...
 }
 ```
 
-Burst will specialize the test class for each value in the enum.
+Burst will specialize the test class for each value in the enum. If you specified a default value
+for the parameter, it'll be used when you run the test in the IDE.
 
 Burst can also specialize individual test functions:
 
 ```kotlin
 @Test
-fun drinkFavoriteSodas(soda: Soda) {
+fun drinkFavoriteSodas(soda: Soda = Soda.Pepsi) {
   ...
 }
 ```
@@ -68,7 +69,10 @@ Use multiple enums for the combination of their variations.
 
 ```kotlin
 @Test
-fun collectSodas(soda: Soda, collectionsFactory: CollectionFactory) {
+fun collectSodas(
+  soda: Soda = Soda.Pepsi,
+  collectionsFactory: CollectionFactory = CollectionFactory.MutableSetOf,
+) {
   ...
 }
 ```

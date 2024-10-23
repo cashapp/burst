@@ -47,9 +47,6 @@ internal class BurstApis private constructor(
 
   val testClassSymbol: IrClassSymbol
     get() = pluginContext.referenceClass(testPackage.classId("Test"))!!
-
-  val ignoreClassSymbol: IrClassSymbol
-    get() = pluginContext.referenceClass(testPackage.classId("Ignore"))!!
 }
 
 private val burstFqPackage = FqPackageName("app.cash.burst")

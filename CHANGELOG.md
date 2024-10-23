@@ -3,6 +3,10 @@
 ## [Unreleased]
 [Unreleased]: https://github.com/cashapp/burst/compare/0.5.0...HEAD
 
+**Added**
+
+ * New: Use default parameter values to configure which specialization runs in the IDE.
+
 
 ## [0.5.0] *(2024-10-17)*
 [0.5.0]: https://github.com/cashapp/burst/releases/tag/0.4.0

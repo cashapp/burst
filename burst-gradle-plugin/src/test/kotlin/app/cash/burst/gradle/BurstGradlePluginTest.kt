@@ -17,13 +17,10 @@
 package app.cash.burst.gradle
 
 import assertk.assertThat
-import assertk.assertions.contains
 import assertk.assertions.containsExactlyInAnyOrder
-import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isIn
-import assertk.assertions.isTrue
 import java.io.File
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
@@ -70,58 +67,16 @@ class BurstGradlePluginTest {
 
     val testResults = projectDir.resolve("lib/build/test-results")
 
-    // The original test class runs the default specialization.
-    with(readTestSuite(testResults.resolve("$testTaskName/TEST-CoffeeTest.xml"))) {
-      assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
-        "test[$platformName]",
-        "test_Milk[$platformName]",
-        "test_None[$platformName]",
-        "test_Oat[$platformName]",
-      )
+    // There's no default specialization.
+    assertThat(testResults.resolve("$testTaskName/TEST-CoffeeTest.xml").exists()).isFalse()
 
-      val defaultFunction = testCases.single { it.name == "test[$platformName]" }
-      assertThat(defaultFunction.skipped).isFalse()
-
-      val defaultSpecialization = testCases.single { it.name == "test_None[$platformName]" }
-      assertThat(defaultSpecialization.skipped).isTrue()
-
-      val sampleSpecialization = testCases.single { it.name == "test_Milk[$platformName]" }
-      assertThat(sampleSpecialization.skipped).isFalse()
-    }
-
-    // The default test class is completely skipped.
-    with(readTestSuite(testResults.resolve("$testTaskName/TEST-CoffeeTest_Decaf.xml"))) {
-      assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
-        "test[$platformName]",
-        "test_Milk[$platformName]",
-        "test_None[$platformName]",
-        "test_Oat[$platformName]",
-      )
-
-      val defaultFunction = testCases.single { it.name == "test[$platformName]" }
-      assertThat(defaultFunction.skipped).isTrue()
-
-      val defaultSpecialization = testCases.single { it.name == "test_None[$platformName]" }
-      assertThat(defaultSpecialization.skipped).isTrue()
-
-      val sampleSpecialization = testCases.single { it.name == "test_Milk[$platformName]" }
-      assertThat(sampleSpecialization.skipped).isTrue()
-    }
-
-    // Another test class is executed normally with nothing skipped.
+    // Each test class is executed normally with nothing skipped.
     with(readTestSuite(testResults.resolve("$testTaskName/TEST-CoffeeTest_Regular.xml"))) {
       assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
-        "test[$platformName]",
         "test_Milk[$platformName]",
         "test_None[$platformName]",
         "test_Oat[$platformName]",
       )
-
-      val defaultFunction = testCases.single { it.name == "test[$platformName]" }
-      assertThat(defaultFunction.skipped).isFalse()
-
-      val defaultSpecialization = testCases.single { it.name == "test_None[$platformName]" }
-      assertThat(defaultSpecialization.skipped).isTrue()
 
       val sampleSpecialization = testCases.single { it.name == "test_Milk[$platformName]" }
       assertThat(sampleSpecialization.skipped).isFalse()
@@ -142,7 +97,6 @@ class BurstGradlePluginTest {
     val testSuite = readTestSuite(testXmlFile)
 
     assertThat(testSuite.testCases.map { it.name }).containsExactlyInAnyOrder(
-      "test",
       "test_Decaf_Milk",
       "test_Decaf_None",
       "test_Decaf_Oat",
@@ -153,12 +107,6 @@ class BurstGradlePluginTest {
       "test_Regular_None",
       "test_Regular_Oat",
     )
-
-    val originalTest = testSuite.testCases.single { it.name == "test" }
-    assertThat(originalTest.skipped).isFalse()
-
-    val defaultSpecialization = testSuite.testCases.single { it.name == "test_Decaf_None" }
-    assertThat(defaultSpecialization.skipped).isTrue()
 
     val sampleSpecialization = testSuite.testCases.single { it.name == "test_Regular_Milk" }
     assertThat(sampleSpecialization.skipped).isFalse()
@@ -174,22 +122,8 @@ class BurstGradlePluginTest {
 
     val testResults = projectDir.resolve("lib/build/test-results")
 
-    val coffeeTest = readTestSuite(testResults.resolve("test/TEST-CoffeeTest.xml"))
-    val coffeeTestTest = coffeeTest.testCases.single()
-    assertThat(coffeeTestTest.name).isEqualTo("test")
-    assertThat(coffeeTest.systemOut).isEqualTo(
-      """
-      |set up Decaf None
-      |running Decaf None
-      |
-      """.trimMargin(),
-    )
-
-    val defaultTest = readTestSuite(testResults.resolve("test/TEST-CoffeeTest_Decaf_None.xml"))
-    val defaultTestTest = defaultTest.testCases.single()
-    assertThat(defaultTestTest.name).isEqualTo("test")
-    assertThat(defaultTestTest.skipped).isTrue()
-    assertThat(defaultTest.systemOut).isEmpty()
+    // There's no default specialization.
+    assertThat(testResults.resolve("test/TEST-CoffeeTest.xml").exists()).isFalse()
 
     val sampleTest = readTestSuite(testResults.resolve("test/TEST-CoffeeTest_Regular_Milk.xml"))
     val sampleTestTest = sampleTest.testCases.single()
@@ -213,6 +147,49 @@ class BurstGradlePluginTest {
     val result = createRunner(projectDir, "clean", testTaskName, androidTestTaskName).build()
     assertThat(result.task(testTaskName)!!.outcome).isIn(*SUCCESS_OUTCOMES)
     assertThat(result.task(androidTestTaskName)!!.outcome).isIn(*SUCCESS_OUTCOMES)
+  }
+
+  @Test
+  fun defaultArguments() {
+    val projectDir = File("src/test/projects/defaultArguments")
+
+    val result = createRunner(projectDir, "clean", ":lib:test").build()
+    assertThat(result.task(":lib:test")!!.outcome).isIn(*SUCCESS_OUTCOMES)
+
+    val testResults = projectDir.resolve("lib/build/test-results")
+
+    // The original test class runs the default specialization.
+    with(readTestSuite(testResults.resolve("test/TEST-CoffeeTest.xml"))) {
+      assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
+        "test",
+        "test_None",
+        "test_Oat",
+      )
+
+      val defaultFunction = testCases.single { it.name == "test" }
+      assertThat(defaultFunction.skipped).isFalse()
+
+      val sampleSpecialization = testCases.single { it.name == "test_Oat" }
+      assertThat(sampleSpecialization.skipped).isFalse()
+    }
+
+    // No subclass is generated for the default specialization.
+    assertThat(testResults.resolve("test/TEST-CoffeeTest_Regular.xml").exists()).isFalse()
+
+    // Another test class is executed normally with nothing skipped.
+    with(readTestSuite(testResults.resolve("test/TEST-CoffeeTest_Double.xml"))) {
+      assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
+        "test",
+        "test_None",
+        "test_Oat",
+      )
+
+      val defaultFunction = testCases.single { it.name == "test" }
+      assertThat(defaultFunction.skipped).isFalse()
+
+      val sampleSpecialization = testCases.single { it.name == "test_Oat" }
+      assertThat(sampleSpecialization.skipped).isFalse()
+    }
   }
 
   private fun createRunner(
