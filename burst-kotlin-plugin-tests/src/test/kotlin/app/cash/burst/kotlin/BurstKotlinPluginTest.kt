@@ -107,6 +107,33 @@ class BurstKotlinPluginTest {
   }
 
   @Test
+  fun unexpectedDefaultArgumentValue() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "CoffeeTest.kt",
+        """
+        import app.cash.burst.Burst
+        import kotlin.test.Test
+
+        val defaultEspresso = Espresso.Regular
+
+        @Burst
+        class CoffeeTest {
+          @Test
+          fun test(espresso: Espresso = defaultEspresso) {
+          }
+        }
+
+        enum class Espresso { Decaf, Regular, Double }
+        """,
+      ),
+    )
+    assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
+    assertThat(result.messages)
+      .contains("CoffeeTest.kt:9:12 @Burst default parameter must be an enum constant (or absent)")
+  }
+
+  @Test
   fun constructorParameters() {
     val result = compile(
       sourceFile = SourceFile.kotlin(
