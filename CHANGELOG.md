@@ -1,7 +1,10 @@
 # Change Log
 
 ## [Unreleased]
-[Unreleased]: https://github.com/cashapp/burst/compare/0.5.0...HEAD
+[Unreleased]: https://github.com/cashapp/burst/compare/0.6.0...HEAD
+
+## [0.6.0] *(2024-10-23)*
+[0.6.0]: https://github.com/cashapp/burst/releases/tag/0.6.0
 
 **Added**
 
@@ -9,7 +12,7 @@
 
 
 ## [0.5.0] *(2024-10-17)*
-[0.5.0]: https://github.com/cashapp/burst/releases/tag/0.4.0
+[0.5.0]: https://github.com/cashapp/burst/releases/tag/0.5.0
 
 **Fixed**
 
