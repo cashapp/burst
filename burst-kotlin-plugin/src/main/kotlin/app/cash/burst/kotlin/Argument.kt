@@ -61,7 +61,18 @@ internal fun IrPluginContext.allPossibleArguments(
   val referenceClass = referenceClass(classId)?.owner ?: return null
   if (!referenceClass.isEnumClass) return null
   val enumEntries = referenceClass.declarations.filterIsInstance<IrEnumEntry>()
-  val defaultValueSymbol = (parameter.defaultValue?.expression as? IrGetEnumValue)?.symbol
+
+  val defaultValueSymbol = parameter.defaultValue?.let { defaultValue ->
+    val expression = defaultValue.expression
+    if (expression !is IrGetEnumValue) {
+      throw BurstCompilationException(
+        "@Burst default parameter must be an enum constant (or absent)",
+        parameter,
+      )
+    }
+    expression.symbol
+  }
+
   return enumEntries.map {
     Argument(
       original = parameter,
