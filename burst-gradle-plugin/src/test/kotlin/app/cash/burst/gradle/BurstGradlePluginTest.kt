@@ -113,6 +113,26 @@ class BurstGradlePluginTest {
   }
 
   @Test
+  fun abstractClasses() {
+    val projectDir = File("src/test/projects/abstractClasses")
+
+    val taskName = ":lib:test"
+    val result = createRunner(projectDir, "clean", taskName).build()
+    assertThat(result.task(taskName)!!.outcome).isIn(*SUCCESS_OUTCOMES)
+
+    val testResults = projectDir.resolve("lib/build/test-results")
+    val testXmlFile = testResults.resolve("test/TEST-CoffeeTest.xml")
+
+    val testSuite = readTestSuite(testXmlFile)
+
+    assertThat(testSuite.testCases.map { it.name }).containsExactlyInAnyOrder(
+      "test_Milk",
+      "test_None",
+      "test_Oat",
+    )
+  }
+
+  @Test
   fun classParameters() {
     val projectDir = File("src/test/projects/classParameters")
 
