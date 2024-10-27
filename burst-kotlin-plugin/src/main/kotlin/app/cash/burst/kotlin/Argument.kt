@@ -99,7 +99,7 @@ internal fun IrPluginContext.allPossibleArguments(
           isDefault = true,
           value = defaultArgument ?: unexpectedParameter(parameter),
           index = 0,
-        )
+        ),
       )
 
       for ((index, element) in (burstApisCall.valueArguments[1] as IrVararg).elements.withIndex()) {
@@ -108,7 +108,7 @@ internal fun IrPluginContext.allPossibleArguments(
             isDefault = false,
             value = element as? IrExpression ?: unexpectedParameter(parameter),
             index = index + 1,
-          )
+          ),
         )
       }
     }
