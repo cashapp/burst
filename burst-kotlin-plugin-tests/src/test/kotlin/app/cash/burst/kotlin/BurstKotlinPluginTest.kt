@@ -102,8 +102,10 @@ class BurstKotlinPluginTest {
       ),
     )
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
-    assertThat(result.messages)
-      .contains("CoffeeTest.kt:7:12 Expected an enum for @Burst test parameter")
+    assertThat(result.messages).contains(
+      "CoffeeTest.kt:7:12 " +
+        "@Burst parameter must be an enum or have a burstValues() default value",
+    )
   }
 
   @Test
@@ -129,8 +131,10 @@ class BurstKotlinPluginTest {
       ),
     )
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
-    assertThat(result.messages)
-      .contains("CoffeeTest.kt:9:12 @Burst default parameter must be an enum constant (or absent)")
+    assertThat(result.messages).contains(
+      "CoffeeTest.kt:9:12 " +
+        "@Burst parameter default value must be burstValues(), an enum constant, or absent",
+    )
   }
 
   @Test

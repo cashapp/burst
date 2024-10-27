@@ -18,6 +18,7 @@ package app.cash.burst.kotlin
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.backend.js.utils.valueArguments
+import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrEnumEntry
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
 import org.jetbrains.kotlin.ir.expressions.IrCall
@@ -26,6 +27,7 @@ import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrGetEnumValue
 import org.jetbrains.kotlin.ir.expressions.IrVararg
 import org.jetbrains.kotlin.ir.expressions.impl.IrGetEnumValueImpl
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.util.classId
@@ -60,12 +62,13 @@ private class BurstValuesArgument(
   private val value: IrExpression,
   private val index: Int,
 ) : Argument {
-  override val name: String get() {
-    return when {
-      value is IrConst<*> -> value.value.toString()
-      else -> index.toString()
+  override val name: String
+    get() {
+      return when {
+        value is IrConst<*> -> value.value.toString()
+        else -> index.toString()
+      }
     }
-  }
 
   override fun expression() = value.deepCopyWithSymbols()
 }
@@ -86,64 +89,80 @@ internal fun name(
  *
  * @throws BurstCompilationException if we can't compute all possible arguments for this parameter.
  */
+@UnsafeDuringIrConstructionAPI
 internal fun IrPluginContext.allPossibleArguments(
   parameter: IrValueParameter,
   burstApis: BurstApis,
 ): List<Argument> {
   val burstApisCall = parameter.defaultValue?.expression as? IrCall
   if (burstApisCall?.symbol == burstApis.burstValues) {
-    return buildList {
-      val defaultArgument = burstApisCall.valueArguments[0]
-      add(
-        BurstValuesArgument(
-          isDefault = true,
-          value = defaultArgument ?: unexpectedParameter(parameter),
-          index = 0,
-        ),
-      )
-
-      for ((index, element) in (burstApisCall.valueArguments[1] as IrVararg).elements.withIndex()) {
-        add(
-          BurstValuesArgument(
-            isDefault = false,
-            value = element as? IrExpression ?: unexpectedParameter(parameter),
-            index = index + 1,
-          ),
-        )
-      }
-    }
+    return burstValuesArguments(parameter, burstApisCall)
   }
 
   val classId = parameter.type.getClass()?.classId ?: unexpectedParameter(parameter)
   val referenceClass = referenceClass(classId)?.owner ?: unexpectedParameter(parameter)
   if (referenceClass.isEnumClass) {
-    val enumEntries = referenceClass.declarations.filterIsInstance<IrEnumEntry>()
-    val defaultValueSymbol = parameter.defaultValue?.let { defaultValue ->
-      val expression = defaultValue.expression
-      if (expression !is IrGetEnumValue) {
-        throw BurstCompilationException(
-          "@Burst default parameter must be an enum constant (or absent)",
-          parameter,
-        )
-      }
-      expression.symbol
-    }
-    return enumEntries.map {
-      EnumValueArgument(
-        original = parameter,
-        type = parameter.type,
-        isDefault = it.symbol == defaultValueSymbol,
-        value = it,
-      )
-    }
+    return enumValueArguments(referenceClass, parameter)
   }
 
   unexpectedParameter(parameter)
 }
 
+private fun burstValuesArguments(
+  parameter: IrValueParameter,
+  burstApisCall: IrCall,
+): List<Argument> {
+  return buildList {
+    add(
+      BurstValuesArgument(
+        isDefault = true,
+        value = burstApisCall.valueArguments[0] ?: unexpectedParameter(parameter),
+        index = 0,
+      ),
+    )
+
+    for ((index, element) in (burstApisCall.valueArguments[1] as IrVararg).elements.withIndex()) {
+      add(
+        BurstValuesArgument(
+          isDefault = false,
+          value = element as? IrExpression ?: unexpectedParameter(parameter),
+          index = index + 1,
+        ),
+      )
+    }
+  }
+}
+
+@UnsafeDuringIrConstructionAPI
+private fun enumValueArguments(
+  referenceClass: IrClass,
+  parameter: IrValueParameter,
+): List<EnumValueArgument> {
+  val enumEntries = referenceClass.declarations.filterIsInstance<IrEnumEntry>()
+  val defaultValueSymbol = parameter.defaultValue?.let { defaultValue ->
+    (defaultValue.expression as? IrGetEnumValue)?.symbol ?: unexpectedDefaultValue(parameter)
+  }
+
+  return enumEntries.map {
+    EnumValueArgument(
+      original = parameter,
+      type = parameter.type,
+      isDefault = it.symbol == defaultValueSymbol,
+      value = it,
+    )
+  }
+}
+
 private fun unexpectedParameter(parameter: IrValueParameter): Nothing {
   throw BurstCompilationException(
-    "Expected an enum or burstValues() for @Burst test parameter",
+    "@Burst parameter must be an enum or have a burstValues() default value",
+    parameter,
+  )
+}
+
+private fun unexpectedDefaultValue(parameter: IrValueParameter): Nothing {
+  throw BurstCompilationException(
+    "@Burst parameter default value must be burstValues(), an enum constant, or absent",
     parameter,
   )
 }
