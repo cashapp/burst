@@ -258,6 +258,50 @@ class BurstKotlinPluginTest {
     // Other test functions are available.
     baseClass.getMethod("test_Oat")
   }
+
+  @Test
+  fun burstValues() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "CoffeeTest.kt",
+        """
+        import app.cash.burst.Burst
+        import app.cash.burst.burstValues
+        import kotlin.test.Test
+
+        @Burst
+        class CoffeeTest {
+          val log = mutableListOf<String>()
+
+          @Test
+          fun test(volume: Int = burstValues(12, 16, 20)) {
+            log += "running ${'$'}volume"
+          }
+        }
+        """,
+      ),
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val baseClass = result.classLoader.loadClass("CoffeeTest")
+    val baseInstance = baseClass.constructors.single().newInstance()
+    val baseLog = baseClass.getMethod("getLog").invoke(baseInstance) as MutableList<*>
+
+    // The test function gets its default parameter value.
+    baseClass.getMethod("test").invoke(baseInstance)
+    assertThat(baseLog).containsExactly("running 12")
+    baseLog.clear()
+
+    // The default test function is not generated.
+    assertFailsWith<NoSuchMethodException> {
+      baseClass.getMethod("test_12")
+    }
+
+    // Other test functions are available, named by the literal values.
+    baseClass.getMethod("test_16").invoke(baseInstance)
+    assertThat(baseLog).containsExactly("running 16")
+    baseLog.clear()
+  }
 }
 
 @ExperimentalCompilerApi

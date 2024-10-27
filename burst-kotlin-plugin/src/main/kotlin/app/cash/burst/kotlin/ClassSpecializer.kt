@@ -75,6 +75,7 @@ import org.jetbrains.kotlin.name.Name
 @OptIn(UnsafeDuringIrConstructionAPI::class)
 internal class ClassSpecializer(
   private val pluginContext: IrPluginContext,
+  private val burstApis: BurstApis,
   private val originalParent: IrFile,
   private val original: IrClass,
 ) {
@@ -88,8 +89,7 @@ internal class ClassSpecializer(
     if (valueParameters.isEmpty()) return // Nothing to do.
 
     val parameterArguments = valueParameters.map { parameter ->
-      pluginContext.allPossibleArguments(parameter)
-        ?: throw BurstCompilationException("Expected an enum for @Burst test parameter", parameter)
+      pluginContext.allPossibleArguments(parameter, burstApis)
     }
 
     val cartesianProduct = parameterArguments.cartesianProduct()
@@ -153,7 +153,7 @@ internal class ClassSpecializer(
           valueArgumentsCount = arguments.size,
         ) {
           for ((index, argument) in arguments.withIndex()) {
-            putValueArgument(index, argument.get())
+            putValueArgument(index, argument.expression())
           }
         }
         statements += irInstanceInitializerCall(
@@ -182,7 +182,7 @@ internal class ClassSpecializer(
           valueArgumentsCount = arguments.size,
         ) {
           for ((index, argument) in arguments.withIndex()) {
-            putValueArgument(index, argument.get())
+            putValueArgument(index, argument.expression())
           }
         }
       }
