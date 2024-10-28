@@ -75,7 +75,7 @@ internal fun specializations(
 internal class ArgumentValidator(
   private val parameters: List<IrValueParameter>,
   private val element: IrValueParameter,
-): IrElementTransformer<Unit> {
+) : IrElementTransformer<Unit> {
   /**
    * Confirm `burstValues()` don't reference other parameters. If we don't validate this here we'll
    * get an ugly compiler crash because the referenced parameter won't be visible.
