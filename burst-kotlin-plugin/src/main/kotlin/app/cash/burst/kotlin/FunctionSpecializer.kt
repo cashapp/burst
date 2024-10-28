@@ -71,8 +71,7 @@ internal class FunctionSpecializer(
       ?: throw BurstCompilationException("Unexpected dispatch receiver", original)
 
     val parameterArguments = valueParameters.map { parameter ->
-      pluginContext.allPossibleArguments(parameter)
-        ?: throw BurstCompilationException("Expected an enum for @Burst test parameter", parameter)
+      pluginContext.allPossibleArguments(parameter, burstApis)
     }
 
     val cartesianProduct = parameterArguments.cartesianProduct()
@@ -138,7 +137,7 @@ internal class FunctionSpecializer(
       ).apply {
         this.dispatchReceiver = irGet(receiverLocal)
         for ((index, argument) in arguments.withIndex()) {
-          putValueArgument(index, argument.get())
+          putValueArgument(index, argument.expression())
         }
       }
     }

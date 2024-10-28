@@ -20,3 +20,21 @@ package app.cash.burst
   AnnotationTarget.FUNCTION,
 )
 annotation class Burst
+
+/**
+ * This is a ✨ magic ✨ function that Burst will expand during compilation into specializations.
+ * Use it in as a parameter's default value when declaring a test function:
+ *
+ * ```kotlin
+ * @Test
+ * fun drinkSoda(volume: Int = burstValues(12, 16, 24)) {
+ *   ...
+ * }
+ * ```
+ *
+ * This function has many limitations:
+ *
+ *  * It must only be used to declare the default value of a parameter.
+ *  * Its arguments must be literal values or uses of named declarations.
+ */
+fun <T> burstValues(default: T, vararg rest: T): T = throw UnsupportedOperationException()
