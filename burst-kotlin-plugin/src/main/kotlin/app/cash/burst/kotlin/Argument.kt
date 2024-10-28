@@ -28,6 +28,7 @@ import org.jetbrains.kotlin.ir.expressions.IrConst
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrGetEnumValue
 import org.jetbrains.kotlin.ir.expressions.IrVararg
+import org.jetbrains.kotlin.ir.expressions.impl.IrConstImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrGetEnumValueImpl
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrType
@@ -35,6 +36,7 @@ import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.util.classId
 import org.jetbrains.kotlin.ir.util.deepCopyWithSymbols
+import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.isEnumClass
 import org.jetbrains.kotlin.ir.visitors.IrElementVisitor
 import org.jetbrains.kotlin.name.NameUtils
@@ -63,6 +65,22 @@ private class EnumValueArgument(
 
   override fun expression() =
     IrGetEnumValueImpl(original.startOffset, original.endOffset, type, value.symbol)
+
+  override fun <R, D> accept(visitor: IrElementVisitor<R, D>, data: D): R {
+    return original.accept(visitor, data)
+  }
+}
+
+private class BooleanArgument(
+  private val original: IrElement,
+  private val booleanType: IrType,
+  override val isDefault: Boolean,
+  private val value: Boolean,
+) : Argument {
+  override val name = value.toString()
+
+  override fun expression() =
+    IrConstImpl.boolean(original.startOffset, original.endOffset, booleanType, value)
 
   override fun <R, D> accept(visitor: IrElementVisitor<R, D>, data: D): R {
     return original.accept(visitor, data)
@@ -104,8 +122,9 @@ internal fun IrPluginContext.allPossibleArguments(
 
   val classId = parameter.type.getClass()?.classId ?: unexpectedParameter(parameter)
   val referenceClass = referenceClass(classId)?.owner ?: unexpectedParameter(parameter)
-  if (referenceClass.isEnumClass) {
-    return enumValueArguments(referenceClass, parameter)
+  when {
+    referenceClass.isEnumClass -> return enumValueArguments(referenceClass, parameter)
+    referenceClass.defaultType == irBuiltIns.booleanType -> return booleanArguments(parameter)
   }
 
   unexpectedParameter(parameter)
@@ -190,16 +209,33 @@ private fun enumValueArguments(
   }
 }
 
+private fun IrPluginContext.booleanArguments(
+  parameter: IrValueParameter,
+): List<BooleanArgument> {
+  val defaultValue = parameter.defaultValue?.let { defaultValue ->
+    (defaultValue.expression as? IrConst<*>)?.value ?: unexpectedDefaultValue(parameter)
+  }
+
+  return listOf(false, true).map {
+    BooleanArgument(
+      original = parameter,
+      booleanType = irBuiltIns.booleanType,
+      isDefault = defaultValue == it,
+      value = it,
+    )
+  }
+}
+
 private fun unexpectedParameter(parameter: IrValueParameter): Nothing {
   throw BurstCompilationException(
-    "@Burst parameter must be an enum or have a burstValues() default value",
+    "@Burst parameter must be a boolean, enum, or have a burstValues() default value",
     parameter,
   )
 }
 
 private fun unexpectedDefaultValue(parameter: IrValueParameter): Nothing {
   throw BurstCompilationException(
-    "@Burst parameter default value must be burstValues(), an enum constant, or absent",
+    "@Burst parameter default value must be burstValues(), a constant, or absent",
     parameter,
   )
 }
