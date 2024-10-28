@@ -464,6 +464,50 @@ class BurstKotlinPluginTest {
     )
   }
 
+  @Test
+  fun burstValuesWithNameCollisions() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "CoffeeTest.kt",
+        """
+        import app.cash.burst.Burst
+        import app.cash.burst.burstValues
+        import kotlin.test.Test
+
+        @Burst
+        class CoffeeTest {
+          @Test
+          fun test(
+            content: Any? = burstValues(
+              3, // No name is generated for the first value.
+              "1",
+              1,
+              1L,
+              "CASE_INSENSITIVE_ORDER",
+              String.CASE_INSENSITIVE_ORDER,
+              true,
+              "true"
+            )
+          ) {
+          }
+        }
+        """,
+      ),
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val baseClass = result.classLoader.loadClass("CoffeeTest")
+    assertThat(baseClass.testSuffixes).containsExactlyInAnyOrder(
+      "1_1",
+      "2_1",
+      "3_1",
+      "4_CASE_INSENSITIVE_ORDER",
+      "5_CASE_INSENSITIVE_ORDER",
+      "6_true",
+      "7_true",
+    )
+  }
+
   private val Class<*>.testSuffixes: List<String>
     get() = methods.mapNotNull {
       when {
