@@ -350,8 +350,10 @@ class BurstKotlinPluginTest {
       "hello",
       "uppercase",
       "CoffeeTest",
-      "3_4028235E38", // Would have preferred 'MAX_VALUE', but this is constant is inlined!
-      "3_141592653589793", // Would have preferred 'PI', but this is constant is inlined!
+      // Would have preferred 'MAX_VALUE', but this is constant is inlined!
+      "3_4028235E38",
+      // Would have preferred 'PI', but this is constant is inlined!
+      "3_141592653589793",
       "CASE_INSENSITIVE_ORDER",
       "abs",
       "null",
