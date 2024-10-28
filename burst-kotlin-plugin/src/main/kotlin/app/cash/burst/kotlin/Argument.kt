@@ -70,12 +70,6 @@ private class BurstValuesArgument(
   override fun expression() = value.deepCopyWithSymbols(declarationParent)
 }
 
-/** Returns a name like `orderCoffee_Decaf_Oat` with each argument value inline. */
-internal fun name(
-  prefix: String,
-  arguments: List<Argument>,
-): String = arguments.joinToString(prefix = prefix, separator = "_", transform = Argument::name)
-
 /**
  * Returns all arguments for [parameter].
  *

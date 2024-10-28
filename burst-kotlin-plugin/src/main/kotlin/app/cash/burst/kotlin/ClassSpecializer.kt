@@ -88,15 +88,8 @@ internal class ClassSpecializer(
     val valueParameters = onlyConstructor.valueParameters
     if (valueParameters.isEmpty()) return // Nothing to do.
 
-    val parameterArguments = valueParameters.map { parameter ->
-      pluginContext.allPossibleArguments(parameter, burstApis)
-    }
-
-    val cartesianProduct = parameterArguments.cartesianProduct()
-
-    val indexOfDefaultSpecialization = cartesianProduct.indexOfFirst { arguments ->
-      arguments.all { it.isDefault }
-    }
+    val specializations = specializations(pluginContext, burstApis, valueParameters)
+    val indexOfDefaultSpecialization = specializations.indexOfFirst { it.isDefault }
 
     // Make sure the constructor we're using is accessible. Drop the default arguments to prevent
     // JUnit from using it.
@@ -111,7 +104,7 @@ internal class ClassSpecializer(
       // Add a no-args constructor that calls the only constructor as the default specialization.
       createNoArgsConstructor(
         superConstructor = onlyConstructor,
-        arguments = cartesianProduct[indexOfDefaultSpecialization],
+        specialization = specializations[indexOfDefaultSpecialization],
       )
     } else {
       // There's no default specialization. Make the class abstract so JUnit skips it.
@@ -119,57 +112,57 @@ internal class ClassSpecializer(
     }
 
     // Add a subclass for each specialization.
-    cartesianProduct.mapIndexed { index, arguments ->
+    for ((index, specialization) in specializations.withIndex()) {
       // Don't generate code for the default specialization; we only want to run it once.
-      if (index == indexOfDefaultSpecialization) return@mapIndexed
+      if (index == indexOfDefaultSpecialization) continue
 
-      createSpecialization(
+      createSubclass(
         superConstructor = onlyConstructor,
-        arguments = arguments,
+        specialization = specialization,
       )
     }
   }
 
-  private fun createSpecialization(
+  private fun createSubclass(
     superConstructor: IrConstructor,
-    arguments: List<Argument>,
+    specialization: Specialization,
   ) {
-    val specialization = original.factory.buildClass {
+    val created = original.factory.buildClass {
       initDefaults(original)
       visibility = PUBLIC
-      name = Name.identifier(name("${original.name.identifier}_", arguments))
+      name = Name.identifier("${original.name.identifier}_${specialization.name}")
     }.apply {
       superTypes = listOf(original.defaultType)
       createImplicitParameterDeclarationWithWrappedDescriptor()
     }
 
-    specialization.addConstructor {
+    created.addConstructor {
       initDefaults(original)
     }.apply {
       irConstructorBody(pluginContext) { statements ->
         statements += irDelegatingConstructorCall(
           context = pluginContext,
           symbol = superConstructor.symbol,
-          valueArgumentsCount = arguments.size,
+          valueArgumentsCount = specialization.arguments.size,
         ) {
-          for ((index, argument) in arguments.withIndex()) {
+          for ((index, argument) in specialization.arguments.withIndex()) {
             putValueArgument(index, argument.expression())
           }
         }
         statements += irInstanceInitializerCall(
           context = pluginContext,
-          classSymbol = specialization.symbol,
+          classSymbol = created.symbol,
         )
       }
     }
 
-    originalParent.addDeclaration(specialization)
-    specialization.addFakeOverrides(irTypeSystemContext)
+    originalParent.addDeclaration(created)
+    created.addFakeOverrides(irTypeSystemContext)
   }
 
   private fun createNoArgsConstructor(
     superConstructor: IrConstructor,
-    arguments: List<Argument>,
+    specialization: Specialization,
   ) {
     original.addConstructor {
       initDefaults(original)
@@ -179,9 +172,9 @@ internal class ClassSpecializer(
         statements += irDelegatingConstructorCall(
           context = pluginContext,
           symbol = superConstructor.symbol,
-          valueArgumentsCount = arguments.size,
+          valueArgumentsCount = specialization.arguments.size,
         ) {
-          for ((index, argument) in arguments.withIndex()) {
+          for ((index, argument) in specialization.arguments.withIndex()) {
             putValueArgument(index, argument.expression())
           }
         }

@@ -70,20 +70,13 @@ internal class FunctionSpecializer(
     val originalDispatchReceiver = original.dispatchReceiverParameter
       ?: throw BurstCompilationException("Unexpected dispatch receiver", original)
 
-    val parameterArguments = valueParameters.map { parameter ->
-      pluginContext.allPossibleArguments(parameter, burstApis)
-    }
+    val specializations = specializations(pluginContext, burstApis, valueParameters)
+    val indexOfDefaultSpecialization = specializations.indexOfFirst { it.isDefault }
 
-    val cartesianProduct = parameterArguments.cartesianProduct()
-
-    val indexOfDefaultSpecialization = cartesianProduct.indexOfFirst { arguments ->
-      arguments.all { it.isDefault }
-    }
-
-    val specializations = cartesianProduct.mapIndexed { index, arguments ->
-      createSpecialization(
+    val functions = specializations.mapIndexed { index, specialization ->
+      createFunction(
         originalDispatchReceiver = originalDispatchReceiver,
-        arguments = arguments,
+        specialization = specialization,
         isDefaultSpecialization = index == indexOfDefaultSpecialization,
       )
     }
@@ -94,21 +87,21 @@ internal class FunctionSpecializer(
     }
 
     // Add new declarations.
-    for (specialization in specializations) {
-      originalParent.addDeclaration(specialization)
+    for (function in functions) {
+      originalParent.addDeclaration(function)
     }
   }
 
-  private fun createSpecialization(
+  private fun createFunction(
     originalDispatchReceiver: IrValueParameter,
-    arguments: List<Argument>,
+    specialization: Specialization,
     isDefaultSpecialization: Boolean,
   ): IrSimpleFunction {
     val result = original.factory.buildFun {
       initDefaults(original)
       name = when {
         isDefaultSpecialization -> original.name
-        else -> Name.identifier(name("${original.name.identifier}_", arguments))
+        else -> Name.identifier("${original.name.identifier}_${specialization.name}")
       }
       returnType = original.returnType
     }.apply {
@@ -136,7 +129,7 @@ internal class FunctionSpecializer(
         callee = original.symbol,
       ).apply {
         this.dispatchReceiver = irGet(receiverLocal)
-        for ((index, argument) in arguments.withIndex()) {
+        for ((index, argument) in specialization.arguments.withIndex()) {
           putValueArgument(index, argument.expression())
         }
       }
