@@ -18,6 +18,7 @@ package app.cash.burst.kotlin
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.containsExactly
+import assertk.assertions.containsExactlyInAnyOrder
 import assertk.assertions.isFalse
 import assertk.assertions.isTrue
 import com.tschuchort.compiletesting.JvmCompilationResult
@@ -306,6 +307,64 @@ class BurstKotlinPluginTest {
     assertThat(baseLog).containsExactly("running 16")
     baseLog.clear()
   }
+
+  @Test
+  fun burstValuesHasReasonableSymbolName() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "CoffeeTest.kt",
+        """
+        import app.cash.burst.Burst
+        import app.cash.burst.burstValues
+        import kotlin.math.PI
+        import kotlin.math.abs
+        import kotlin.test.Test
+
+        @Burst
+        class CoffeeTest {
+          @Test
+          fun test(
+            content: Any? = burstValues(
+              3, // No name is generated for the first value.
+              "5".toInt(),
+              "hello",
+              "hello".uppercase(),
+              CoffeeTest::class,
+              Float.MAX_VALUE,
+              PI,
+              String.CASE_INSENSITIVE_ORDER,
+              abs(1),
+              null,
+            )
+          ) {
+          }
+        }
+        """,
+      ),
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val baseClass = result.classLoader.loadClass("CoffeeTest")
+    assertThat(baseClass.testSuffixes).containsExactlyInAnyOrder(
+      "toInt",
+      "hello",
+      "uppercase",
+      "CoffeeTest",
+      "3_4028235E38", // Would have preferred 'MAX_VALUE', but this is constant is inlined!
+      "3_141592653589793", // Would have preferred 'PI', but this is constant is inlined!
+      "CASE_INSENSITIVE_ORDER",
+      "abs",
+      "null",
+    )
+  }
+
+  private val Class<*>.testSuffixes: List<String>
+    get() = methods.mapNotNull {
+      when {
+        it.name.startsWith("test_") -> it.name.substring(5)
+        else -> null
+      }
+    }
 }
 
 @ExperimentalCompilerApi

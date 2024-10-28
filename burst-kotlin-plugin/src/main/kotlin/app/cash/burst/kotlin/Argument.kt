@@ -22,6 +22,7 @@ import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrEnumEntry
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
 import org.jetbrains.kotlin.ir.expressions.IrCall
+import org.jetbrains.kotlin.ir.expressions.IrClassReference
 import org.jetbrains.kotlin.ir.expressions.IrConst
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrGetEnumValue
@@ -29,10 +30,12 @@ import org.jetbrains.kotlin.ir.expressions.IrVararg
 import org.jetbrains.kotlin.ir.expressions.impl.IrGetEnumValueImpl
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrType
+import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.util.classId
 import org.jetbrains.kotlin.ir.util.deepCopyWithSymbols
 import org.jetbrains.kotlin.ir.util.isEnumClass
+import org.jetbrains.kotlin.name.NameUtils
 
 internal sealed interface Argument {
   /** True if this argument matches the default parameter value. */
@@ -59,17 +62,9 @@ private class EnumValueArgument(
 
 private class BurstValuesArgument(
   override val isDefault: Boolean,
+  override val name: String,
   private val value: IrExpression,
-  private val index: Int,
 ) : Argument {
-  override val name: String
-    get() {
-      return when {
-        value is IrConst<*> -> value.value.toString()
-        else -> index.toString()
-      }
-    }
-
   override fun expression() = value.deepCopyWithSymbols()
 }
 
@@ -113,24 +108,55 @@ private fun burstValuesArguments(
   burstApisCall: IrCall,
 ): List<Argument> {
   return buildList {
+    val defaultExpression = burstApisCall.valueArguments[0] ?: unexpectedParameter(parameter)
     add(
       BurstValuesArgument(
         isDefault = true,
-        value = burstApisCall.valueArguments[0] ?: unexpectedParameter(parameter),
-        index = 0,
+        name = defaultExpression.suggestedName() ?: "0",
+        value = defaultExpression,
       ),
     )
 
     for ((index, element) in (burstApisCall.valueArguments[1] as IrVararg).elements.withIndex()) {
+      val varargExpression = element as? IrExpression ?: unexpectedParameter(parameter)
       add(
         BurstValuesArgument(
           isDefault = false,
-          value = element as? IrExpression ?: unexpectedParameter(parameter),
-          index = index + 1,
+          name = varargExpression.suggestedName() ?: (index + 1).toString(),
+          value = varargExpression,
         ),
       )
     }
   }
+}
+
+/**
+ * Returns a short name for this expression appropriate for use in a generated symbol declaration.
+ *
+ * If this is a constant like 'hello' or '3.14', this returns the value as a string.
+ *
+ * If this is a call like `String.CASE_INSENSITIVE_ORDER` or `abs(-5)`, this returns the name of the
+ * called symbol (`CASE_INSENSITIVE_ORDER` or `abs`), discarding the receiver, value parameters, and
+ * type parameters.
+ *
+ * If this is a class reference like `String::class`, this returns the type's simple name.
+ */
+@UnsafeDuringIrConstructionAPI
+private fun IrExpression.suggestedName(): String? {
+  val raw = when (this) {
+    is IrConst<*> -> value.toString()
+    is IrCall -> {
+      val target = (symbol.owner.correspondingPropertySymbol?.owner ?: symbol.owner)
+      target.name.asString()
+    }
+
+    is IrClassReference -> classType.classFqName?.shortName()?.asString() ?: return null
+    else -> return null
+  }
+
+  // Calling sanitizeAsJavaIdentifier is necessary but not sufficient. We assume further phases of
+  // the compiler will make the returned name safe for the ultimate compilation target.
+  return NameUtils.sanitizeAsJavaIdentifier(raw)
 }
 
 @UnsafeDuringIrConstructionAPI
