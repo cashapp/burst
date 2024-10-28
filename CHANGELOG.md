@@ -3,6 +3,11 @@
 ## [Unreleased]
 [Unreleased]: https://github.com/cashapp/burst/compare/0.6.0...HEAD
 
+**Fixed**
+
+ * Do not attempt to parameterize constructors of `abstract` test classes.
+
+
 ## [0.6.0] *(2024-10-23)*
 [0.6.0]: https://github.com/cashapp/burst/releases/tag/0.6.0
 
