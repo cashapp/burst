@@ -360,6 +360,110 @@ class BurstKotlinPluginTest {
     )
   }
 
+  /** Confirm that inline function declarations are assigned parents. */
+  @Test
+  fun burstValuesWithInlineFunctions() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "CoffeeTest.kt",
+        """
+        import app.cash.burst.Burst
+        import app.cash.burst.burstValues
+        import kotlin.test.Test
+
+        @Burst
+        class CoffeeTest {
+          val log = mutableListOf<String>()
+
+          @Test
+          fun test(
+            greeting: () -> String = burstValues(
+              { "Hello" },
+              { "Yo" },
+            ),
+            subject: () -> String = burstValues(
+              { "Burst" },
+              { "World" },
+            ),
+          ) {
+            log += "${'$'}{greeting()} ${'$'}{subject()}"
+          }
+        }
+        """,
+      ),
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val baseClass = result.classLoader.loadClass("CoffeeTest")
+    val baseInstance = baseClass.constructors.single().newInstance()
+    val baseLog = baseClass.getMethod("getLog").invoke(baseInstance) as MutableList<*>
+
+    baseClass.getMethod("test").invoke(baseInstance)
+    baseClass.getMethod("test_0_1").invoke(baseInstance)
+    baseClass.getMethod("test_1_0").invoke(baseInstance)
+    baseClass.getMethod("test_1_1").invoke(baseInstance)
+    assertThat(baseLog).containsExactly(
+      "Hello Burst",
+      "Hello World",
+      "Yo Burst",
+      "Yo World",
+    )
+  }
+
+  /** Confirm that inline class declarations are assigned parents. */
+  @Test
+  fun burstValuesWithInlineClassDeclarations() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "CoffeeTest.kt",
+        """
+        import app.cash.burst.Burst
+        import app.cash.burst.burstValues
+        import kotlin.test.Test
+
+        @Burst
+        class CoffeeTest {
+          val log = mutableListOf<String>()
+
+          @Test
+          fun test(
+            greeting: StringFactory = burstValues(
+              StringFactory { "Hello" },
+              StringFactory { "Yo" },
+            ),
+            subject: StringFactory = burstValues(
+              StringFactory { "Burst" },
+              StringFactory { "World" },
+            ),
+          ) {
+            log += "${'$'}{greeting.create()} ${'$'}{subject.create()}"
+          }
+        }
+
+        fun interface StringFactory {
+          fun create(): String
+        }
+        """,
+      ),
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val baseClass = result.classLoader.loadClass("CoffeeTest")
+    val baseInstance = baseClass.constructors.single().newInstance()
+    val baseLog = baseClass.getMethod("getLog").invoke(baseInstance) as MutableList<*>
+
+    baseClass.getMethod("test").invoke(baseInstance)
+    baseClass.getMethod("test_0_1").invoke(baseInstance)
+    baseClass.getMethod("test_1_0").invoke(baseInstance)
+    baseClass.getMethod("test_1_1").invoke(baseInstance)
+    assertThat(baseLog).containsExactly(
+      "Hello Burst",
+      "Hello World",
+      "Yo Burst",
+      "Yo World",
+    )
+  }
+
   private val Class<*>.testSuffixes: List<String>
     get() = methods.mapNotNull {
       when {
