@@ -1,7 +1,7 @@
 Burst
 =====
 
-Burst is a unit testing library that uses enums to parameterize unit tests.
+Burst is a unit testing library for parameterizing unit tests.
 
 It is similar to [TestParameterInjector] in usage, but Burst is implemented as a Kotlin compiler
 plug-in. Burst supports all Kotlin platforms and works great in multiplatform projects.
@@ -10,68 +10,75 @@ plug-in. Burst supports all Kotlin platforms and works great in multiplatform pr
 Usage
 -----
 
-Define an enum for the property you wish to vary.
+Annotate your test class with `@Burst`.
 
-```kotlin
-enum class Soda {
-  Pepsi, Coke
-}
-```
-
-The enum can be simple as above, or contain data and methods specific to what you are testing.
-
-```kotlin
-enum class Collections {
-  MutableSetOf {
-    override fun <T> create(): MutableCollection<T> {
-      return mutableSetOf()
-    }
-  },
-  MutableListOf {
-    override fun <T> create(): MutableCollection<T> {
-      return mutableListOf()
-    }
-  },
-  NewArrayDeque {
-    override fun <T> create(): MutableCollection<T> {
-      return ArrayDeque()
-    }
-  };
-
-  abstract fun <T> create(): MutableCollection<T>?
-}
-```
-
-Annotate your test class with `@Burst`, and accept an enum as a constructor parameter:
+Declare a parameter in your test constructor that uses `burstValues()` for its tested values:
 
 ```kotlin
 @Burst
 class DrinkSodaTest(
-  val soda: Soda = Soda.Pepsi,
+  val soda: String = burstValues("Pepsi", "Coke"),
 ) {
   ...
 }
 ```
 
-Burst will specialize the test class for each value in the enum. If you specified a default value
-for the parameter, it'll be used when you run the test in the IDE.
+Burst will specialize the test class for each argument to `burstValues()`. The first value is used
+when you run the test in the IDE.
 
-Burst can also specialize individual test functions:
+### Parameterize Functions
+
+Burst can specialize individual test functions:
 
 ```kotlin
 @Test
-fun drinkFavoriteSodas(soda: Soda = Soda.Pepsi) {
+fun drinkSoda(
+  soda: String = burstValues("Pepsi", "Coke"),
+) {
   ...
 }
 ```
 
-Use multiple enums for the combination of their variations.
+### Enum Parameters
+
+If your parameter is an enum type, you don't need to call `burstValues()`. Burst will test each
+value of that enum.
+
+```kotlin
+enum class Distribution {
+  Fountain, Can, Bottle
+}
+```
+
+```kotlin
+@Burst
+class DrinkSodaTest(
+  val distribution: Distribution,
+) {
+  ...
+}
+```
+
+If you specify a default value for the enum, Burst will use that when running in the IDE.
+
+```kotlin
+@Burst
+class DrinkSodaTest(
+  val distribution: Distribution = Distribution.Can,
+) {
+  ...
+}
+```
+
+### Multiple Parameters
+
+Use multiple parameters to test all variations.
 
 ```kotlin
 @Test
-fun collectSodas(
-  soda: Soda = Soda.Pepsi,
-  collectionsFactory: CollectionFactory = CollectionFactory.MutableSetOf,
+fun drinkSoda(
+  soda: String = burstValues("Pepsi", "Coke"),
+  distribution: Distribution,
 ) {
   ...
 }
@@ -79,12 +86,12 @@ fun collectSodas(
 
 The test will be specialized for each combination of arguments.
 
- * `collectSodas(Soda.Pepsi, CollectionFactory.MutableSetOf)`
- * `collectSodas(Soda.Pepsi, CollectionFactory.MutableListOf)`
- * `collectSodas(Soda.Pepsi, CollectionFactory.NewArrayDeque)`
- * `collectSodas(Soda.Coke, CollectionFactory.MutableSetOf)`
- * `collectSodas(Soda.Coke, CollectionFactory.MutableListOf)`
- * `collectSodas(Soda.Coke, CollectionFactory.NewArrayDeque)`
+ * `drinkSoda("Pepsi", Distribution.Fountain)`
+ * `drinkSoda("Pepsi", Distribution.Can)`
+ * `drinkSoda("Pepsi", Distribution.Bottle)`
+ * `drinkSoda("Coke", Distribution.Fountain)`
+ * `drinkSoda("Coke", Distribution.Can)`
+ * `drinkSoda("Coke", Distribution.Bottle)`
 
 Gradle Setup
 ------------
