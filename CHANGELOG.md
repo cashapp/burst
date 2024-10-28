@@ -3,6 +3,13 @@
 ## [Unreleased]
 [Unreleased]: https://github.com/cashapp/burst/compare/0.6.0...HEAD
 
+## [0.7.0] *(2024-10-28)*
+[0.7.0]: https://github.com/cashapp/burst/releases/tag/0.7.0
+
+**Added**
+
+ * New: Use `burstValues()` for test parameters of any type.
+
 **Fixed**
 
  * Do not attempt to parameterize constructors of `abstract` test classes.
