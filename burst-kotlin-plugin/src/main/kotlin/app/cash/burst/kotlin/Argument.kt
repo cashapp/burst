@@ -36,6 +36,7 @@ import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.util.classId
 import org.jetbrains.kotlin.ir.util.deepCopyWithSymbols
 import org.jetbrains.kotlin.ir.util.isEnumClass
+import org.jetbrains.kotlin.ir.visitors.IrElementVisitor
 import org.jetbrains.kotlin.name.NameUtils
 
 internal sealed interface Argument {
@@ -45,8 +46,11 @@ internal sealed interface Argument {
   /** A string that's safe to use in a declaration name. */
   val name: String
 
-  /** Returns an expression that looks up this argument. */
+  /** Returns a new expression that looks up this argument. */
   fun expression(): IrExpression
+
+  /** Visits this argument for validation. */
+  fun <R, D> accept(visitor: IrElementVisitor<R, D>, data: D): R
 }
 
 private class EnumValueArgument(
@@ -59,15 +63,23 @@ private class EnumValueArgument(
 
   override fun expression() =
     IrGetEnumValueImpl(original.startOffset, original.endOffset, type, value.symbol)
+
+  override fun <R, D> accept(visitor: IrElementVisitor<R, D>, data: D): R {
+    return original.accept(visitor, data)
+  }
 }
 
 private class BurstValuesArgument(
   private val declarationParent: IrDeclarationParent,
   override val isDefault: Boolean,
   override val name: String,
-  private val value: IrExpression,
+  val value: IrExpression,
 ) : Argument {
   override fun expression() = value.deepCopyWithSymbols(declarationParent)
+
+  override fun <R, D> accept(visitor: IrElementVisitor<R, D>, data: D): R {
+    return value.accept(visitor, data)
+  }
 }
 
 /**
