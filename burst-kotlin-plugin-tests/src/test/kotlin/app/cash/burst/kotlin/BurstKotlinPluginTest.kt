@@ -19,6 +19,7 @@ import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.containsExactly
 import assertk.assertions.containsExactlyInAnyOrder
+import assertk.assertions.isEmpty
 import assertk.assertions.isFalse
 import assertk.assertions.isTrue
 import com.tschuchort.compiletesting.JvmCompilationResult
@@ -306,6 +307,31 @@ class BurstKotlinPluginTest {
     baseClass.getMethod("test_16").invoke(baseInstance)
     assertThat(baseLog).containsExactly("running 16")
     baseLog.clear()
+  }
+
+  @Test
+  fun burstValuesJustOne() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "CoffeeTest.kt",
+        """
+        import app.cash.burst.Burst
+        import app.cash.burst.burstValues
+        import kotlin.test.Test
+
+        @Burst
+        class CoffeeTest {
+          @Test
+          fun test(volume: Int = burstValues(12)) {
+          }
+        }
+        """,
+      ),
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val baseClass = result.classLoader.loadClass("CoffeeTest")
+    assertThat(baseClass.testSuffixes).isEmpty()
   }
 
   @Test
