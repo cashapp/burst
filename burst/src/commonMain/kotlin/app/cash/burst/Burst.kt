@@ -37,4 +37,4 @@ annotation class Burst
  *  * It must only be used to declare the default value of a parameter.
  *  * Its arguments must be literal values or uses of named declarations.
  */
-fun <T> burstValues(default: T, vararg rest: T): T = default
+fun <T> burstValues(default: T, vararg rest: T): T = throw UnsupportedOperationException()
