@@ -19,6 +19,7 @@ import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.backend.js.utils.valueArguments
 import org.jetbrains.kotlin.ir.declarations.IrClass
+import org.jetbrains.kotlin.ir.declarations.IrDeclarationParent
 import org.jetbrains.kotlin.ir.declarations.IrEnumEntry
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
 import org.jetbrains.kotlin.ir.expressions.IrCall
@@ -61,11 +62,12 @@ private class EnumValueArgument(
 }
 
 private class BurstValuesArgument(
+  private val declarationParent: IrDeclarationParent,
   override val isDefault: Boolean,
   override val name: String,
   private val value: IrExpression,
 ) : Argument {
-  override fun expression() = value.deepCopyWithSymbols()
+  override fun expression() = value.deepCopyWithSymbols(declarationParent)
 }
 
 /** Returns a name like `orderCoffee_Decaf_Oat` with each argument value inline. */
@@ -103,6 +105,7 @@ internal fun IrPluginContext.allPossibleArguments(
   unexpectedParameter(parameter)
 }
 
+@UnsafeDuringIrConstructionAPI
 private fun burstValuesArguments(
   parameter: IrValueParameter,
   burstApisCall: IrCall,
@@ -111,6 +114,7 @@ private fun burstValuesArguments(
     val defaultExpression = burstApisCall.valueArguments[0] ?: unexpectedParameter(parameter)
     add(
       BurstValuesArgument(
+        declarationParent = parameter.parent,
         isDefault = true,
         name = defaultExpression.suggestedName() ?: "0",
         value = defaultExpression,
@@ -121,6 +125,7 @@ private fun burstValuesArguments(
       val varargExpression = element as? IrExpression ?: unexpectedParameter(parameter)
       add(
         BurstValuesArgument(
+          declarationParent = parameter.parent,
           isDefault = false,
           name = varargExpression.suggestedName() ?: (index + 1).toString(),
           value = varargExpression,
