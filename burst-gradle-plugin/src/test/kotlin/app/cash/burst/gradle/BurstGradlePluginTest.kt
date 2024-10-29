@@ -212,6 +212,55 @@ class BurstGradlePluginTest {
     }
   }
 
+  @Test
+  fun burstValues() {
+    val projectDir = File("src/test/projects/burstValues")
+
+    val taskName = ":lib:test"
+    val result = createRunner(projectDir, "clean", taskName).build()
+    assertThat(result.task(taskName)!!.outcome).isIn(*SUCCESS_OUTCOMES)
+
+    val testResults = projectDir.resolve("lib/build/test-results")
+
+    with(readTestSuite(testResults.resolve("test/TEST-CoffeeTest.xml"))) {
+      assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
+        "test",
+        "test_12",
+        "test_16",
+      )
+      assertThat(systemOut).isEqualTo(
+        """
+        |set up Decaf
+        |running Decaf 12
+        |set up Decaf
+        |running Decaf 16
+        |set up Decaf
+        |running Decaf 8
+        |
+        """.trimMargin(),
+      )
+    }
+
+    with(readTestSuite(testResults.resolve("test/TEST-CoffeeTest_Regular.xml"))) {
+      assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
+        "test",
+        "test_12",
+        "test_16",
+      )
+      assertThat(systemOut).isEqualTo(
+        """
+        |set up Regular
+        |running Regular 12
+        |set up Regular
+        |running Regular 16
+        |set up Regular
+        |running Regular 8
+        |
+        """.trimMargin(),
+      )
+    }
+  }
+
   private fun createRunner(
     projectDir: File,
     vararg taskNames: String,
