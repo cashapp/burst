@@ -39,29 +39,29 @@ fun drinkSoda(
 }
 ```
 
-### Enum Parameters
+### Boolean Parameters
 
-If your parameter is an enum type, you don't need to call `burstValues()`. Burst will test each
-value of that enum.
-
-```kotlin
-enum class Distribution {
-  Fountain, Can, Bottle
-}
-```
+If your parameter is a boolean, you don't need to call `burstValues()`. Burst will test both values.
+Specify a default value to use that in the IDE.
 
 ```kotlin
 @Burst
 class DrinkSodaTest(
-  val distribution: Distribution,
+  val ice: Boolean = true,
 ) {
   ...
 }
 ```
 
-If you specify a default value for the enum, Burst will use that when running in the IDE.
+### Enum Parameters
+
+Burst will test each value of enum types. Specify a default value to use that in the IDE.
 
 ```kotlin
+enum class Distribution {
+  Fountain, Can, Bottle
+}
+
 @Burst
 class DrinkSodaTest(
   val distribution: Distribution = Distribution.Can,
@@ -78,7 +78,8 @@ Use multiple parameters to test all variations.
 @Test
 fun drinkSoda(
   soda: String = burstValues("Pepsi", "Coke"),
-  distribution: Distribution,
+  ice: Boolean = true,
+  distribution: Distribution = Distribution.Can,
 ) {
   ...
 }
@@ -86,12 +87,18 @@ fun drinkSoda(
 
 The test will be specialized for each combination of arguments.
 
- * `drinkSoda("Pepsi", Distribution.Fountain)`
- * `drinkSoda("Pepsi", Distribution.Can)`
- * `drinkSoda("Pepsi", Distribution.Bottle)`
- * `drinkSoda("Coke", Distribution.Fountain)`
- * `drinkSoda("Coke", Distribution.Can)`
- * `drinkSoda("Coke", Distribution.Bottle)`
+ * `drinkSoda("Pepsi", true, Distribution.Fountain)`
+ * `drinkSoda("Pepsi", true, Distribution.Can)`
+ * `drinkSoda("Pepsi", true, Distribution.Bottle)`
+ * `drinkSoda("Pepsi", false, Distribution.Fountain)`
+ * `drinkSoda("Pepsi", false, Distribution.Can)`
+ * `drinkSoda("Pepsi", false, Distribution.Bottle)`
+ * `drinkSoda("Coke", true, Distribution.Fountain)`
+ * `drinkSoda("Coke", true, Distribution.Can)`
+ * `drinkSoda("Coke", true, Distribution.Bottle)`
+ * `drinkSoda("Coke", false, Distribution.Fountain)`
+ * `drinkSoda("Coke", false, Distribution.Can)`
+ * `drinkSoda("Coke", false, Distribution.Bottle)`
 
 Gradle Setup
 ------------
