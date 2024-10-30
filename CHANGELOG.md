@@ -3,6 +3,19 @@
 ## [Unreleased]
 [Unreleased]: https://github.com/cashapp/burst/compare/0.6.0...HEAD
 
+## [2.0.0] *(2024-10-30)*
+[2.0.0]: https://github.com/cashapp/burst/releases/tag/2.0.0
+
+**Added**
+
+ * Add support for booleans, and nullable booleans.
+ * Add support for nullable enums.
+
+**Fixed**
+
+ * Don't crash if burstValues() has only one argument
+
+
 ## [0.7.0] *(2024-10-28)*
 [0.7.0]: https://github.com/cashapp/burst/releases/tag/0.7.0
 
