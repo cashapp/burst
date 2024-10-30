@@ -19,7 +19,6 @@ import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.backend.js.utils.valueArguments
 import org.jetbrains.kotlin.ir.declarations.IrClass
-import org.jetbrains.kotlin.ir.declarations.IrDeclarationParent
 import org.jetbrains.kotlin.ir.declarations.IrEnumEntry
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
 import org.jetbrains.kotlin.ir.expressions.IrCall
@@ -87,13 +86,16 @@ private class BooleanArgument(
   }
 }
 
+@UnsafeDuringIrConstructionAPI
 private class BurstValuesArgument(
-  private val declarationParent: IrDeclarationParent,
-  override val isDefault: Boolean,
-  override val name: String,
-  val value: IrExpression,
+  private val parameter: IrValueParameter,
+  private val value: IrExpression,
+  index: Int,
 ) : Argument {
-  override fun expression() = value.deepCopyWithSymbols(declarationParent)
+  override val isDefault = index == 0
+  override val name = value.suggestedName() ?: index.toString()
+
+  override fun expression() = value.deepCopyWithSymbols(parameter.parent)
 
   override fun <R, D> accept(visitor: IrElementVisitor<R, D>, data: D): R {
     return value.accept(visitor, data)
@@ -136,24 +138,21 @@ private fun burstValuesArguments(
   burstApisCall: IrCall,
 ): List<Argument> {
   return buildList {
-    val defaultExpression = burstApisCall.valueArguments[0] ?: unexpectedParameter(parameter)
     add(
       BurstValuesArgument(
-        declarationParent = parameter.parent,
-        isDefault = true,
-        name = defaultExpression.suggestedName() ?: "0",
-        value = defaultExpression,
+        parameter = parameter,
+        value = burstApisCall.valueArguments[0] ?: unexpectedParameter(parameter),
+        index = size,
       ),
     )
 
-    for ((index, element) in (burstApisCall.valueArguments[1] as IrVararg).elements.withIndex()) {
-      val varargExpression = element as? IrExpression ?: unexpectedParameter(parameter)
+    val varargs = burstApisCall.valueArguments[1] as? IrVararg ?: return@buildList
+    for (element in varargs.elements) {
       add(
         BurstValuesArgument(
-          declarationParent = parameter.parent,
-          isDefault = false,
-          name = varargExpression.suggestedName() ?: (index + 1).toString(),
-          value = varargExpression,
+          parameter = parameter,
+          value = element as? IrExpression ?: unexpectedParameter(parameter),
+          index = size,
         ),
       )
     }
