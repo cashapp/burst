@@ -23,10 +23,20 @@ jobs:
           distribution: 'zulu'
           java-version: 21
 
-      - run: ./gradlew build
+      - run: ./gradlew build :burst:dokkaHtml
 
       - run: ./gradlew publish
         if: ${{ github.ref == 'refs/heads/main' && github.repository == 'cashapp/burst' }}
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.SONATYPE_NEXUS_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.SONATYPE_NEXUS_PASSWORD }}
+
+      - name: Deploy docs to website
+        if: ${{ github.ref == 'refs/heads/main' && github.repository == 'cashapp/burst' }}
+        uses: JamesIves/github-pages-deploy-action@releases/v3
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: site
+          FOLDER: burst/build/dokka/html
+          TARGET_FOLDER: docs/latest/
+          CLEAN: true
