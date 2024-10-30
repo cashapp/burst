@@ -106,7 +106,7 @@ class BurstKotlinPluginTest {
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
     assertThat(result.messages).contains(
       "CoffeeTest.kt:7:12 " +
-        "@Burst parameter must be a boolean, enum, or have a burstValues() default value",
+        "@Burst parameter must be a boolean, an enum, or have a burstValues() default value",
     )
   }
 
@@ -135,7 +135,7 @@ class BurstKotlinPluginTest {
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
     assertThat(result.messages).contains(
       "CoffeeTest.kt:9:12 " +
-        "@Burst parameter default value must be burstValues(), a constant, or absent",
+        "@Burst parameter default must be burstValues(), a constant, null, or absent",
     )
   }
 
@@ -678,6 +678,166 @@ class BurstKotlinPluginTest {
       "running testDefaultTrue iced=false",
       "running testDefaultFalse iced=false",
       "running testDefaultFalse iced=true",
+    )
+  }
+
+  @Test
+  fun nullableEnumNoDefault() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "CoffeeTest.kt",
+        """
+        import app.cash.burst.Burst
+        import kotlin.test.Test
+
+        @Burst
+        class CoffeeTest {
+          val log = mutableListOf<String>()
+
+          @Test
+          fun test(espresso: Espresso?) {
+            log += "running ${'$'}espresso"
+          }
+        }
+
+        enum class Espresso { Decaf, Regular, Double }
+        """,
+      ),
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val baseClass = result.classLoader.loadClass("CoffeeTest")
+    val baseInstance = baseClass.constructors.single().newInstance()
+    val baseLog = baseClass.getMethod("getLog").invoke(baseInstance) as MutableList<*>
+
+    baseClass.getMethod("test_Decaf").invoke(baseInstance)
+    baseClass.getMethod("test_Regular").invoke(baseInstance)
+    baseClass.getMethod("test_Double").invoke(baseInstance)
+    baseClass.getMethod("test_null").invoke(baseInstance)
+    assertThat(baseLog).containsExactly(
+      "running Decaf",
+      "running Regular",
+      "running Double",
+      "running null",
+    )
+  }
+
+  @Test
+  fun nullableBooleanNoDefault() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "CoffeeTest.kt",
+        """
+        import app.cash.burst.Burst
+        import kotlin.test.Test
+
+        @Burst
+        class CoffeeTest {
+          val log = mutableListOf<String>()
+
+          @Test
+          fun test(iced: Boolean?) {
+            log += "running ${'$'}iced"
+          }
+        }
+
+        enum class Espresso { Decaf, Regular, Double }
+        """,
+      ),
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val baseClass = result.classLoader.loadClass("CoffeeTest")
+    val baseInstance = baseClass.constructors.single().newInstance()
+    val baseLog = baseClass.getMethod("getLog").invoke(baseInstance) as MutableList<*>
+
+    baseClass.getMethod("test_false").invoke(baseInstance)
+    baseClass.getMethod("test_true").invoke(baseInstance)
+    baseClass.getMethod("test_null").invoke(baseInstance)
+    assertThat(baseLog).containsExactly(
+      "running false",
+      "running true",
+      "running null",
+    )
+  }
+
+  @Test
+  fun nullableEnumAsDefault() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "CoffeeTest.kt",
+        """
+        import app.cash.burst.Burst
+        import kotlin.test.Test
+
+        @Burst
+        class CoffeeTest {
+          val log = mutableListOf<String>()
+
+          @Test
+          fun test(espresso: Espresso? = null) {
+            log += "running ${'$'}espresso"
+          }
+        }
+
+        enum class Espresso { Decaf, Regular, Double }
+        """,
+      ),
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val baseClass = result.classLoader.loadClass("CoffeeTest")
+    val baseInstance = baseClass.constructors.single().newInstance()
+    val baseLog = baseClass.getMethod("getLog").invoke(baseInstance) as MutableList<*>
+
+    baseClass.getMethod("test_Decaf").invoke(baseInstance)
+    baseClass.getMethod("test_Regular").invoke(baseInstance)
+    baseClass.getMethod("test_Double").invoke(baseInstance)
+    baseClass.getMethod("test").invoke(baseInstance)
+    assertThat(baseLog).containsExactly(
+      "running Decaf",
+      "running Regular",
+      "running Double",
+      "running null",
+    )
+  }
+
+  @Test
+  fun nullableBooleanAsDefault() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "CoffeeTest.kt",
+        """
+        import app.cash.burst.Burst
+        import kotlin.test.Test
+
+        @Burst
+        class CoffeeTest {
+          val log = mutableListOf<String>()
+
+          @Test
+          fun test(iced: Boolean? = null) {
+            log += "running ${'$'}iced"
+          }
+        }
+
+        enum class Espresso { Decaf, Regular, Double }
+        """,
+      ),
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val baseClass = result.classLoader.loadClass("CoffeeTest")
+    val baseInstance = baseClass.constructors.single().newInstance()
+    val baseLog = baseClass.getMethod("getLog").invoke(baseInstance) as MutableList<*>
+
+    baseClass.getMethod("test_false").invoke(baseInstance)
+    baseClass.getMethod("test_true").invoke(baseInstance)
+    baseClass.getMethod("test").invoke(baseInstance)
+    assertThat(baseLog).containsExactly(
+      "running false",
+      "running true",
+      "running null",
     )
   }
 
