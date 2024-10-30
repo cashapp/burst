@@ -33,6 +33,7 @@ import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.types.getClass
+import org.jetbrains.kotlin.ir.types.isNullable
 import org.jetbrains.kotlin.ir.util.classId
 import org.jetbrains.kotlin.ir.util.deepCopyWithSymbols
 import org.jetbrains.kotlin.ir.util.defaultType
@@ -80,6 +81,20 @@ private class BooleanArgument(
 
   override fun expression() =
     IrConstImpl.boolean(original.startOffset, original.endOffset, booleanType, value)
+
+  override fun <R, D> accept(visitor: IrElementVisitor<R, D>, data: D): R {
+    return original.accept(visitor, data)
+  }
+}
+
+private class NullArgument(
+  private val original: IrElement,
+  private val type: IrType,
+  override val isDefault: Boolean,
+) : Argument {
+  override val name = "null"
+
+  override fun expression() = IrConstImpl.constNull(original.startOffset, original.endOffset, type)
 
   override fun <R, D> accept(visitor: IrElementVisitor<R, D>, data: D): R {
     return original.accept(visitor, data)
@@ -192,49 +207,86 @@ private fun IrExpression.suggestedName(): String? {
 private fun enumValueArguments(
   referenceClass: IrClass,
   parameter: IrValueParameter,
-): List<EnumValueArgument> {
+): List<Argument> {
   val enumEntries = referenceClass.declarations.filterIsInstance<IrEnumEntry>()
-  val defaultValueSymbol = parameter.defaultValue?.let { defaultValue ->
-    (defaultValue.expression as? IrGetEnumValue)?.symbol ?: unexpectedDefaultValue(parameter)
+  val hasDefaultValue = parameter.defaultValue != null
+  val defaultEnumSymbol = parameter.defaultValue?.let { defaultValue ->
+    val expression = defaultValue.expression
+    when {
+      expression is IrGetEnumValue -> expression.symbol
+      expression is IrConst<*> && expression.value == null -> null
+      else -> unexpectedDefaultValue(parameter)
+    }
   }
 
-  return enumEntries.map {
-    EnumValueArgument(
-      original = parameter,
-      type = parameter.type,
-      isDefault = it.symbol == defaultValueSymbol,
-      value = it,
-    )
+  return buildList {
+    for (enumEntry in enumEntries) {
+      add(
+        EnumValueArgument(
+          original = parameter,
+          type = parameter.type,
+          isDefault = hasDefaultValue && enumEntry.symbol == defaultEnumSymbol,
+          value = enumEntry,
+        ),
+      )
+    }
+    if (parameter.type.isNullable()) {
+      add(
+        NullArgument(
+          original = parameter,
+          type = parameter.type,
+          isDefault = hasDefaultValue && defaultEnumSymbol == null,
+        ),
+      )
+    }
   }
 }
 
 private fun IrPluginContext.booleanArguments(
   parameter: IrValueParameter,
-): List<BooleanArgument> {
+): List<Argument> {
+  val hasDefaultValue = parameter.defaultValue != null
   val defaultValue = parameter.defaultValue?.let { defaultValue ->
-    (defaultValue.expression as? IrConst<*>)?.value ?: unexpectedDefaultValue(parameter)
+    val expression = defaultValue.expression
+    when {
+      expression is IrConst<*> -> expression.value
+      else -> unexpectedDefaultValue(parameter)
+    }
   }
 
-  return listOf(false, true).map {
-    BooleanArgument(
-      original = parameter,
-      booleanType = irBuiltIns.booleanType,
-      isDefault = defaultValue == it,
-      value = it,
-    )
+  return buildList {
+    for (b in listOf(false, true)) {
+      add(
+        BooleanArgument(
+          original = parameter,
+          booleanType = irBuiltIns.booleanType,
+          isDefault = hasDefaultValue && defaultValue == b,
+          value = b,
+        ),
+      )
+    }
+    if (parameter.type.isNullable()) {
+      add(
+        NullArgument(
+          original = parameter,
+          type = parameter.type,
+          isDefault = hasDefaultValue && defaultValue == null,
+        ),
+      )
+    }
   }
 }
 
 private fun unexpectedParameter(parameter: IrValueParameter): Nothing {
   throw BurstCompilationException(
-    "@Burst parameter must be a boolean, enum, or have a burstValues() default value",
+    "@Burst parameter must be a boolean, an enum, or have a burstValues() default value",
     parameter,
   )
 }
 
 private fun unexpectedDefaultValue(parameter: IrValueParameter): Nothing {
   throw BurstCompilationException(
-    "@Burst parameter default value must be burstValues(), a constant, or absent",
+    "@Burst parameter default must be burstValues(), a constant, null, or absent",
     parameter,
   )
 }

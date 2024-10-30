@@ -66,6 +66,8 @@ class DrinkSodaTest(
 }
 ```
 
+If the parameter is nullable, Burst will also test with null.
+
 ### Multiple Parameters
 
 Use multiple parameters to test all variations.
