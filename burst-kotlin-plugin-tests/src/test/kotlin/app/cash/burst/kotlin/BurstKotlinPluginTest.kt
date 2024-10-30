@@ -699,6 +699,8 @@ fun compile(
     sources = sourceFiles
     compilerPluginRegistrars = listOf(plugin)
     inheritClassPath = true
+    kotlincArguments += "-Xverify-ir=error"
+    kotlincArguments += "-Xverify-ir-visibility"
   }.compile()
 }
 
