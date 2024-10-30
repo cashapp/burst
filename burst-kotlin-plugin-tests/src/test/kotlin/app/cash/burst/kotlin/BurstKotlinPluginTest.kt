@@ -643,7 +643,6 @@ class BurstKotlinPluginTest {
         "CoffeeTest.kt",
         """
         import app.cash.burst.Burst
-        import app.cash.burst.burstValues
         import kotlin.test.Test
 
         @Burst
@@ -762,6 +761,46 @@ class BurstKotlinPluginTest {
   }
 
   @Test
+  fun nullableBurstValuesNotDefault() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "CoffeeTest.kt",
+        """
+        import app.cash.burst.Burst
+        import app.cash.burst.burstValues
+        import kotlin.test.Test
+
+        @Burst
+        class CoffeeTest {
+          val log = mutableListOf<String>()
+
+          @Test
+          fun test(volume: Int? = burstValues(12, 16, 20, null)) {
+            log += "running ${'$'}volume"
+          }
+        }
+        """,
+      ),
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val baseClass = result.classLoader.loadClass("CoffeeTest")
+    val baseInstance = baseClass.constructors.single().newInstance()
+    val baseLog = baseClass.getMethod("getLog").invoke(baseInstance) as MutableList<*>
+
+    baseClass.getMethod("test").invoke(baseInstance)
+    baseClass.getMethod("test_16").invoke(baseInstance)
+    baseClass.getMethod("test_20").invoke(baseInstance)
+    baseClass.getMethod("test_null").invoke(baseInstance)
+    assertThat(baseLog).containsExactly(
+      "running 12",
+      "running 16",
+      "running 20",
+      "running null",
+    )
+  }
+
+  @Test
   fun nullableEnumAsDefault() {
     val result = compile(
       sourceFile = SourceFile.kotlin(
@@ -837,6 +876,46 @@ class BurstKotlinPluginTest {
     assertThat(baseLog).containsExactly(
       "running false",
       "running true",
+      "running null",
+    )
+  }
+
+  @Test
+  fun nullableBurstValuesAsDefault() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "CoffeeTest.kt",
+        """
+        import app.cash.burst.Burst
+        import app.cash.burst.burstValues
+        import kotlin.test.Test
+
+        @Burst
+        class CoffeeTest {
+          val log = mutableListOf<String>()
+
+          @Test
+          fun test(volume: Int? = burstValues(null, 12, 16, 20)) {
+            log += "running ${'$'}volume"
+          }
+        }
+        """,
+      ),
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val baseClass = result.classLoader.loadClass("CoffeeTest")
+    val baseInstance = baseClass.constructors.single().newInstance()
+    val baseLog = baseClass.getMethod("getLog").invoke(baseInstance) as MutableList<*>
+
+    baseClass.getMethod("test_12").invoke(baseInstance)
+    baseClass.getMethod("test_16").invoke(baseInstance)
+    baseClass.getMethod("test_20").invoke(baseInstance)
+    baseClass.getMethod("test").invoke(baseInstance)
+    assertThat(baseLog).containsExactly(
+      "running 12",
+      "running 16",
+      "running 20",
       "running null",
     )
   }
