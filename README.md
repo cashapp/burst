@@ -1,7 +1,7 @@
 Burst
 =====
 
-Burst is a unit testing library for parameterizing unit tests.
+Burst is a library for parameterizing unit tests.
 
 It is similar to [TestParameterInjector] in usage, but Burst is implemented as a Kotlin compiler
 plug-in. Burst supports all Kotlin platforms and works great in multiplatform projects.
@@ -12,7 +12,7 @@ Usage
 
 Annotate your test class with `@Burst`.
 
-Declare a parameter in your test constructor that uses `burstValues()` for its tested values:
+Declare a parameter in your test's constructor that calls `burstValues()` as its default.
 
 ```kotlin
 @Burst
@@ -39,10 +39,10 @@ fun drinkSoda(
 }
 ```
 
-### Boolean Parameters
+### Booleans and Enums
 
-If your parameter is a boolean, you don't need to call `burstValues()`. Burst will test both values.
-Specify a default value to use that in the IDE.
+If your parameter is a boolean or an enum, you don't need to call `burstValues()`. Burst will test
+all values. Specify a default value to use that when you launch the test from the IDE.
 
 ```kotlin
 @Burst
@@ -52,10 +52,6 @@ class DrinkSodaTest(
   ...
 }
 ```
-
-### Enum Parameters
-
-Burst will test each value of enum types. Specify a default value to use that in the IDE.
 
 ```kotlin
 enum class Distribution {
