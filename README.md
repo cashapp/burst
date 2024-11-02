@@ -76,8 +76,8 @@ Use multiple parameters to test all variations.
 @Test
 fun drinkSoda(
   soda: String = burstValues("Pepsi", "Coke"),
-  ice: Boolean = true,
-  distribution: Distribution = Distribution.Can,
+  ice: Boolean,
+  distribution: Distribution,
 ) {
   ...
 }
