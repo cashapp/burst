@@ -45,12 +45,16 @@ class BurstIrGenerationExtension(
         }
 
         if (classHasAtBurst && classDeclaration.modality != Modality.ABSTRACT) {
-          ClassSpecializer(
-            pluginContext = pluginContext,
-            burstApis = burstApis,
-            originalParent = currentFile,
-            original = classDeclaration,
-          ).generateSpecializations()
+          try {
+            ClassSpecializer(
+              pluginContext = pluginContext,
+              burstApis = burstApis,
+              originalParent = currentFile,
+              original = classDeclaration,
+            ).generateSpecializations()
+          } catch (e: BurstCompilationException) {
+            messageCollector.report(e.severity, e.message, currentFile.locationOf(e.element))
+          }
         }
 
         // Snapshot the original functions because the loop mutates them.

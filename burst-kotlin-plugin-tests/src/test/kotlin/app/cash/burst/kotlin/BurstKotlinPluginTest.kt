@@ -86,7 +86,32 @@ class BurstKotlinPluginTest {
   }
 
   @Test
-  fun unexpectedArgumentType() {
+  fun unexpectedClassArgumentType() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "CoffeeTest.kt",
+        """
+        import app.cash.burst.Burst
+        import kotlin.test.Test
+
+        @Burst
+        class CoffeeTest(espresso: String) {
+          @Test
+          fun test() {
+          }
+        }
+        """,
+      ),
+    )
+    assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
+    assertThat(result.messages).contains(
+      "CoffeeTest.kt:5:18 " +
+        "@Burst parameter must be a boolean, an enum, or have a burstValues() default value",
+    )
+  }
+
+  @Test
+  fun unexpectedFunctionArgumentType() {
     val result = compile(
       sourceFile = SourceFile.kotlin(
         "CoffeeTest.kt",
