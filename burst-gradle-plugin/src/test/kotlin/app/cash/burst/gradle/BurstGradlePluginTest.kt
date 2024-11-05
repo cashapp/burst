@@ -261,6 +261,25 @@ class BurstGradlePluginTest {
     }
   }
 
+  @Test
+  fun junit5() {
+    val projectDir = File("src/test/projects/junit5")
+
+    val taskName = ":lib:test"
+    val result = createRunner(projectDir, "clean", taskName).build()
+    assertThat(result.task(taskName)!!.outcome).isIn(*SUCCESS_OUTCOMES)
+
+    val testResults = projectDir.resolve("lib/build/test-results")
+
+    with(readTestSuite(testResults.resolve("test/TEST-CoffeeTest_Regular.xml"))) {
+      assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
+        "test_Milk()",
+        "test_None()",
+        "test_Oat()",
+      )
+    }
+  }
+
   private fun createRunner(
     projectDir: File,
     vararg taskNames: String,

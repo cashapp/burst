@@ -37,6 +37,10 @@ internal class BurstApis private constructor(
         return BurstApis(pluginContext, junitPackage)
       }
 
+      if (pluginContext.referenceClass(junit5TestClassId) != null) {
+        return BurstApis(pluginContext, junit5Package)
+      }
+
       if (pluginContext.referenceClass(kotlinTestClassId) != null) {
         return BurstApis(pluginContext, kotlinTestPackage)
       }
@@ -56,11 +60,15 @@ private val burstValuesId = burstFqPackage.callableId("burstValues")
 
 private val junitPackage = FqPackageName("org.junit")
 private val junitTestClassId = junitPackage.classId("Test")
+private val junit5Package = FqPackageName("org.junit.jupiter.api")
+private val junit5TestClassId = junit5Package.classId("Test")
 private val kotlinTestPackage = FqPackageName("kotlin.test")
 private val kotlinTestClassId = kotlinTestPackage.classId("Test")
 
 internal val IrAnnotationContainer.hasAtTest: Boolean
-  get() = hasAnnotation(junitTestClassId) || hasAnnotation(kotlinTestClassId)
+  get() = hasAnnotation(junitTestClassId) ||
+    hasAnnotation(junit5TestClassId) ||
+    hasAnnotation(kotlinTestClassId)
 
 internal val IrAnnotationContainer.hasAtBurst: Boolean
   get() = hasAnnotation(burstAnnotationId)
