@@ -5,4 +5,6 @@ plugins {
 
 dependencies {
   testImplementation(kotlin("test"))
+  testImplementation(libs.junit)
+  testRuntimeOnly(libs.junit.vintage.engine)
 }

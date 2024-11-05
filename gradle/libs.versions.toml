@@ -10,6 +10,7 @@ binary-compatibility-validator-gradle-plugin = { module = "org.jetbrains.kotlinx
 dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version = "1.9.20" }
 google-ksp = "com.google.devtools.ksp:symbol-processing-gradle-plugin:2.0.21-1.0.26"
 junit = { module = "junit:junit", version = "4.13.2" }
+junit-vintage-engine = { module = "org.junit.vintage:junit-vintage-engine", version = "5.11.3" }
 kotlin-compile-testing = { module = "dev.zacsweers.kctfork:core", version = "0.5.1" }
 kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test" }

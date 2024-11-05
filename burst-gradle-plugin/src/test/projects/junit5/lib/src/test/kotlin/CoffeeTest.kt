@@ -11,9 +11,19 @@ class CoffeeTest(
     println("set up $espresso")
   }
 
-  @Test
-  fun test(dairy: Dairy) {
-    println("running $espresso $dairy")
+  @kotlin.test.Test
+  fun kotlinTestTest(dairy: Dairy) {
+    println("@kotlin.test.Test running $espresso $dairy")
+  }
+
+  @org.junit.Test
+  fun orgJunitTest(dairy: Dairy) {
+    println("@org.junit.Test running $espresso $dairy")
+  }
+
+  @org.junit.jupiter.api.Test
+  fun orgJunitJupiterApiTest(dairy: Dairy) {
+    println("@org.junit.jupiter.api.Test running $espresso $dairy")
   }
 }
 

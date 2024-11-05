@@ -273,9 +273,15 @@ class BurstGradlePluginTest {
 
     with(readTestSuite(testResults.resolve("test/TEST-CoffeeTest_Regular.xml"))) {
       assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
-        "test_Milk()",
-        "test_None()",
-        "test_Oat()",
+        "kotlinTestTest_Milk()",
+        "kotlinTestTest_None()",
+        "kotlinTestTest_Oat()",
+        "orgJunitJupiterApiTest_Milk()",
+        "orgJunitJupiterApiTest_None()",
+        "orgJunitJupiterApiTest_Oat()",
+        "orgJunitTest_Milk",
+        "orgJunitTest_None",
+        "orgJunitTest_Oat"
       )
     }
   }
