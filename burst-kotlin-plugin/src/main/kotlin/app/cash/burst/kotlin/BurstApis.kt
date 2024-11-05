@@ -17,15 +17,25 @@ package app.cash.burst.kotlin
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.declarations.IrAnnotationContainer
+import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
+import org.jetbrains.kotlin.ir.types.classOrNull
 import org.jetbrains.kotlin.ir.util.hasAnnotation
 
 /** Looks up APIs used by the code rewriters. */
 internal class BurstApis private constructor(
   pluginContext: IrPluginContext,
-  testPackage: FqPackageName,
+  private val testClassSymbols: List<IrClassSymbol>,
 ) {
+  val burstValues: IrFunctionSymbol = pluginContext.referenceFunctions(burstValuesId).single()
+
+  fun findTestAnnotation(function: IrSimpleFunction): IrClassSymbol? {
+    return function.annotations
+      .mapNotNull { it.type.classOrNull }
+      .firstOrNull { it in testClassSymbols }
+  }
+
   companion object {
     fun maybeCreate(pluginContext: IrPluginContext): BurstApis? {
       // If we don't have @Burst, we don't have the runtime. Abort!
@@ -33,21 +43,20 @@ internal class BurstApis private constructor(
         return null
       }
 
-      if (pluginContext.referenceClass(junitTestClassId) != null) {
-        return BurstApis(pluginContext, junitPackage)
+      val testClassSymbols = listOfNotNull(
+        pluginContext.referenceClass(junit5TestClassId),
+        pluginContext.referenceClass(junitTestClassId),
+        pluginContext.referenceClass(kotlinTestClassId),
+      )
+
+      // No @Test annotations? No Burst.
+      if (testClassSymbols.isEmpty()) {
+        return null
       }
 
-      if (pluginContext.referenceClass(kotlinTestClassId) != null) {
-        return BurstApis(pluginContext, kotlinTestPackage)
-      }
-
-      // No kotlin.test and no org.junit. No Burst for you.
-      return null
+      return BurstApis(pluginContext, testClassSymbols)
     }
   }
-
-  val testClassSymbol: IrClassSymbol = pluginContext.referenceClass(testPackage.classId("Test"))!!
-  val burstValues: IrFunctionSymbol = pluginContext.referenceFunctions(burstValuesId).single()
 }
 
 private val burstFqPackage = FqPackageName("app.cash.burst")
@@ -56,11 +65,10 @@ private val burstValuesId = burstFqPackage.callableId("burstValues")
 
 private val junitPackage = FqPackageName("org.junit")
 private val junitTestClassId = junitPackage.classId("Test")
+private val junit5Package = FqPackageName("org.junit.jupiter.api")
+private val junit5TestClassId = junit5Package.classId("Test")
 private val kotlinTestPackage = FqPackageName("kotlin.test")
 private val kotlinTestClassId = kotlinTestPackage.classId("Test")
-
-internal val IrAnnotationContainer.hasAtTest: Boolean
-  get() = hasAnnotation(junitTestClassId) || hasAnnotation(kotlinTestClassId)
 
 internal val IrAnnotationContainer.hasAtBurst: Boolean
   get() = hasAnnotation(burstAnnotationId)

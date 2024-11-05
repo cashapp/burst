@@ -3,6 +3,10 @@
 ## [Unreleased]
 [Unreleased]: https://github.com/cashapp/burst/compare/0.6.0...HEAD
 
+**Added**
+
+ * Basic support for JUnit 5. Burst doesn't support JUnit 5 tests that populate parameters from extensions.
+
 ## [2.0.0] *(2024-10-30)*
 [2.0.0]: https://github.com/cashapp/burst/releases/tag/2.0.0
 

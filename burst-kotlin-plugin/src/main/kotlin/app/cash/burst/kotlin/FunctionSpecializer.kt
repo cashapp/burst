@@ -25,9 +25,9 @@ import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
+import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
-import org.jetbrains.kotlin.ir.types.classFqName
-import org.jetbrains.kotlin.ir.types.starProjectedType
+import org.jetbrains.kotlin.ir.types.classOrNull
 import org.jetbrains.kotlin.ir.util.patchDeclarationParents
 import org.jetbrains.kotlin.name.Name
 
@@ -63,6 +63,7 @@ internal class FunctionSpecializer(
   private val burstApis: BurstApis,
   private val originalParent: IrClass,
   private val original: IrSimpleFunction,
+  private val testAnnotationClassSymbol: IrClassSymbol,
 ) {
   fun generateSpecializations() {
     val valueParameters = original.valueParameters
@@ -84,7 +85,7 @@ internal class FunctionSpecializer(
 
     // Drop `@Test` from the original's annotations.
     original.annotations = original.annotations.filter {
-      it.type.classFqName != burstApis.testClassSymbol.starProjectedType.classFqName
+      it.type.classOrNull != testAnnotationClassSymbol
     }
 
     // Add new declarations.
@@ -112,7 +113,7 @@ internal class FunctionSpecializer(
       }
     }
 
-    result.annotations += burstApis.testClassSymbol.asAnnotation()
+    result.annotations += testAnnotationClassSymbol.asAnnotation()
 
     result.irFunctionBody(
       context = pluginContext,

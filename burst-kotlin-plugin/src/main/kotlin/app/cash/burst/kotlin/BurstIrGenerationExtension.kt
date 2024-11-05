@@ -61,7 +61,7 @@ class BurstIrGenerationExtension(
         val originalFunctions = classDeclaration.functions.toList()
 
         for (function in originalFunctions) {
-          if (!function.hasAtTest) continue
+          val testAnnotationClassSymbol = burstApis.findTestAnnotation(function) ?: continue
           if (!classHasAtBurst && !function.hasAtBurst) continue
 
           try {
@@ -70,6 +70,7 @@ class BurstIrGenerationExtension(
               burstApis = burstApis,
               originalParent = classDeclaration,
               original = function,
+              testAnnotationClassSymbol = testAnnotationClassSymbol,
             )
             specializer.generateSpecializations()
           } catch (e: BurstCompilationException) {
