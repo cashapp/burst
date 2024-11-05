@@ -31,11 +31,9 @@ internal class BurstApis private constructor(
   val burstValues: IrFunctionSymbol = pluginContext.referenceFunctions(burstValuesId).single()
 
   fun findTestAnnotation(function: IrSimpleFunction): IrClassSymbol? {
-    for (annotation in function.annotations) {
-      val annotationClassSymbol = annotation.type.classOrNull ?: continue
-      if (annotationClassSymbol in testClassSymbols) return annotationClassSymbol
-    }
-    return null
+    return function.annotations
+      .mapNotNull { it.type.classOrNull }
+      .firstOrNull { it in testClassSymbols }
   }
 
   companion object {
