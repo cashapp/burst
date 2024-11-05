@@ -281,7 +281,7 @@ class BurstGradlePluginTest {
         "orgJunitJupiterApiTest_Oat()",
         "orgJunitTest_Milk",
         "orgJunitTest_None",
-        "orgJunitTest_Oat"
+        "orgJunitTest_Oat",
       )
     }
   }
