@@ -21,11 +21,13 @@ import assertk.assertions.containsExactlyInAnyOrder
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isIn
+import assertk.assertions.matches
 import java.io.File
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.konan.target.presetName
+import org.junit.Ignore
 import org.junit.Test
 
 class BurstGradlePluginTest {
@@ -282,6 +284,34 @@ class BurstGradlePluginTest {
         "orgJunitTest_Milk",
         "orgJunitTest_None",
         "orgJunitTest_Oat",
+      )
+    }
+  }
+
+  @Test
+  @Ignore("mixing JUnit 5 and Burst parameters is not supported")
+  fun junit5Extensions() {
+    val projectDir = File("src/test/projects/junit5Extensions")
+
+    val taskName = ":lib:test"
+    val result = createRunner(projectDir, "clean", taskName).build()
+    assertThat(result.task(taskName)!!.outcome).isIn(*SUCCESS_OUTCOMES)
+
+    val testResults = projectDir.resolve("lib/build/test-results")
+
+    with(readTestSuite(testResults.resolve("test/TEST-TempDirTest.xml"))) {
+      assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
+        "test()",
+        "test_b()",
+      )
+      assertThat(systemOut).matches(
+        Regex(
+          """
+          |running \S+ b
+          |running \S+ a
+          |
+          """.trimMargin()
+        )
       )
     }
   }
