@@ -210,10 +210,10 @@ private fun enumValueArguments(
 ): List<Argument> {
   val enumEntries = referenceClass.declarations.filterIsInstance<IrEnumEntry>()
   val hasDefaultValue = parameter.defaultValue != null
-  val defaultEnumSymbol = parameter.defaultValue?.let { defaultValue ->
+  val defaultEnumSymbolName = parameter.defaultValue?.let { defaultValue ->
     val expression = defaultValue.expression
     when {
-      expression is IrGetEnumValue -> expression.symbol
+      expression is IrGetEnumValue -> expression.symbol.owner.name
       expression is IrConst<*> && expression.value == null -> null
       else -> unexpectedDefaultValue(parameter)
     }
@@ -225,7 +225,7 @@ private fun enumValueArguments(
         EnumValueArgument(
           original = parameter,
           type = parameter.type,
-          isDefault = hasDefaultValue && enumEntry.symbol == defaultEnumSymbol,
+          isDefault = hasDefaultValue && enumEntry.symbol.owner.name == defaultEnumSymbolName,
           value = enumEntry,
         ),
       )
@@ -235,7 +235,7 @@ private fun enumValueArguments(
         NullArgument(
           original = parameter,
           type = parameter.type,
-          isDefault = hasDefaultValue && defaultEnumSymbol == null,
+          isDefault = hasDefaultValue && defaultEnumSymbolName == null,
         ),
       )
     }
