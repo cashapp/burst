@@ -29,6 +29,7 @@ import org.jetbrains.kotlin.ir.expressions.IrGetEnumValue
 import org.jetbrains.kotlin.ir.expressions.IrVararg
 import org.jetbrains.kotlin.ir.expressions.impl.IrConstImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrGetEnumValueImpl
+import org.jetbrains.kotlin.ir.symbols.IrEnumEntrySymbol
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.classFqName
@@ -37,7 +38,9 @@ import org.jetbrains.kotlin.ir.types.isNullable
 import org.jetbrains.kotlin.ir.util.classId
 import org.jetbrains.kotlin.ir.util.deepCopyWithSymbols
 import org.jetbrains.kotlin.ir.util.defaultType
+import org.jetbrains.kotlin.ir.util.findDeclaration
 import org.jetbrains.kotlin.ir.util.isEnumClass
+import org.jetbrains.kotlin.ir.util.parentAsClass
 import org.jetbrains.kotlin.ir.visitors.IrElementVisitor
 import org.jetbrains.kotlin.name.NameUtils
 
@@ -204,7 +207,7 @@ private fun IrExpression.suggestedName(): String? {
 }
 
 @UnsafeDuringIrConstructionAPI
-private fun enumValueArguments(
+private fun IrPluginContext.enumValueArguments(
   referenceClass: IrClass,
   parameter: IrValueParameter,
 ): List<Argument> {
@@ -213,7 +216,7 @@ private fun enumValueArguments(
   val defaultEnumSymbol = parameter.defaultValue?.let { defaultValue ->
     val expression = defaultValue.expression
     when {
-      expression is IrGetEnumValue -> expression.symbol
+      expression is IrGetEnumValue -> canonicalize(expression.symbol)
       expression is IrConst<*> && expression.value == null -> null
       else -> unexpectedDefaultValue(parameter)
     }
@@ -225,7 +228,7 @@ private fun enumValueArguments(
         EnumValueArgument(
           original = parameter,
           type = parameter.type,
-          isDefault = hasDefaultValue && enumEntry.symbol == defaultEnumSymbol,
+          isDefault = hasDefaultValue && canonicalize(enumEntry.symbol) == defaultEnumSymbol,
           value = enumEntry,
         ),
       )
@@ -240,6 +243,22 @@ private fun enumValueArguments(
       )
     }
   }
+}
+
+/**
+ * It's possible we'll see two different [IrEnumEntrySymbol] instances for the same enum constant.
+ * This returns a canonical instance by looking up the enum by its name in this [IrPluginContext].
+ *
+ * https://kotlinlang.slack.com/archives/C7L3JB43G/p1732121246270569
+ */
+@UnsafeDuringIrConstructionAPI
+private fun IrPluginContext.canonicalize(
+  enumSymbol: IrEnumEntrySymbol,
+) : IrEnumEntrySymbol {
+  val classId = enumSymbol.owner.parentAsClass.classId ?: return enumSymbol
+  val classSymbol = referenceClass(classId) ?: return enumSymbol
+  val entry = classSymbol.owner.findDeclaration<IrEnumEntry> { it.name == enumSymbol.owner.name }
+  return entry?.symbol ?: enumSymbol
 }
 
 private fun IrPluginContext.booleanArguments(
