@@ -188,7 +188,7 @@ private fun burstValuesArguments(
 @UnsafeDuringIrConstructionAPI
 private fun IrExpression.suggestedName(): String? {
   val raw = when (this) {
-    is IrConst<*> -> value.toString()
+    is IrConst -> value.toString()
     is IrCall -> {
       val target = (symbol.owner.correspondingPropertySymbol?.owner ?: symbol.owner)
       target.name.asString()
@@ -214,7 +214,7 @@ private fun enumValueArguments(
     val expression = defaultValue.expression
     when {
       expression is IrGetEnumValue -> expression.symbol.owner.name
-      expression is IrConst<*> && expression.value == null -> null
+      expression is IrConst && expression.value == null -> null
       else -> unexpectedDefaultValue(parameter)
     }
   }
@@ -249,7 +249,7 @@ private fun IrPluginContext.booleanArguments(
   val defaultValue = parameter.defaultValue?.let { defaultValue ->
     val expression = defaultValue.expression
     when {
-      expression is IrConst<*> -> expression.value
+      expression is IrConst -> expression.value
       else -> unexpectedDefaultValue(parameter)
     }
   }

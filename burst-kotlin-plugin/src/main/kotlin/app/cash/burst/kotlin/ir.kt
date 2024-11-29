@@ -43,6 +43,7 @@ import org.jetbrains.kotlin.ir.expressions.IrInstanceInitializerCall
 import org.jetbrains.kotlin.ir.expressions.impl.IrConstructorCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrDelegatingConstructorCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrInstanceInitializerCallImpl
+import org.jetbrains.kotlin.ir.expressions.impl.fromSymbolOwner
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrConstructorSymbol
 import org.jetbrains.kotlin.ir.symbols.IrSymbol
@@ -141,7 +142,6 @@ fun DeclarationIrBuilder.irDelegatingConstructorCall(
   context: IrGeneratorContext,
   symbol: IrConstructorSymbol,
   typeArgumentsCount: Int = 0,
-  valueArgumentsCount: Int = 0,
   block: IrDelegatingConstructorCall.() -> Unit = {},
 ): IrDelegatingConstructorCall {
   val result = IrDelegatingConstructorCallImpl(
@@ -150,7 +150,6 @@ fun DeclarationIrBuilder.irDelegatingConstructorCall(
     type = context.irBuiltIns.unitType,
     symbol = symbol,
     typeArgumentsCount = typeArgumentsCount,
-    valueArgumentsCount = valueArgumentsCount,
   )
   result.block()
   return result
