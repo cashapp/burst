@@ -11,7 +11,7 @@ dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", vers
 google-ksp = "com.google.devtools.ksp:symbol-processing-gradle-plugin:2.0.21-1.0.28"
 junit = { module = "junit:junit", version = "4.13.2" }
 junit-vintage-engine = { module = "org.junit.vintage:junit-vintage-engine", version = "5.11.3" }
-kotlin-compile-testing = { module = "dev.zacsweers.kctfork:core", version = "0.6.0" }
+kotlin-compile-testing = { module = "dev.zacsweers.kctfork:core", version = "0.7.0" }
 kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test" }
 mavenPublish-gradle-plugin = { module = "com.vanniktech:gradle-maven-publish-plugin", version = "0.30.0" }
