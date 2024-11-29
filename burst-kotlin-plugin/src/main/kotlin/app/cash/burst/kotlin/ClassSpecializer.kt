@@ -143,7 +143,6 @@ internal class ClassSpecializer(
         statements += irDelegatingConstructorCall(
           context = pluginContext,
           symbol = superConstructor.symbol,
-          valueArgumentsCount = specialization.arguments.size,
         ) {
           for ((index, argument) in specialization.arguments.withIndex()) {
             putValueArgument(index, argument.expression())
@@ -172,7 +171,6 @@ internal class ClassSpecializer(
         statements += irDelegatingConstructorCall(
           context = pluginContext,
           symbol = superConstructor.symbol,
-          valueArgumentsCount = specialization.arguments.size,
         ) {
           for ((index, argument) in specialization.arguments.withIndex()) {
             putValueArgument(index, argument.expression())
