@@ -109,7 +109,7 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-    classpath("app.cash.burst:burst-gradle-plugin:2.1.0")
+    classpath("app.cash.burst:burst-gradle-plugin:2.2.0")
   }
 }
 ```
@@ -122,6 +122,19 @@ plugins {
   ...
 }
 ```
+
+### Compatibility
+
+Since Kotlin compiler plugins are an unstable API, certain versions of Cite only work with
+certain versions of Kotlin.
+
+| Kotlin          | Burst         |
+|-----------------|---------------|
+| 2.1.0           | 2.2.0         |
+| 2.0.20 - 2.0.21 | 0.1.0 - 2.1.0 |
+
+Kotlin versions newer than those listed may be supported but have not been tested.
+
 
 
 License

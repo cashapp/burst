@@ -1,11 +1,20 @@
 # Change Log
 
 ## [Unreleased]
-[Unreleased]: https://github.com/cashapp/burst/compare/0.6.0...HEAD
+[Unreleased]: https://github.com/cashapp/burst/compare/2.1.0...HEAD
+
+
+
+## [2.2.0] *(2024-11-06)*
+[2.2.0]: https://github.com/cashapp/burst/releases/tag/2.2.0
 
 **Added**
 
- * Basic support for JUnit 5. Burst doesn't support JUnit 5 tests that populate parameters from extensions.
+ * Support Kotlin 2.1.0
+
+**Fixed**
+
+ * Match enum values by name, to ensure they can be matched across compilation units.
 
 
 ## [2.1.0] *(2024-11-06)*
