@@ -125,7 +125,7 @@ plugins {
 
 ### Compatibility
 
-Since Kotlin compiler plugins are an unstable API, certain versions of Cite only work with
+Since Kotlin compiler plugins are an unstable API, certain versions of Burst only work with
 certain versions of Kotlin.
 
 | Kotlin          | Burst         |
