@@ -16,9 +16,11 @@ dependencies {
   implementation(projects.burst)
   implementation(projects.burstKotlinPlugin)
   implementation(libs.kotlin.gradlePlugin)
+  testImplementation(kotlin("compiler-embeddable"))
   testImplementation(libs.assertk)
   testImplementation(libs.junit)
   testImplementation(libs.kotlin.test)
+  testImplementation(libs.kotlinx.metadata.klib)
 }
 
 buildConfig {
