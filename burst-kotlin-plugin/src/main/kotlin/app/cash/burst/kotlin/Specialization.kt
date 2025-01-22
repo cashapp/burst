@@ -96,4 +96,4 @@ private fun unexpectedParameterReference(element: IrElement): Nothing {
 }
 
 /** Strictly speaking Java symbol names may up to 64 KiB, but this is an ergonomic limit. */
-private const val NAME_MAX_LENGTH = 1024
+const val NAME_MAX_LENGTH = 1024

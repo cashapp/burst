@@ -132,9 +132,9 @@ internal fun IrPluginContext.allPossibleArguments(
   parameter: IrValueParameter,
   burstApis: BurstApis,
 ): List<Argument> {
-  val burstApisCall = parameter.defaultValue?.expression as? IrCall
-  if (burstApisCall?.symbol == burstApis.burstValues) {
-    return burstValuesArguments(parameter, burstApisCall)
+  val burstValuesCall = parameter.defaultValue?.expression as? IrCall
+  if (burstValuesCall?.symbol == burstApis.burstValues) {
+    return burstValuesArguments(parameter, burstValuesCall)
   }
 
   val classId = parameter.type.getClass()?.classId ?: unexpectedParameter(parameter)
