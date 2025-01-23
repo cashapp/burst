@@ -91,6 +91,7 @@ internal class FunctionSpecializer(
     // Add new declarations.
     for (function in functions) {
       originalParent.addDeclaration(function)
+      pluginContext.metadataDeclarationRegistrar.registerFunctionAsMetadataVisible(function)
     }
   }
 

@@ -90,11 +90,12 @@ class BurstGradlePluginTest {
       )
       val klibMetadata = klib.moduleMetadata()
       val coffeeTestMetadata = klibMetadata.classes.first { it.name == "CoffeeTest" }
-      // TODO: This expected output is wrong. It should have specializations like test_Milk etc.
-      //     https://github.com/cashapp/burst/issues/87
       assertThat(coffeeTestMetadata.functions.map { it.name }).containsExactlyInAnyOrder(
         "setUp",
         "test",
+        "test_Milk",
+        "test_None",
+        "test_Oat",
       )
     }
   }
