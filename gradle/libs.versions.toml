@@ -14,6 +14,7 @@ junit-vintage-engine = { module = "org.junit.vintage:junit-vintage-engine", vers
 kotlin-compile-testing = { module = "dev.zacsweers.kctfork:core", version = "0.7.0" }
 kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test" }
+kotlinx-metadata-klib = { module = "org.jetbrains.kotlinx:kotlinx-metadata-klib", version = "0.0.6" }
 mavenPublish-gradle-plugin = { module = "com.vanniktech:gradle-maven-publish-plugin", version = "0.30.0" }
 
 [plugins]
