@@ -15,12 +15,12 @@
  */
 package app.cash.burst.gradle
 
-import org.jetbrains.kotlin.konan.file.File as KonanFile
 import java.io.File
 import kotlin.metadata.KmClass
 import kotlinx.metadata.klib.KlibModuleFragmentReadStrategy
 import kotlinx.metadata.klib.KlibModuleMetadata
 import kotlinx.metadata.klib.KlibModuleMetadata.MetadataLibraryProvider
+import org.jetbrains.kotlin.konan.file.File as KonanFile
 import org.jetbrains.kotlin.library.KotlinLibrary
 import org.jetbrains.kotlin.library.ToolingSingleFileKlibResolveStrategy
 import org.jetbrains.kotlin.util.DummyLogger

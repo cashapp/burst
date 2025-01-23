@@ -83,7 +83,7 @@ class BurstGradlePluginTest {
     }
 
     val klib = readKlib(
-      projectDir.resolve("lib/build/classes/kotlin/$platformName/test/klib/lib_test")
+      projectDir.resolve("lib/build/classes/kotlin/$platformName/test/klib/lib_test"),
     )
     val klibMetadata = klib.moduleMetadata()
     val coffeeTestMetadata = klibMetadata.classes.first { it.name == "CoffeeTest" }
