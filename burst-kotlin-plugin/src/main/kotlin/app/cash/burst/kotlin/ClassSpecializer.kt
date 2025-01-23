@@ -163,7 +163,7 @@ internal class ClassSpecializer(
     superConstructor: IrConstructor,
     specialization: Specialization,
   ) {
-    original.addConstructor {
+    val constructor = original.addConstructor {
       initDefaults(original)
       isPrimary = false
     }.apply {
@@ -178,5 +178,6 @@ internal class ClassSpecializer(
         }
       }
     }
+    pluginContext.metadataDeclarationRegistrar.registerConstructorAsMetadataVisible(constructor)
   }
 }
