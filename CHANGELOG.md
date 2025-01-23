@@ -1,8 +1,16 @@
 # Change Log
 
 ## [Unreleased]
-[Unreleased]: https://github.com/cashapp/burst/compare/2.1.0...HEAD
+[Unreleased]: https://github.com/cashapp/burst/compare/2.3.0...HEAD
 
+
+
+## [2.3.0] *(2025-01-22)*
+[2.3.0]: https://github.com/cashapp/burst/releases/tag/2.3.0
+
+**Fixed**
+
+ * Include Burst’s generated functions in Kotlin metadata on Kotlin/Native.
 
 
 ## [2.2.0] *(2024-11-06)*
