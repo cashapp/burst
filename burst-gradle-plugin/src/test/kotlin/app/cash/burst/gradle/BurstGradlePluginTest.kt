@@ -52,12 +52,14 @@ class BurstGradlePluginTest {
     multiplatform(
       testTaskName = "${platformName}Test",
       platformName = platformName,
+      checkKlibMetadata = true,
     )
   }
 
   private fun multiplatform(
     testTaskName: String,
     platformName: String,
+    checkKlibMetadata: Boolean = false,
   ) {
     val projectDir = File("src/test/projects/multiplatform")
 
@@ -82,17 +84,19 @@ class BurstGradlePluginTest {
       assertThat(sampleSpecialization.skipped).isFalse()
     }
 
-    val klib = readKlib(
-      projectDir.resolve("lib/build/classes/kotlin/$platformName/test/klib/lib_test"),
-    )
-    val klibMetadata = klib.moduleMetadata()
-    val coffeeTestMetadata = klibMetadata.classes.first { it.name == "CoffeeTest" }
-    // TODO: This expected output is wrong. It should have specializations like test_Milk etc.
-    //     https://github.com/cashapp/burst/issues/87
-    assertThat(coffeeTestMetadata.functions.map { it.name }).containsExactlyInAnyOrder(
-      "setUp",
-      "test",
-    )
+    if (checkKlibMetadata) {
+      val klib = readKlib(
+        projectDir.resolve("lib/build/classes/kotlin/$platformName/test/klib/lib_test"),
+      )
+      val klibMetadata = klib.moduleMetadata()
+      val coffeeTestMetadata = klibMetadata.classes.first { it.name == "CoffeeTest" }
+      // TODO: This expected output is wrong. It should have specializations like test_Milk etc.
+      //     https://github.com/cashapp/burst/issues/87
+      assertThat(coffeeTestMetadata.functions.map { it.name }).containsExactlyInAnyOrder(
+        "setUp",
+        "test",
+      )
+    }
   }
 
   @Test
