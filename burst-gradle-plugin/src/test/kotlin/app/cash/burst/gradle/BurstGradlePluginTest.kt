@@ -303,6 +303,32 @@ class BurstGradlePluginTest {
     }
   }
 
+  /** https://github.com/cashapp/burst/issues/90 */
+  @Test
+  fun subclass() {
+    val projectDir = File("src/test/projects/subclass")
+
+    val taskName = ":lib:test"
+    val result = createRunner(projectDir, "clean", taskName).build()
+    assertThat(result.task(taskName)!!.outcome).isIn(*SUCCESS_OUTCOMES)
+
+    val testResults = projectDir.resolve("lib/build/test-results")
+    with(readTestSuite(testResults.resolve("test/TEST-CoffeeTest.xml"))) {
+      assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
+        "hasFakeOverride",
+        "hasFakeOverride_Oat",
+        "hasRealOverride",
+        "hasRealOverride_Oat",
+      )
+      assertThat(systemOut.trim().lines()).containsExactlyInAnyOrder(
+        "running fakeOverride Milk",
+        "running fakeOverride Oat",
+        "running realOverride Milk",
+        "running realOverride Oat",
+      )
+    }
+  }
+
   private fun createRunner(
     projectDir: File,
     vararg taskNames: String,
