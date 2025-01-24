@@ -72,6 +72,17 @@ internal class FunctionSpecializer(
     val originalDispatchReceiver = original.dispatchReceiverParameter
       ?: throw BurstCompilationException("Unexpected dispatch receiver", original)
 
+    // Drop `@Test` from the original's annotations.
+    original.annotations = original.annotations.filter {
+      it.type.classOrNull != testAnnotationClassSymbol
+    }
+
+    // Skip overrides. Burst will specialize the overridden function, and that's sufficient! (And
+    // we can't do anything here anyway, because overrides don't support default parameters.)
+    if (original.overriddenSymbols.isNotEmpty()) {
+      return
+    }
+
     val specializations = specializations(pluginContext, burstApis, valueParameters)
     val indexOfDefaultSpecialization = specializations.indexOfFirst { it.isDefault }
 
@@ -81,11 +92,6 @@ internal class FunctionSpecializer(
         specialization = specialization,
         isDefaultSpecialization = index == indexOfDefaultSpecialization,
       )
-    }
-
-    // Drop `@Test` from the original's annotations.
-    original.annotations = original.annotations.filter {
-      it.type.classOrNull != testAnnotationClassSymbol
     }
 
     // Add new declarations.
