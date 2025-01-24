@@ -5,6 +5,14 @@
 
 
 
+## [2.4.0] *(2025-01-24)*
+[2.4.0]: https://github.com/cashapp/burst/releases/tag/2.4.0
+
+**Fixed**
+
+ * Don't fail the compile when a `@Burst` class is subclassed. We had a bug where overridden tests were incorrectly being processed by Burst.
+
+
 ## [2.3.0] *(2025-01-22)*
 [2.3.0]: https://github.com/cashapp/burst/releases/tag/2.3.0
 
