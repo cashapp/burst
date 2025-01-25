@@ -3,6 +3,9 @@
 ## [Unreleased]
 [Unreleased]: https://github.com/cashapp/burst/compare/2.3.0...HEAD
 
+**Fixed**
+
+ * Don't fail for constructors that have value class parameters. Unfortunately we can't run such tests from the IDE.
 
 
 ## [2.4.0] *(2025-01-24)*

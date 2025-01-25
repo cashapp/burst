@@ -26,6 +26,7 @@ import org.jetbrains.kotlin.ir.declarations.IrConstructor
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrTypeSystemContextImpl
+import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.util.addFakeOverrides
 import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.createImplicitParameterDeclarationWithWrappedDescriptor
@@ -89,7 +90,10 @@ internal class ClassSpecializer(
     if (valueParameters.isEmpty()) return // Nothing to do.
 
     val specializations = specializations(pluginContext, burstApis, valueParameters)
-    val indexOfDefaultSpecialization = specializations.indexOfFirst { it.isDefault }
+    val indexOfDefaultSpecialization = when {
+      onlyConstructor.defaultSpecializationIsBroken() -> -1
+      else -> specializations.indexOfFirst { it.isDefault }
+    }
 
     // Make sure the constructor we're using is accessible. Drop the default arguments to prevent
     // JUnit from using it.
@@ -179,5 +183,19 @@ internal class ClassSpecializer(
       }
     }
     pluginContext.metadataDeclarationRegistrar.registerConstructorAsMetadataVisible(constructor)
+  }
+
+  /**
+   * Returns true if the default specialization would be broken for this constructor.
+   *
+   * We don't support the default specialization if any constructor parameter is a JVM value class.
+   * For each constructor that declares a value class parameter, the Kotlin compiler generates an
+   * extra (not-user-visible) constructor. But JUnit requires each test class to have exactly one
+   * public constructor.
+   *
+   * https://github.com/cashapp/burst/issues/93
+   */
+  private fun IrConstructor.defaultSpecializationIsBroken(): Boolean {
+    return valueParameters.any { it.type.getClass()?.hasAtJvmInline == true }
   }
 }

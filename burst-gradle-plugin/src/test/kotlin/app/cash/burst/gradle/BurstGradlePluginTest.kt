@@ -329,6 +329,31 @@ class BurstGradlePluginTest {
     }
   }
 
+  @Test
+  fun valueClassConstructor() {
+    val projectDir = File("src/test/projects/valueClassConstructor")
+
+    val taskName = ":lib:test"
+    val result = createRunner(projectDir, "clean", taskName).build()
+    assertThat(result.task(taskName)!!.outcome).isIn(*SUCCESS_OUTCOMES)
+
+    val testResults = projectDir.resolve("lib/build/test-results")
+
+    // There's no default specialization.
+    assertThat(testResults.resolve("test/TEST-CoffeeTest.xml").exists()).isFalse()
+
+    val sampleTest = readTestSuite(testResults.resolve("test/TEST-CoffeeTest_Decaf.xml"))
+    val sampleTestTest = sampleTest.testCases.single()
+    assertThat(sampleTestTest.name).isEqualTo("test")
+    assertThat(sampleTestTest.skipped).isFalse()
+    assertThat(sampleTest.systemOut).isEqualTo(
+      """
+      |running Decaf
+      |
+      """.trimMargin(),
+    )
+  }
+
   private fun createRunner(
     projectDir: File,
     vararg taskNames: String,
