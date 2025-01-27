@@ -70,5 +70,11 @@ private val junit5TestClassId = junit5Package.classId("Test")
 private val kotlinTestPackage = FqPackageName("kotlin.test")
 private val kotlinTestClassId = kotlinTestPackage.classId("Test")
 
+private val kotlinJvmFqPackage = FqPackageName("kotlin.jvm")
+private val jvmInlineAnnotationId = kotlinJvmFqPackage.classId("JvmInline")
+
 internal val IrAnnotationContainer.hasAtBurst: Boolean
   get() = hasAnnotation(burstAnnotationId)
+
+internal val IrAnnotationContainer.hasAtJvmInline: Boolean
+  get() = hasAnnotation(jvmInlineAnnotationId)
