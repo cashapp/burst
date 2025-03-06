@@ -15,7 +15,7 @@ kotlin-compile-testing = { module = "dev.zacsweers.kctfork:core", version = "0.7
 kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test" }
 kotlinx-metadata-klib = { module = "org.jetbrains.kotlinx:kotlinx-metadata-klib", version = "0.0.6" }
-mavenPublish-gradle-plugin = { module = "com.vanniktech:gradle-maven-publish-plugin", version = "0.30.0" }
+mavenPublish-gradle-plugin = { module = "com.vanniktech:gradle-maven-publish-plugin", version = "0.31.0" }
 
 [plugins]
 buildconfig = { id = "com.github.gmazzo.buildconfig", version = "5.5.1" }
