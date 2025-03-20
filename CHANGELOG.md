@@ -11,7 +11,7 @@ Nothing yet!
 
 **Added**
 
-* Support Kotlin 2.1.0
+* Support Kotlin 2.1.20
 
 **Fixed**
 
