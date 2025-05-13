@@ -1,5 +1,5 @@
 [versions]
-kotlin = "2.1.20"
+kotlin = "2.1.21"
 
 [libraries]
 android-gradlePlugin = "com.android.tools.build:gradle:8.10.0"
