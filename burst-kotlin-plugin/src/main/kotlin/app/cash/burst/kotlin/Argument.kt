@@ -16,8 +16,6 @@
 package app.cash.burst.kotlin
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
-import org.jetbrains.kotlin.ir.IrElement
-import org.jetbrains.kotlin.ir.backend.js.utils.valueArguments
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrEnumEntry
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
@@ -38,12 +36,15 @@ import org.jetbrains.kotlin.ir.util.classId
 import org.jetbrains.kotlin.ir.util.deepCopyWithSymbols
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.isEnumClass
-import org.jetbrains.kotlin.ir.visitors.IrElementVisitor
+import org.jetbrains.kotlin.ir.visitors.IrVisitor
 import org.jetbrains.kotlin.name.NameUtils
 
 internal sealed interface Argument {
   /** True if this argument matches the default parameter value. */
   val isDefault: Boolean
+
+  /** Where to assign this argument to in a call. */
+  val indexInParameters: Int
 
   /** A string that's safe to use in a declaration name. */
   val name: String
@@ -52,51 +53,60 @@ internal sealed interface Argument {
   fun expression(): IrExpression
 
   /** Visits this argument for validation. */
-  fun <R, D> accept(visitor: IrElementVisitor<R, D>, data: D): R
+  fun <R, D> accept(visitor: IrVisitor<R, D>, data: D): R
 }
 
 private class EnumValueArgument(
-  private val original: IrElement,
+  private val original: IrValueParameter,
   private val type: IrType,
   override val isDefault: Boolean,
   private val value: IrEnumEntry,
 ) : Argument {
   override val name = value.name.identifier
 
+  override val indexInParameters: Int
+    get() = original.indexInParameters
+
   override fun expression() =
     IrGetEnumValueImpl(original.startOffset, original.endOffset, type, value.symbol)
 
-  override fun <R, D> accept(visitor: IrElementVisitor<R, D>, data: D): R {
+  override fun <R, D> accept(visitor: IrVisitor<R, D>, data: D): R {
     return original.accept(visitor, data)
   }
 }
 
 private class BooleanArgument(
-  private val original: IrElement,
+  private val original: IrValueParameter,
   private val booleanType: IrType,
   override val isDefault: Boolean,
   private val value: Boolean,
 ) : Argument {
   override val name = value.toString()
 
+  override val indexInParameters: Int
+    get() = original.indexInParameters
+
   override fun expression() =
     IrConstImpl.boolean(original.startOffset, original.endOffset, booleanType, value)
 
-  override fun <R, D> accept(visitor: IrElementVisitor<R, D>, data: D): R {
+  override fun <R, D> accept(visitor: IrVisitor<R, D>, data: D): R {
     return original.accept(visitor, data)
   }
 }
 
 private class NullArgument(
-  private val original: IrElement,
+  private val original: IrValueParameter,
   private val type: IrType,
   override val isDefault: Boolean,
 ) : Argument {
   override val name = "null"
 
+  override val indexInParameters: Int
+    get() = original.indexInParameters
+
   override fun expression() = IrConstImpl.constNull(original.startOffset, original.endOffset, type)
 
-  override fun <R, D> accept(visitor: IrElementVisitor<R, D>, data: D): R {
+  override fun <R, D> accept(visitor: IrVisitor<R, D>, data: D): R {
     return original.accept(visitor, data)
   }
 }
@@ -108,11 +118,13 @@ private class BurstValuesArgument(
   index: Int,
 ) : Argument {
   override val isDefault = index == 0
+  override val indexInParameters: Int
+    get() = parameter.indexInParameters
   override val name = value.suggestedName() ?: index.toString()
 
   override fun expression() = value.deepCopyWithSymbols(parameter.parent)
 
-  override fun <R, D> accept(visitor: IrElementVisitor<R, D>, data: D): R {
+  override fun <R, D> accept(visitor: IrVisitor<R, D>, data: D): R {
     return value.accept(visitor, data)
   }
 }
@@ -153,15 +165,16 @@ private fun burstValuesArguments(
   burstApisCall: IrCall,
 ): List<Argument> {
   return buildList {
+    val valueArguments = burstApisCall.valueArguments()
     add(
       BurstValuesArgument(
         parameter = parameter,
-        value = burstApisCall.valueArguments[0] ?: unexpectedParameter(parameter),
+        value = valueArguments[0] ?: unexpectedParameter(parameter),
         index = size,
       ),
     )
 
-    val varargs = burstApisCall.valueArguments[1] as? IrVararg ?: return@buildList
+    val varargs = valueArguments[1] as? IrVararg ?: return@buildList
     for (element in varargs.elements) {
       add(
         BurstValuesArgument(

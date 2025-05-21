@@ -21,7 +21,7 @@ import org.jetbrains.kotlin.ir.declarations.IrValueParameter
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrGetValue
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
-import org.jetbrains.kotlin.ir.visitors.IrElementTransformer
+import org.jetbrains.kotlin.ir.visitors.IrTransformer
 
 internal class Specialization(
   /** The argument values for this specialization. */
@@ -75,7 +75,7 @@ internal fun specializations(
 internal class ArgumentValidator(
   private val parameters: List<IrValueParameter>,
   private val element: IrValueParameter,
-) : IrElementTransformer<Unit> {
+) : IrTransformer<Unit>() {
   /**
    * Confirm `burstValues()` don't reference other parameters. If we don't validate this here we'll
    * get an ugly compiler crash because the referenced parameter won't be visible.

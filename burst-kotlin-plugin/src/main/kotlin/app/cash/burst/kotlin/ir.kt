@@ -35,10 +35,15 @@ import org.jetbrains.kotlin.ir.declarations.IrDeclaration
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationContainer
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.declarations.IrFile
+import org.jetbrains.kotlin.ir.declarations.IrFunction
+import org.jetbrains.kotlin.ir.declarations.IrParameterKind
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
+import org.jetbrains.kotlin.ir.declarations.IrValueParameter
 import org.jetbrains.kotlin.ir.declarations.createBlockBody
+import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
 import org.jetbrains.kotlin.ir.expressions.IrDelegatingConstructorCall
+import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrInstanceInitializerCall
 import org.jetbrains.kotlin.ir.expressions.impl.IrConstructorCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrDelegatingConstructorCallImpl
@@ -187,4 +192,16 @@ fun IrSimpleFunction.irFunctionBody(
 internal fun IrDeclarationContainer.addDeclaration(declaration: IrDeclaration) {
   declarations.add(declaration)
   declaration.parent = this
+}
+
+@UnsafeDuringIrConstructionAPI
+internal fun IrFunction.valueParameters(): List<IrValueParameter> {
+  return parameters
+    .filter { it.kind == IrParameterKind.Regular }
+}
+
+@UnsafeDuringIrConstructionAPI
+internal fun IrCall.valueArguments(): List<IrExpression?> {
+  return symbol.owner.valueParameters()
+    .map { arguments[it.indexInParameters] }
 }

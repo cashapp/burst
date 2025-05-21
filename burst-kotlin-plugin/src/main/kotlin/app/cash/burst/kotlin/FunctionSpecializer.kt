@@ -16,8 +16,8 @@
 package app.cash.burst.kotlin
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
-import org.jetbrains.kotlin.backend.common.ir.addDispatchReceiver
 import org.jetbrains.kotlin.ir.builders.declarations.buildFun
+import org.jetbrains.kotlin.ir.builders.declarations.buildReceiverParameter
 import org.jetbrains.kotlin.ir.builders.irCall
 import org.jetbrains.kotlin.ir.builders.irGet
 import org.jetbrains.kotlin.ir.builders.irTemporary
@@ -66,7 +66,7 @@ internal class FunctionSpecializer(
   private val testAnnotationClassSymbol: IrClassSymbol,
 ) {
   fun generateSpecializations() {
-    val valueParameters = original.valueParameters
+    val valueParameters = original.valueParameters()
     if (valueParameters.isEmpty()) return // Nothing to do.
 
     val originalDispatchReceiver = original.dispatchReceiverParameter
@@ -114,7 +114,7 @@ internal class FunctionSpecializer(
       }
       returnType = original.returnType
     }.apply {
-      addDispatchReceiver {
+      parameters += buildReceiverParameter {
         initDefaults(originalDispatchReceiver)
         type = originalDispatchReceiver.type
       }
@@ -138,8 +138,8 @@ internal class FunctionSpecializer(
         callee = original.symbol,
       ).apply {
         this.dispatchReceiver = irGet(receiverLocal)
-        for ((index, argument) in specialization.arguments.withIndex()) {
-          putValueArgument(index, argument.expression())
+        for (argument in specialization.arguments) {
+          arguments[argument.indexInParameters] = argument.expression()
         }
       }
     }
