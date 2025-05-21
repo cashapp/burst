@@ -29,7 +29,7 @@ import org.jetbrains.kotlin.ir.types.IrTypeSystemContextImpl
 import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.util.addFakeOverrides
 import org.jetbrains.kotlin.ir.util.constructors
-import org.jetbrains.kotlin.ir.util.createImplicitParameterDeclarationWithWrappedDescriptor
+import org.jetbrains.kotlin.ir.util.createThisReceiverParameter
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.name.Name
 
@@ -86,7 +86,7 @@ internal class ClassSpecializer(
     val onlyConstructor = original.constructors.singleOrNull()
       ?: return // We only know how to handle a single constructor.
 
-    val valueParameters = onlyConstructor.valueParameters
+    val valueParameters = onlyConstructor.valueParameters()
     if (valueParameters.isEmpty()) return // Nothing to do.
 
     val specializations = specializations(pluginContext, burstApis, valueParameters)
@@ -98,7 +98,7 @@ internal class ClassSpecializer(
     // Make sure the constructor we're using is accessible. Drop the default arguments to prevent
     // JUnit from using it.
     onlyConstructor.visibility = PROTECTED
-    for (valueParameter in onlyConstructor.valueParameters) {
+    for (valueParameter in valueParameters) {
       valueParameter.defaultValue = null
     }
 
@@ -137,7 +137,7 @@ internal class ClassSpecializer(
       name = Name.identifier("${original.name.identifier}_${specialization.name}")
     }.apply {
       superTypes = listOf(original.defaultType)
-      createImplicitParameterDeclarationWithWrappedDescriptor()
+      createThisReceiverParameter()
     }
 
     created.addConstructor {
@@ -148,8 +148,8 @@ internal class ClassSpecializer(
           context = pluginContext,
           symbol = superConstructor.symbol,
         ) {
-          for ((index, argument) in specialization.arguments.withIndex()) {
-            putValueArgument(index, argument.expression())
+          for (argument in specialization.arguments) {
+            arguments[argument.indexInParameters] = argument.expression()
           }
         }
         statements += irInstanceInitializerCall(
@@ -176,8 +176,8 @@ internal class ClassSpecializer(
           context = pluginContext,
           symbol = superConstructor.symbol,
         ) {
-          for ((index, argument) in specialization.arguments.withIndex()) {
-            putValueArgument(index, argument.expression())
+          for (argument in specialization.arguments) {
+            arguments[argument.indexInParameters] = argument.expression()
           }
         }
       }
@@ -196,6 +196,6 @@ internal class ClassSpecializer(
    * https://github.com/cashapp/burst/issues/93
    */
   private fun IrConstructor.defaultSpecializationIsBroken(): Boolean {
-    return valueParameters.any { it.type.getClass()?.hasAtJvmInline == true }
+    return valueParameters().any { it.type.getClass()?.hasAtJvmInline == true }
   }
 }
