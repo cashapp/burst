@@ -1,5 +1,5 @@
 [versions]
-kotlin = "2.2.0-RC"
+kotlin = "2.2.0-RC2"
 
 [libraries]
 android-gradlePlugin = "com.android.tools.build:gradle:8.10.1"
