@@ -1,7 +1,17 @@
 # Change Log
 
 ## [Unreleased]
-[Unreleased]: https://github.com/cashapp/burst/compare/2.5.0...HEAD
+[Unreleased]: https://github.com/cashapp/burst/compare/2.6.0...HEAD
+
+Nothing yet!
+
+
+## [2.6.0] *(2025-06-23)*
+[2.6.0]: https://github.com/cashapp/burst/releases/tag/2.6.0
+
+**Added**
+
+* Support Kotlin 2.2.0
 
 **Changed**
 
