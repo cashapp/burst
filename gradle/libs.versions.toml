@@ -8,7 +8,7 @@ auto-service-annotations = { module = "com.google.auto.service:auto-service-anno
 auto-service-compiler = { module = "dev.zacsweers.autoservice:auto-service-ksp", version = "1.2.0" }
 binary-compatibility-validator-gradle-plugin = { module = "org.jetbrains.kotlinx.binary-compatibility-validator:org.jetbrains.kotlinx.binary-compatibility-validator.gradle.plugin", version = "0.17.0" }
 dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version = "2.0.0" }
-google-ksp = "com.google.devtools.ksp:symbol-processing-gradle-plugin:2.1.21-2.0.2"
+google-ksp = "com.google.devtools.ksp:symbol-processing-gradle-plugin:2.2.0-2.0.2"
 junit = { module = "junit:junit", version = "4.13.2" }
 junit-vintage-engine = { module = "org.junit.vintage:junit-vintage-engine", version = "5.13.2" }
 kotlin-compile-testing = { module = "dev.zacsweers.kctfork:core", version = "0.7.1" }
