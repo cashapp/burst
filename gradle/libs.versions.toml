@@ -6,7 +6,7 @@ android-gradlePlugin = "com.android.tools.build:gradle:8.11.0"
 assertk = "com.willowtreeapps.assertk:assertk:0.28.1"
 auto-service-annotations = { module = "com.google.auto.service:auto-service-annotations", version = "1.1.1" }
 auto-service-compiler = { module = "dev.zacsweers.autoservice:auto-service-ksp", version = "1.2.0" }
-binary-compatibility-validator-gradle-plugin = { module = "org.jetbrains.kotlinx.binary-compatibility-validator:org.jetbrains.kotlinx.binary-compatibility-validator.gradle.plugin", version = "0.18.0" }
+binary-compatibility-validator-gradle-plugin = { module = "org.jetbrains.kotlinx.binary-compatibility-validator:org.jetbrains.kotlinx.binary-compatibility-validator.gradle.plugin", version = "0.18.1" }
 dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version = "2.0.0" }
 google-ksp = "com.google.devtools.ksp:symbol-processing-gradle-plugin:2.2.0-2.0.2"
 junit = { module = "junit:junit", version = "4.13.2" }
