@@ -1,6 +1,5 @@
 import com.diffplug.gradle.spotless.SpotlessExtension
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
-import com.vanniktech.maven.publish.SonatypeHost
 import java.net.URI
 import java.net.URL
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
@@ -158,7 +157,7 @@ allprojects {
       }
     }
     configure<MavenPublishBaseExtension> {
-      publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL, automaticRelease = true)
+      publishToMavenCentral(automaticRelease = true)
       signAllPublications()
       pom {
         description.set("Adds parameters to tests")
