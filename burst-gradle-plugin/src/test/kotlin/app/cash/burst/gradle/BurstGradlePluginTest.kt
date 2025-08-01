@@ -20,10 +20,7 @@ import assertk.assertThat
 import assertk.assertions.containsExactlyInAnyOrder
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
-import assertk.assertions.isIn
 import java.io.File
-import org.gradle.testkit.runner.GradleRunner
-import org.gradle.testkit.runner.TaskOutcome
 import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.konan.target.presetName
 import org.junit.Test
@@ -61,19 +58,16 @@ class BurstGradlePluginTest {
     platformName: String,
     checkKlibMetadata: Boolean = false,
   ) {
-    val projectDir = File("src/test/projects/multiplatform")
+    val tester = GradleTester("multiplatform")
 
     val taskName = ":lib:$testTaskName"
-    val result = createRunner(projectDir, "clean", taskName).build()
-    assertThat(result.task(taskName)!!.outcome).isIn(*SUCCESS_OUTCOMES)
-
-    val testResults = projectDir.resolve("lib/build/test-results")
+    tester.cleanAndBuild(taskName)
 
     // There's no default specialization.
-    assertThat(testResults.resolve("$testTaskName/TEST-CoffeeTest.xml").exists()).isFalse()
+    assertThat(tester.hasTestSuite("CoffeeTest", testTaskName)).isFalse()
 
     // Each test class is executed normally with nothing skipped.
-    with(readTestSuite(testResults.resolve("$testTaskName/TEST-CoffeeTest_Regular.xml"))) {
+    with(tester.readTestSuite("CoffeeTest_Regular", testTaskName)) {
       assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
         "test_Milk[$platformName]",
         "test_None[$platformName]",
@@ -86,7 +80,7 @@ class BurstGradlePluginTest {
 
     if (checkKlibMetadata) {
       val klib = readKlib(
-        projectDir.resolve("lib/build/classes/kotlin/$platformName/test/klib/lib_test"),
+        File("src/test/projects/multiplatform").resolve("lib/build/classes/kotlin/$platformName/test/klib/lib_test"),
       )
       val klibMetadata = klib.moduleMetadata()
       val coffeeTestMetadata = klibMetadata.classes.first { it.name == "CoffeeTest" }
@@ -102,16 +96,12 @@ class BurstGradlePluginTest {
 
   @Test
   fun functionParameters() {
-    val projectDir = File("src/test/projects/functionParameters")
+    val tester = GradleTester("functionParameters")
 
     val taskName = ":lib:test"
-    val result = createRunner(projectDir, "clean", taskName).build()
-    assertThat(result.task(taskName)!!.outcome).isIn(*SUCCESS_OUTCOMES)
+    tester.cleanAndBuild(taskName)
 
-    val testResults = projectDir.resolve("lib/build/test-results")
-    val testXmlFile = testResults.resolve("test/TEST-CoffeeTest.xml")
-
-    val testSuite = readTestSuite(testXmlFile)
+    val testSuite = tester.readTestSuite("CoffeeTest")
 
     assertThat(testSuite.testCases.map { it.name }).containsExactlyInAnyOrder(
       "test_Decaf_Milk",
@@ -131,16 +121,11 @@ class BurstGradlePluginTest {
 
   @Test
   fun abstractClasses() {
-    val projectDir = File("src/test/projects/abstractClasses")
+    val tester = GradleTester("abstractClasses")
 
-    val taskName = ":lib:test"
-    val result = createRunner(projectDir, "clean", taskName).build()
-    assertThat(result.task(taskName)!!.outcome).isIn(*SUCCESS_OUTCOMES)
+    tester.cleanAndBuild(":lib:test")
 
-    val testResults = projectDir.resolve("lib/build/test-results")
-    val testXmlFile = testResults.resolve("test/TEST-CoffeeTest.xml")
-
-    val testSuite = readTestSuite(testXmlFile)
+    val testSuite = tester.readTestSuite("CoffeeTest")
 
     assertThat(testSuite.testCases.map { it.name }).containsExactlyInAnyOrder(
       "test_Milk",
@@ -151,18 +136,14 @@ class BurstGradlePluginTest {
 
   @Test
   fun classParameters() {
-    val projectDir = File("src/test/projects/classParameters")
+    val tester = GradleTester("classParameters")
 
-    val taskName = ":lib:test"
-    val result = createRunner(projectDir, "clean", taskName).build()
-    assertThat(result.task(taskName)!!.outcome).isIn(*SUCCESS_OUTCOMES)
-
-    val testResults = projectDir.resolve("lib/build/test-results")
+    tester.cleanAndBuild(":lib:test")
 
     // There's no default specialization.
-    assertThat(testResults.resolve("test/TEST-CoffeeTest.xml").exists()).isFalse()
+    assertThat(tester.hasTestSuite("CoffeeTest")).isFalse()
 
-    val sampleTest = readTestSuite(testResults.resolve("test/TEST-CoffeeTest_Regular_Milk.xml"))
+    val sampleTest = tester.readTestSuite("CoffeeTest_Regular_Milk")
     val sampleTestTest = sampleTest.testCases.single()
     assertThat(sampleTestTest.name).isEqualTo("test")
     assertThat(sampleTestTest.skipped).isFalse()
@@ -177,26 +158,18 @@ class BurstGradlePluginTest {
 
   @Test
   fun android() {
-    val projectDir = File("src/test/projects/android")
-
-    val testTaskName = ":lib:test"
-    val androidTestTaskName = ":lib:assembleAndroidTest"
-    val result = createRunner(projectDir, "clean", testTaskName, androidTestTaskName).build()
-    assertThat(result.task(testTaskName)!!.outcome).isIn(*SUCCESS_OUTCOMES)
-    assertThat(result.task(androidTestTaskName)!!.outcome).isIn(*SUCCESS_OUTCOMES)
+    val tester = GradleTester("android")
+    tester.cleanAndBuild(":lib:test", ":lib:assembleAndroidTest")
   }
 
   @Test
   fun defaultArguments() {
-    val projectDir = File("src/test/projects/defaultArguments")
+    val tester = GradleTester("defaultArguments")
 
-    val result = createRunner(projectDir, "clean", ":lib:test").build()
-    assertThat(result.task(":lib:test")!!.outcome).isIn(*SUCCESS_OUTCOMES)
-
-    val testResults = projectDir.resolve("lib/build/test-results")
+    tester.cleanAndBuild(":lib:test")
 
     // The original test class runs the default specialization.
-    with(readTestSuite(testResults.resolve("test/TEST-CoffeeTest.xml"))) {
+    with(tester.readTestSuite("CoffeeTest")) {
       assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
         "test",
         "test_None",
@@ -211,10 +184,10 @@ class BurstGradlePluginTest {
     }
 
     // No subclass is generated for the default specialization.
-    assertThat(testResults.resolve("test/TEST-CoffeeTest_Regular.xml").exists()).isFalse()
+    assertThat(tester.hasTestSuite("CoffeeTest_Regular")).isFalse()
 
     // Another test class is executed normally with nothing skipped.
-    with(readTestSuite(testResults.resolve("test/TEST-CoffeeTest_Double.xml"))) {
+    with(tester.readTestSuite("CoffeeTest_Double")) {
       assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
         "test",
         "test_None",
@@ -231,15 +204,11 @@ class BurstGradlePluginTest {
 
   @Test
   fun burstValues() {
-    val projectDir = File("src/test/projects/burstValues")
+    val tester = GradleTester("burstValues")
 
-    val taskName = ":lib:test"
-    val result = createRunner(projectDir, "clean", taskName).build()
-    assertThat(result.task(taskName)!!.outcome).isIn(*SUCCESS_OUTCOMES)
+    tester.cleanAndBuild(":lib:test")
 
-    val testResults = projectDir.resolve("lib/build/test-results")
-
-    with(readTestSuite(testResults.resolve("test/TEST-CoffeeTest.xml"))) {
+    with(tester.readTestSuite("CoffeeTest")) {
       assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
         "test",
         "test_12",
@@ -258,7 +227,7 @@ class BurstGradlePluginTest {
       )
     }
 
-    with(readTestSuite(testResults.resolve("test/TEST-CoffeeTest_Regular.xml"))) {
+    with(tester.readTestSuite("CoffeeTest_Regular")) {
       assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
         "test",
         "test_12",
@@ -280,15 +249,11 @@ class BurstGradlePluginTest {
 
   @Test
   fun junit5() {
-    val projectDir = File("src/test/projects/junit5")
+    val tester = GradleTester("junit5")
 
-    val taskName = ":lib:test"
-    val result = createRunner(projectDir, "clean", taskName).build()
-    assertThat(result.task(taskName)!!.outcome).isIn(*SUCCESS_OUTCOMES)
+    tester.cleanAndBuild(":lib:test")
 
-    val testResults = projectDir.resolve("lib/build/test-results")
-
-    with(readTestSuite(testResults.resolve("test/TEST-CoffeeTest_Regular.xml"))) {
+    with(tester.readTestSuite("CoffeeTest_Regular")) {
       assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
         "kotlinTestTest_Milk()",
         "kotlinTestTest_None()",
@@ -306,14 +271,11 @@ class BurstGradlePluginTest {
   /** https://github.com/cashapp/burst/issues/90 */
   @Test
   fun subclass() {
-    val projectDir = File("src/test/projects/subclass")
+    val tester = GradleTester("subclass")
 
-    val taskName = ":lib:test"
-    val result = createRunner(projectDir, "clean", taskName).build()
-    assertThat(result.task(taskName)!!.outcome).isIn(*SUCCESS_OUTCOMES)
+    tester.cleanAndBuild(":lib:test")
 
-    val testResults = projectDir.resolve("lib/build/test-results")
-    with(readTestSuite(testResults.resolve("test/TEST-CoffeeTest.xml"))) {
+    with(tester.readTestSuite("CoffeeTest")) {
       assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
         "hasFakeOverride",
         "hasFakeOverride_Oat",
@@ -331,18 +293,14 @@ class BurstGradlePluginTest {
 
   @Test
   fun valueClassConstructor() {
-    val projectDir = File("src/test/projects/valueClassConstructor")
+    val tester = GradleTester("valueClassConstructor")
 
-    val taskName = ":lib:test"
-    val result = createRunner(projectDir, "clean", taskName).build()
-    assertThat(result.task(taskName)!!.outcome).isIn(*SUCCESS_OUTCOMES)
-
-    val testResults = projectDir.resolve("lib/build/test-results")
+    tester.cleanAndBuild(":lib:test")
 
     // There's no default specialization.
-    assertThat(testResults.resolve("test/TEST-CoffeeTest.xml").exists()).isFalse()
+    assertThat(tester.hasTestSuite("CoffeeTest")).isFalse()
 
-    val sampleTest = readTestSuite(testResults.resolve("test/TEST-CoffeeTest_Decaf.xml"))
+    val sampleTest = tester.readTestSuite("CoffeeTest_Decaf")
     val sampleTestTest = sampleTest.testCases.single()
     assertThat(sampleTestTest.name).isEqualTo("test")
     assertThat(sampleTestTest.skipped).isFalse()
@@ -352,25 +310,5 @@ class BurstGradlePluginTest {
       |
       """.trimMargin(),
     )
-  }
-
-  private fun createRunner(
-    projectDir: File,
-    vararg taskNames: String,
-  ): GradleRunner {
-    val gradleRoot = projectDir.resolve("gradle").also { it.mkdir() }
-    File("../gradle/wrapper").copyRecursively(gradleRoot.resolve("wrapper"), true)
-    File(projectDir, "kotlin-js-store/yarn.lock").delete()
-    val arguments = arrayOf("--info", "--stacktrace", "--continue")
-    return GradleRunner.create()
-      .withProjectDir(projectDir)
-      .withDebug(true) // Run in-process.
-      .withArguments(*arguments, *taskNames, versionProperty)
-      .forwardOutput()
-  }
-
-  companion object {
-    val SUCCESS_OUTCOMES = arrayOf(TaskOutcome.SUCCESS, TaskOutcome.UP_TO_DATE)
-    val versionProperty = "-PburstVersion=${System.getProperty("burstVersion")}"
   }
 }
