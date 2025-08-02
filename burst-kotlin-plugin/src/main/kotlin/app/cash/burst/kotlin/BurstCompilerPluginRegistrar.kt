@@ -41,5 +41,8 @@ class BurstCompilerPluginRegistrar : CompilerPluginRegistrar() {
     IrGenerationExtension.registerExtension(
       extension = BurstIrGenerationExtension(messageCollector),
     )
+    IrGenerationExtension.registerExtension(
+      extension = TestInterceptorIrGenerationExtension(messageCollector),
+    )
   }
 }
