@@ -47,16 +47,23 @@ internal fun Element.toTestSuite(): TestSuite {
 
 internal fun Element.toTestCase(): TestCase {
   var skipped = false
+  var failureMessage: String? = null
   for (i in 0 until childNodes.length) {
     val item = childNodes.item(i)
-    if (item is Element && item.tagName == "skipped") {
-      skipped = true
+    if (item is Element) {
+      if (item.tagName == "skipped") {
+        skipped = true
+      }
+      if (item.tagName == "failure") {
+        failureMessage = item.getAttribute("message")
+      }
     }
   }
 
   return TestCase(
     name = getAttribute("name"),
     skipped = skipped,
+    failureMessage = failureMessage,
   )
 }
 
@@ -69,4 +76,5 @@ class TestSuite(
 class TestCase(
   val name: String,
   val skipped: Boolean,
+  val failureMessage: String?,
 )

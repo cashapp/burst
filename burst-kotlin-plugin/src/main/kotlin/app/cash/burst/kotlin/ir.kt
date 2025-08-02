@@ -16,6 +16,7 @@
 package app.cash.burst.kotlin
 
 import org.jetbrains.kotlin.backend.common.lower.DeclarationIrBuilder
+import org.jetbrains.kotlin.backend.common.lower.irCatch
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageLocationWithRange
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSourceLocation
@@ -25,11 +26,20 @@ import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.IrStatement
 import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
 import org.jetbrains.kotlin.ir.builders.IrBlockBodyBuilder
+import org.jetbrains.kotlin.ir.builders.IrBlockBuilder
 import org.jetbrains.kotlin.ir.builders.IrGeneratorContext
 import org.jetbrains.kotlin.ir.builders.Scope
 import org.jetbrains.kotlin.ir.builders.declarations.IrClassBuilder
 import org.jetbrains.kotlin.ir.builders.declarations.IrFunctionBuilder
 import org.jetbrains.kotlin.ir.builders.declarations.IrValueParameterBuilder
+import org.jetbrains.kotlin.ir.builders.declarations.buildFun
+import org.jetbrains.kotlin.ir.builders.declarations.buildVariable
+import org.jetbrains.kotlin.ir.builders.irCall
+import org.jetbrains.kotlin.ir.builders.irGet
+import org.jetbrains.kotlin.ir.builders.irIfNull
+import org.jetbrains.kotlin.ir.builders.irSet
+import org.jetbrains.kotlin.ir.builders.irTry
+import org.jetbrains.kotlin.ir.builders.parent
 import org.jetbrains.kotlin.ir.declarations.IrConstructor
 import org.jetbrains.kotlin.ir.declarations.IrDeclaration
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationContainer
@@ -39,14 +49,17 @@ import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrParameterKind
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
+import org.jetbrains.kotlin.ir.declarations.IrVariable
 import org.jetbrains.kotlin.ir.declarations.createBlockBody
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
 import org.jetbrains.kotlin.ir.expressions.IrDelegatingConstructorCall
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrInstanceInitializerCall
+import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
 import org.jetbrains.kotlin.ir.expressions.impl.IrConstructorCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrDelegatingConstructorCallImpl
+import org.jetbrains.kotlin.ir.expressions.impl.IrFunctionExpressionImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrInstanceInitializerCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.fromSymbolOwner
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
@@ -55,6 +68,7 @@ import org.jetbrains.kotlin.ir.symbols.IrSymbol
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.symbols.impl.IrSimpleFunctionSymbolImpl
 import org.jetbrains.kotlin.ir.types.starProjectedType
+import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.name.Name
@@ -186,6 +200,66 @@ fun IrSimpleFunction.irFunctionBody(
   body = bodyBuilder.blockBody {
     blockBody()
   }
+}
+
+fun IrBlockBodyBuilder.localLambda(
+  scopeOwnerSymbol: IrSymbol,
+  block: IrBlockBodyBuilder.() -> Unit,
+): IrFunctionExpressionImpl {
+  return IrFunctionExpressionImpl(
+    startOffset = startOffset,
+    endOffset = endOffset,
+    type = context.irBuiltIns.functionN(0).typeWith(context.irBuiltIns.unitType),
+    function = context.irFactory.buildFun {
+      this.name = Name.special("<anonymous>")
+      this.returnType = context.irBuiltIns.unitType
+      this.origin = IrDeclarationOrigin.Companion.LOCAL_FUNCTION_FOR_LAMBDA
+      this.visibility = DescriptorVisibilities.LOCAL
+    }.apply {
+      irFunctionBody(
+        context = context,
+        scopeOwnerSymbol = scopeOwnerSymbol,
+      ) {
+        block()
+      }
+    },
+    origin = IrStatementOrigin.Companion.LAMBDA,
+  )
+}
+
+internal fun IrBlockBuilder.irAccumulateFailure(
+  burstApis: BurstApis,
+  failure: IrVariable,
+  tryBody: IrExpression,
+): IrExpression {
+  val e = buildVariable(
+    parent = parent,
+    startOffset = UNDEFINED_OFFSET,
+    endOffset = UNDEFINED_OFFSET,
+    origin = IrDeclarationOrigin.CATCH_PARAMETER,
+    name = Name.identifier("e"),
+    type = context.irBuiltIns.throwableType
+  )
+
+  return irTry(
+    type = context.irBuiltIns.anyNType,
+    tryResult = tryBody,
+    catches = listOf(
+      irCatch(
+        catchParameter = e,
+        result = irIfNull(
+          type = context.irBuiltIns.anyNType,
+          subject = irGet(failure),
+          thenPart = irSet(failure, irGet(e)),
+          elsePart = irCall(burstApis.throwableAddSuppressed).apply {
+            arguments[0] = irGet(failure)
+            arguments[1] = irGet(e)
+          }
+        )
+      )
+    ),
+    finallyExpression = null,
+  )
 }
 
 @UnsafeDuringIrConstructionAPI
