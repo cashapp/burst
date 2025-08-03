@@ -215,10 +215,10 @@ internal class InterceptorInjector(
           burstApis,
           failure,
           irBlock {
-            // Call each function annotated `@BeforeTest`.
-            for (beforeTestFunctionSymbol in beforeTestFunctionSymbols) {
+            // Call each function annotated `@BeforeTest` in reverse alphabetical order.
+            for (functionSymbol in beforeTestFunctionSymbols.sortedBy { it.owner.name }.reversed()) {
               +irCall(
-                callee = beforeTestFunctionSymbol,
+                callee = functionSymbol,
               ).apply {
                 dispatchReceiver = irGet(function.dispatchReceiverParameter!!).apply {
                   origin = IMPLICIT_ARGUMENT
@@ -235,13 +235,13 @@ internal class InterceptorInjector(
           },
         )
 
-        // Call each function annotated `@AfterTest`.
-        for (afterTestFunctionSymbol in afterTestFunctionSymbols) {
+        // Call each function annotated `@AfterTest` in alphabetical order.
+        for (functionSymbol in afterTestFunctionSymbols.sortedBy { it.owner.name }) {
           +irAccumulateFailure(
             burstApis,
             failure,
             irCall(
-              callee = afterTestFunctionSymbol,
+              callee = functionSymbol,
             ).apply {
               dispatchReceiver = irGet(function.dispatchReceiverParameter!!).apply {
                 origin = IMPLICIT_ARGUMENT
@@ -258,7 +258,7 @@ internal class InterceptorInjector(
         )
       }
 
-      for (interceptor in interceptorProperties.reversed()) {
+      for (interceptor in interceptorProperties.sortedBy { it.name }) {
         proceed = wrapWithInterceptor(
           receiverLocal = function.dispatchReceiverParameter!!,
           interceptorProperty = interceptor,
