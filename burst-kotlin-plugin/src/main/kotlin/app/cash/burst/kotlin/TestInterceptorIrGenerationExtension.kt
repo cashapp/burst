@@ -39,7 +39,7 @@ class TestInterceptorIrGenerationExtension(
         val classDeclaration = super.visitClassNew(declaration) as IrClass
 
         val interceptorProperties = classDeclaration.properties.filter {
-          it.hasAtTestInterceptor
+          it.hasAtTestInterceptor && it.overriddenSymbols.isEmpty()
         }.toList()
 
         if (interceptorProperties.isEmpty()) {
@@ -56,6 +56,8 @@ class TestInterceptorIrGenerationExtension(
         )
 
         for (function in originalFunctions) {
+          if (function.overriddenSymbols.isNotEmpty()) continue
+
           if (burstApis.findBeforeTestAnnotation(function) != null) {
             interceptorInjector.adoptBeforeTest(function)
           }
@@ -67,6 +69,8 @@ class TestInterceptorIrGenerationExtension(
         interceptorInjector.defineIntercept()
 
         for (function in originalFunctions) {
+          if (function.overriddenSymbols.isNotEmpty()) continue
+
           if (burstApis.findTestAnnotation(function) != null) {
             interceptorInjector.inject(function)
           }

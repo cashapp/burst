@@ -139,5 +139,20 @@ class TestInterceptorGradlePluginTest {
         """.trimMargin(),
       )
     }
+
+    // In JUnit 4, superclass rules run before subclass rules.
+    with(tester.readTestSuite("app.cash.burst.tests.InterceptInSuperclassTest${'$'}CircleTest")) {
+      assertThat(testCases.single().failureMessage).isNull()
+      assertThat(systemOut).isEqualTo(
+        """
+        |intercepting shape (app.cash.burst.tests InterceptInSuperclassTest.CircleTest passingTest)
+        |intercepting circle (app.cash.burst.tests InterceptInSuperclassTest.CircleTest passingTest)
+        |running
+        |intercepted circle
+        |intercepted shape
+        |
+        """.trimMargin(),
+      )
+    }
   }
 }

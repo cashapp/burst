@@ -35,6 +35,7 @@ import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.IrValueDeclaration
+import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
 import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin.Companion.IMPLICIT_ARGUMENT
@@ -46,10 +47,12 @@ import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.makeNullable
 import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.defaultType
+import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.packageFqName
 import org.jetbrains.kotlin.ir.util.parentClassOrNull
 import org.jetbrains.kotlin.ir.util.patchDeclarationParents
 import org.jetbrains.kotlin.ir.util.statements
+import org.jetbrains.kotlin.ir.util.superClass
 import org.jetbrains.kotlin.name.Name
 
 /**
@@ -133,6 +136,13 @@ internal class InterceptorInjector(
 
   /** The `intercept()` function we defined. */
   private var interceptFunctionSymbol: IrSimpleFunctionSymbol? = null
+
+  /** The `intercept()` function declared by the superclass. */
+  // TODO: run an InterceptorInjector on the superclass first if necessary?!
+  private val superclassIntercept: IrSimpleFunction? =
+    originalParent.superClass?.functions?.firstOrNull {
+      burstApis.testInterceptorIntercept in it.overriddenSymbols
+    }
 
   /** Remove the `@BeforeTest` annotation on [function]. */
   fun adoptBeforeTest(function: IrSimpleFunction) {
@@ -259,13 +269,28 @@ internal class InterceptorInjector(
       }
 
       for (interceptor in interceptorProperties.sortedBy { it.name }) {
-        proceed = wrapWithInterceptor(
+        proceed = callInterceptorIntercept(
           receiverLocal = function.dispatchReceiverParameter!!,
           interceptorProperty = interceptor,
-          packageName = packageNameLocal,
-          className = classNameLocal,
-          functionName = functionNameLocal,
-          proceed = proceed,
+          testInstance = newTestInstance(
+            packageName = packageNameLocal,
+            className = classNameLocal,
+            functionName = functionNameLocal,
+            proceed = proceed,
+          ),
+        )
+      }
+
+      if (superclassIntercept != null) {
+        proceed = callSuperIntercept(
+          superclassIntercept,
+          interceptFunction = function,
+          testInstance = newTestInstance(
+            packageName = packageNameLocal,
+            className = classNameLocal,
+            functionName = functionNameLocal,
+            proceed = proceed,
+          ),
         )
       }
 
@@ -279,24 +304,13 @@ internal class InterceptorInjector(
     this.interceptFunctionSymbol = function.symbol
   }
 
-  /** Wraps [proceed] to apply the interceptor [interceptorProperty]. */
-  private fun IrBlockBodyBuilder.wrapWithInterceptor(
-    receiverLocal: IrValueDeclaration,
-    interceptorProperty: IrProperty,
+  private fun IrBlockBodyBuilder.newTestInstance(
     packageName: IrValueDeclaration,
     className: IrValueDeclaration,
     functionName: IrValueDeclaration,
     proceed: IrExpression,
   ): IrExpression {
-    val interceptorInstance = irCall(interceptorProperty.getter!!)
-      .apply {
-        origin = IrStatementOrigin.Companion.GET_PROPERTY
-        dispatchReceiver = irGet(receiverLocal).apply {
-          origin = IMPLICIT_ARGUMENT
-        }
-      }
-
-    val testInstance = irCall(
+    return irCall(
       callee = burstApis.testInterceptorTest.constructors.single(),
     ).apply {
       arguments[0] = irGet(packageName)
@@ -306,11 +320,43 @@ internal class InterceptorInjector(
         +proceed
       }
     }
+  }
+
+  /** Passes [testInstance] to the `intercept` function of [interceptorProperty]. */
+  private fun IrBlockBodyBuilder.callInterceptorIntercept(
+    receiverLocal: IrValueDeclaration,
+    interceptorProperty: IrProperty,
+    testInstance: IrExpression,
+  ): IrExpression {
+    val interceptorInstance = irCall(interceptorProperty.getter!!)
+      .apply {
+        origin = IrStatementOrigin.Companion.GET_PROPERTY
+        dispatchReceiver = irGet(receiverLocal).apply {
+          origin = IMPLICIT_ARGUMENT
+        }
+      }
 
     return irCall(
       callee = burstApis.testInterceptorIntercept,
     ).apply {
       dispatchReceiver = interceptorInstance
+      arguments[1] = testInstance
+    }
+  }
+
+  /** Calls `super.intercept()`. */
+  private fun IrBlockBodyBuilder.callSuperIntercept(
+    superclassIntercept: IrSimpleFunction,
+    interceptFunction: IrSimpleFunction,
+    testInstance: IrExpression,
+  ): IrCall {
+    return irCall(
+      callee = superclassIntercept,
+      superQualifierSymbol = originalParent.superClass!!.symbol,
+    ).apply {
+      dispatchReceiver = irGet(interceptFunction.dispatchReceiverParameter!!).apply {
+        origin = VARIABLE_AS_FUNCTION
+      }
       arguments[1] = testInstance
     }
   }

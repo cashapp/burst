@@ -140,13 +140,13 @@ class TestInterceptorKotlinPluginTest {
     val happyPath = testClass.methods.single { it.name == "happyPath" }
     happyPath.invoke(testInstance)
     assertThat(log).containsExactly(
-      "start A",
-      "start B",
       "start C",
+      "start B",
+      "start A",
       "running test",
-      "end C",
-      "end B",
       "end A",
+      "end B",
+      "end C",
     )
     log.clear()
   }
@@ -326,5 +326,68 @@ class TestInterceptorKotlinPluginTest {
       "intercepted test",
     )
     log.clear()
+  }
+
+  @Test
+  fun inheritance() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "InterceptInSuperclassTest.kt",
+        """
+        package com.example
+
+        import app.cash.burst.InterceptTest
+        import app.cash.burst.TestInterceptor
+        import kotlin.test.Test
+
+        class InterceptInSuperclassTest {
+          companion object {
+            @JvmStatic
+            val log = mutableListOf<String>()
+          }
+
+          open class ShapeTest {
+            @InterceptTest
+            val shapeInterceptor = LoggingInterceptor("shape")
+          }
+
+          class CircleTest : ShapeTest() {
+            @InterceptTest
+            val circleInterceptor = LoggingInterceptor("circle")
+
+            @Test
+            fun happyPath() {
+              log += "running"
+            }
+          }
+
+          class LoggingInterceptor(val name: String) : TestInterceptor {
+            override fun intercept(test: TestInterceptor.Test) {
+              log += "intercepting ${'$'}name"
+              test()
+              log += "intercepted ${'$'}name"
+            }
+          }
+        }
+        """,
+      ),
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val enclosingClass = result.classLoader.loadClass("com.example.InterceptInSuperclassTest")
+    val testClass = result.classLoader.loadClass("com.example.InterceptInSuperclassTest\$CircleTest")
+
+    val testInstance = testClass.constructors.single().newInstance()
+    val log = enclosingClass.getMethod("getLog").invoke(null) as MutableList<*>
+
+    val happyPath = testClass.methods.single { it.name == "happyPath" }
+    happyPath.invoke(testInstance)
+    assertThat(log).containsExactly(
+      "intercepting shape",
+      "intercepting circle",
+      "running",
+      "intercepted circle",
+      "intercepted shape",
+    )
   }
 }
