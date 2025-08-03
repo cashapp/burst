@@ -73,7 +73,7 @@ class TestInterceptorKotlinPluginTest {
     happyPath.invoke(testInstance)
     assertThat(log).containsExactly(
       "intercepting com.example SampleTest happyPath",
-      "running happyPath"
+      "running happyPath",
     )
     log.clear()
   }

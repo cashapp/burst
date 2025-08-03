@@ -208,7 +208,7 @@ internal class InterceptorInjector(
           value = irNull(),
           irType = pluginContext.irBuiltIns.throwableType.makeNullable(),
           nameHint = "failure",
-          isMutable = true
+          isMutable = true,
         )
 
         +irAccumulateFailure(
@@ -246,7 +246,7 @@ internal class InterceptorInjector(
               dispatchReceiver = irGet(function.dispatchReceiverParameter!!).apply {
                 origin = IMPLICIT_ARGUMENT
               }
-            }
+            },
           )
         }
 

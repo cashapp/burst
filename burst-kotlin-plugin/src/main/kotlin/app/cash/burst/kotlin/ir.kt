@@ -238,7 +238,7 @@ internal fun IrBlockBuilder.irAccumulateFailure(
     endOffset = UNDEFINED_OFFSET,
     origin = IrDeclarationOrigin.CATCH_PARAMETER,
     name = Name.identifier("e"),
-    type = context.irBuiltIns.throwableType
+    type = context.irBuiltIns.throwableType,
   )
 
   return irTry(
@@ -254,9 +254,9 @@ internal fun IrBlockBuilder.irAccumulateFailure(
           elsePart = irCall(burstApis.throwableAddSuppressed).apply {
             arguments[0] = irGet(failure)
             arguments[1] = irGet(e)
-          }
-        )
-      )
+          },
+        ),
+      ),
     ),
     finallyExpression = null,
   )
