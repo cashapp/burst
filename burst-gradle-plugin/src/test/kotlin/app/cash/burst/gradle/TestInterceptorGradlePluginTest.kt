@@ -73,7 +73,7 @@ class TestInterceptorGradlePluginTest {
   }
 
   /**
-   * In JUnit 4:
+   * Note that this is different from JUnit 4, which has this behavior:
    *   multiple set up functions run in reverse alphabetical order
    *   multiple tear down functions run in alphabetical order
    */
@@ -85,12 +85,12 @@ class TestInterceptorGradlePluginTest {
         """
         |intercepting
         |beforeTest red
-        |beforeTest green
         |beforeTest blue
+        |beforeTest green
         |running
+        |afterTest red
         |afterTest blue
         |afterTest green
-        |afterTest red
         |intercepted
         |
         """.trimMargin(),
@@ -104,9 +104,9 @@ class TestInterceptorGradlePluginTest {
       assertThat(testCases.single().failureMessage).isNotNull().contains("boom!")
       assertThat(systemOut).isEqualTo(
         """
+        |afterTest red
         |afterTest blue
         |afterTest green
-        |afterTest red
         |re-throwing exception: boom!
         |
         """.trimMargin(),
@@ -124,8 +124,8 @@ class TestInterceptorGradlePluginTest {
       assertThat(systemOut).isEqualTo(
         """
         |running
-        |afterTest green
         |afterTest red
+        |afterTest green
         |re-throwing exception: boom!
         |
         """.trimMargin(),
@@ -143,7 +143,6 @@ class TestInterceptorGradlePluginTest {
       assertThat(systemOut).isEqualTo(
         """
         |beforeTest red
-        |beforeTest green
         |afterTest
         |re-throwing exception: boom!
         |
@@ -153,7 +152,7 @@ class TestInterceptorGradlePluginTest {
   }
 
   /**
-   * In JUnit 4, @Rules execute in reverse alphabetical order.
+   * Note that this is different from JUnit 4, which executes @Rules in reverse alphabetical order.
    */
   @Test
   fun multipleInterceptors() {
@@ -162,11 +161,11 @@ class TestInterceptorGradlePluginTest {
       assertThat(systemOut).isEqualTo(
         """
         |intercepting red (app.cash.burst.tests MultipleInterceptorsTest passingTest)
-        |intercepting green (app.cash.burst.tests MultipleInterceptorsTest passingTest)
         |intercepting blue (app.cash.burst.tests MultipleInterceptorsTest passingTest)
+        |intercepting green (app.cash.burst.tests MultipleInterceptorsTest passingTest)
         |running
-        |intercepted blue
         |intercepted green
+        |intercepted blue
         |intercepted red
         |
         """.trimMargin(),
@@ -387,15 +386,15 @@ class TestInterceptorGradlePluginTest {
         """
         |getting interceptor red
         |intercepting red
-        |getting interceptor green
-        |intercepting green
         |getting interceptor blue
         |intercepting blue
+        |getting interceptor green
+        |intercepting green
         |before test
         |running
         |after test
-        |intercepted blue
         |intercepted green
+        |intercepted blue
         |intercepted red
         |
         """.trimMargin(),

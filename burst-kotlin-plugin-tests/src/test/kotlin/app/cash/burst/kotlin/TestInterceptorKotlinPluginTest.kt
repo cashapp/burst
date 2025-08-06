@@ -140,13 +140,13 @@ class TestInterceptorKotlinPluginTest {
     val happyPath = testClass.methods.single { it.name == "happyPath" }
     happyPath.invoke(testInstance)
     assertThat(log).containsExactly(
-      "start C",
-      "start B",
       "start A",
+      "start B",
+      "start C",
       "running test",
-      "end A",
-      "end B",
       "end C",
+      "end B",
+      "end A",
     )
     log.clear()
   }
