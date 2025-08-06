@@ -24,7 +24,6 @@ import org.jetbrains.kotlin.ir.symbols.IrPropertySymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.types.classOrNull
 import org.jetbrains.kotlin.ir.util.hasAnnotation
-import org.jetbrains.kotlin.name.Name
 
 /** Looks up APIs used by the code rewriters. */
 internal class BurstApis private constructor(
@@ -38,23 +37,23 @@ internal class BurstApis private constructor(
   val testInterceptor: IrClassSymbol =
     pluginContext.referenceClass(testInterceptorClassId)!!
 
-  val testInterceptorTest: IrClassSymbol =
-    pluginContext.referenceClass(testInterceptorTestClassId)!!
+  val testFunction: IrClassSymbol =
+    pluginContext.referenceClass(testFunctionClassId)!!
 
   val testInterceptorIntercept: IrSimpleFunctionSymbol =
     pluginContext.referenceFunctions(testInterceptorInterceptId).single()
 
-  val testInterceptorTestPackageName: IrPropertySymbol =
-    pluginContext.referenceProperties(testInterceptorTestPackageNameId).single()
+  val testFunctionPackageName: IrPropertySymbol =
+    pluginContext.referenceProperties(testFunctionPackageNameId).single()
 
-  val testInterceptorTestClassName: IrPropertySymbol =
-    pluginContext.referenceProperties(testInterceptorTestClassNameId).single()
+  val testFunctionClassName: IrPropertySymbol =
+    pluginContext.referenceProperties(testFunctionClassNameId).single()
 
-  val testInterceptorTestFunctionName: IrPropertySymbol =
-    pluginContext.referenceProperties(testInterceptorTestFunctionNameId).single()
+  val testFunctionFunctionName: IrPropertySymbol =
+    pluginContext.referenceProperties(testFunctionFunctionNameId).single()
 
-  val testInterceptorTestInvoke: IrSimpleFunctionSymbol =
-    pluginContext.referenceFunctions(testInterceptorTestInvokeId).single()
+  val testFunctionInvoke: IrSimpleFunctionSymbol =
+    pluginContext.referenceFunctions(testFunctionInvokeId).single()
 
   val throwableAddSuppressed: IrSimpleFunctionSymbol =
     pluginContext.referenceFunctions(throwableAddSuppressedId).single()
@@ -123,13 +122,13 @@ private val burstAnnotationId = burstFqPackage.classId("Burst")
 private val burstValuesId = burstFqPackage.callableId("burstValues")
 
 private val interceptTestAnnotationId = burstFqPackage.classId("InterceptTest")
+private val testFunctionClassId = burstFqPackage.classId("TestFunction")
 private val testInterceptorClassId = burstFqPackage.classId("TestInterceptor")
-private val testInterceptorTestClassId = testInterceptorClassId.createNestedClassId(Name.identifier("Test"))
 private val testInterceptorInterceptId = testInterceptorClassId.callableId("intercept")
-private val testInterceptorTestInvokeId = testInterceptorTestClassId.callableId("invoke")
-private val testInterceptorTestPackageNameId = testInterceptorTestClassId.callableId("packageName")
-private val testInterceptorTestClassNameId = testInterceptorTestClassId.callableId("className")
-private val testInterceptorTestFunctionNameId = testInterceptorTestClassId.callableId("functionName")
+private val testFunctionInvokeId = testFunctionClassId.callableId("invoke")
+private val testFunctionPackageNameId = testFunctionClassId.callableId("packageName")
+private val testFunctionClassNameId = testFunctionClassId.callableId("className")
+private val testFunctionFunctionNameId = testFunctionClassId.callableId("functionName")
 
 private val junitPackage = FqPackageName("org.junit")
 private val junitTestClassId = junitPackage.classId("Test")

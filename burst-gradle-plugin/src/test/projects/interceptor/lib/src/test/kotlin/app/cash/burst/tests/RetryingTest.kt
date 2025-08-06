@@ -1,6 +1,7 @@
 package app.cash.burst.tests
 
 import app.cash.burst.InterceptTest
+import app.cash.burst.TestFunction
 import app.cash.burst.TestInterceptor
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -28,11 +29,11 @@ class RetryingTest {
   }
 
   class RetryingInterceptor : TestInterceptor {
-    override fun intercept(test: TestInterceptor.Test) {
+    override fun intercept(testFunction: TestFunction) {
       for (i in 0 until 5) {
         try {
           println("attempt $i")
-          test()
+          testFunction()
           println("success")
           return
         } catch (e: Throwable) {

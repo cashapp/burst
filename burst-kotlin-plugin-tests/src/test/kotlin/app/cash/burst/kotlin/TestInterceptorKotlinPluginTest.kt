@@ -38,6 +38,7 @@ class TestInterceptorKotlinPluginTest {
         package com.example
 
         import app.cash.burst.InterceptTest
+        import app.cash.burst.TestFunction
         import app.cash.burst.TestInterceptor
         import kotlin.test.AfterTest
         import kotlin.test.BeforeTest
@@ -48,9 +49,9 @@ class TestInterceptorKotlinPluginTest {
 
           @InterceptTest
           val interceptor = object : TestInterceptor {
-            override fun intercept(test: TestInterceptor.Test) {
-              log += "intercepting ${'$'}{test.packageName} ${'$'}{test.className} ${'$'}{test.functionName}"
-              test()
+            override fun intercept(testFunction: TestFunction) {
+              log += "intercepting ${'$'}{testFunction.packageName} ${'$'}{testFunction.className} ${'$'}{testFunction.functionName}"
+              testFunction()
             }
           }
 
@@ -87,6 +88,7 @@ class TestInterceptorKotlinPluginTest {
         package com.example
 
         import app.cash.burst.InterceptTest
+        import app.cash.burst.TestFunction
         import app.cash.burst.TestInterceptor
         import kotlin.test.AfterTest
         import kotlin.test.BeforeTest
@@ -97,27 +99,27 @@ class TestInterceptorKotlinPluginTest {
 
           @InterceptTest
           val interceptorA = object : TestInterceptor {
-            override fun intercept(test: TestInterceptor.Test) {
+            override fun intercept(testFunction: TestFunction) {
               log += "start A"
-              test()
+              testFunction()
               log += "end A"
             }
           }
 
           @InterceptTest
           val interceptorB = object : TestInterceptor {
-            override fun intercept(test: TestInterceptor.Test) {
+            override fun intercept(testFunction: TestFunction) {
               log += "start B"
-              test()
+              testFunction()
               log += "end B"
             }
           }
 
           @InterceptTest
           val interceptorC = object : TestInterceptor {
-            override fun intercept(test: TestInterceptor.Test) {
+            override fun intercept(testFunction: TestFunction) {
               log += "start C"
-              test()
+              testFunction()
               log += "end C"
             }
           }
@@ -160,6 +162,7 @@ class TestInterceptorKotlinPluginTest {
         package com.example
 
         import app.cash.burst.InterceptTest
+        import app.cash.burst.TestFunction
         import app.cash.burst.TestInterceptor
         import kotlin.test.AfterTest
         import kotlin.test.BeforeTest
@@ -170,9 +173,9 @@ class TestInterceptorKotlinPluginTest {
 
           @InterceptTest
           val interceptor = object : TestInterceptor {
-            override fun intercept(test: TestInterceptor.Test) {
+            override fun intercept(testFunction: TestFunction) {
               log += "intercepting test"
-              test()
+              testFunction()
               log += "intercepted test"
             }
           }
@@ -217,6 +220,7 @@ class TestInterceptorKotlinPluginTest {
         package com.example
 
         import app.cash.burst.InterceptTest
+        import app.cash.burst.TestFunction
         import app.cash.burst.TestInterceptor
         import kotlin.test.AfterTest
         import kotlin.test.BeforeTest
@@ -227,9 +231,9 @@ class TestInterceptorKotlinPluginTest {
 
           @InterceptTest
           val interceptor = object : TestInterceptor {
-            override fun intercept(test: TestInterceptor.Test) {
+            override fun intercept(testFunction: TestFunction) {
               log += "intercepting test"
-              test()
+              testFunction()
               log += "intercepted test"
             }
           }
@@ -274,6 +278,7 @@ class TestInterceptorKotlinPluginTest {
         package com.example
 
         import app.cash.burst.InterceptTest
+        import app.cash.burst.TestFunction
         import app.cash.burst.TestInterceptor
         import kotlin.test.AfterTest
         import kotlin.test.BeforeTest
@@ -284,10 +289,10 @@ class TestInterceptorKotlinPluginTest {
 
           @InterceptTest
           val interceptor = object : TestInterceptor {
-            override fun intercept(test: TestInterceptor.Test) {
+            override fun intercept(testFunction: TestFunction) {
               log += "intercepting test"
               try {
-                test()
+                testFunction()
               } catch (e: AssertionError) {
                 log += "intercepted test"
                 throw e
@@ -337,6 +342,7 @@ class TestInterceptorKotlinPluginTest {
         package com.example
 
         import app.cash.burst.InterceptTest
+        import app.cash.burst.TestFunction
         import app.cash.burst.TestInterceptor
         import kotlin.test.Test
 
@@ -362,9 +368,9 @@ class TestInterceptorKotlinPluginTest {
           }
 
           class LoggingInterceptor(val name: String) : TestInterceptor {
-            override fun intercept(test: TestInterceptor.Test) {
+            override fun intercept(testFunction: TestFunction) {
               log += "intercepting ${'$'}name"
-              test()
+              testFunction()
               log += "intercepted ${'$'}name"
             }
           }

@@ -78,7 +78,7 @@ import org.jetbrains.kotlin.name.Name
  * @Test
  * fun happyPath() {
  *   intercept(
- *     TestInterceptor.Test(
+ *     TestFunction(
  *       packageName = "com.example",
  *       className = "SampleTest",
  *       functionName = "happyPath",
@@ -93,14 +93,14 @@ import org.jetbrains.kotlin.name.Name
  * And it declares an `intercept` function on the test class:
  *
  * ```kotlin
- * override fun intercept(test: TestInterceptor.Test) {
+ * override fun intercept(testFunction: TestFunction) {
  *   interceptor.intercept(
  *     TestInterceptor.Test(
- *       packageName = test.packageName,
- *       className = test.className,
- *       functionName = test.functionName,
+ *       packageName = testFunction.packageName,
+ *       className = testFunction.className,
+ *       functionName = testFunction.functionName,
  *       block = {
- *         test()
+ *         testFunction()
  *       }
  *     )
  *   )
@@ -180,8 +180,8 @@ internal class InterceptorInjector(
       }
       addValueParameter {
         initDefaults(originalParent)
-        name = Name.identifier("test")
-        type = burstApis.testInterceptorTest.defaultType
+        name = Name.identifier("testFunction")
+        type = burstApis.testFunction.defaultType
       }
     }
 
@@ -190,7 +190,7 @@ internal class InterceptorInjector(
       scopeOwnerSymbol = originalParent.symbol,
     ) {
       val packageNameLocal = irTemporary(
-        value = irCall(burstApis.testInterceptorTestPackageName.owner.getter!!).apply {
+        value = irCall(burstApis.testFunctionPackageName.owner.getter!!).apply {
           origin = IrStatementOrigin.Companion.GET_PROPERTY
           dispatchReceiver = irGet(function.parameters[1])
         },
@@ -198,7 +198,7 @@ internal class InterceptorInjector(
       )
 
       val classNameLocal = irTemporary(
-        value = irCall(burstApis.testInterceptorTestClassName.owner.getter!!).apply {
+        value = irCall(burstApis.testFunctionClassName.owner.getter!!).apply {
           origin = IrStatementOrigin.Companion.GET_PROPERTY
           dispatchReceiver = irGet(function.parameters[1])
         },
@@ -206,7 +206,7 @@ internal class InterceptorInjector(
       )
 
       val functionNameLocal = irTemporary(
-        value = irCall(burstApis.testInterceptorTestFunctionName.owner.getter!!).apply {
+        value = irCall(burstApis.testFunctionFunctionName.owner.getter!!).apply {
           origin = IrStatementOrigin.Companion.GET_PROPERTY
           dispatchReceiver = irGet(function.parameters[1])
         },
@@ -237,7 +237,7 @@ internal class InterceptorInjector(
             }
 
             // Execute the test body.
-            +irCall(burstApis.testInterceptorTestInvoke).apply {
+            +irCall(burstApis.testFunctionInvoke).apply {
               dispatchReceiver = irGet(function.parameters[1]).apply {
                 origin = VARIABLE_AS_FUNCTION
               }
@@ -311,7 +311,7 @@ internal class InterceptorInjector(
     proceed: IrExpression,
   ): IrExpression {
     return irCall(
-      callee = burstApis.testInterceptorTest.constructors.single(),
+      callee = burstApis.testFunction.constructors.single(),
     ).apply {
       arguments[0] = irGet(packageName)
       arguments[1] = irGet(className)
@@ -370,8 +370,8 @@ internal class InterceptorInjector(
       context = pluginContext,
       scopeOwnerSymbol = original.symbol,
     ) {
-      val testInstance = irCall(
-        callee = burstApis.testInterceptorTest.constructors.single(),
+      val testFunctionInstance = irCall(
+        callee = burstApis.testFunction.constructors.single(),
       ).apply {
         arguments[0] = irString(packageName)
         arguments[1] = irString(className)
@@ -387,7 +387,7 @@ internal class InterceptorInjector(
         dispatchReceiver = irGet(original.dispatchReceiverParameter!!).apply {
           origin = IMPLICIT_ARGUMENT
         }
-        arguments[1] = testInstance
+        arguments[1] = testFunctionInstance
       }
     }
 

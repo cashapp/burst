@@ -15,34 +15,34 @@
  */
 package app.cash.burst
 
-interface TestInterceptor {
-  fun intercept(test: Test)
+class TestFunction(
+  /** The package that this test is defined in, or "" it has none. */
+  val packageName: String,
 
-  class Test(
-    /** The package that this test is defined in, or "" it has none. */
-    val packageName: String,
+  /** The classes that enclose the test function, separated by '.'. */
+  val className: String,
 
-    /** The classes that enclose the test function, separated by '.'. */
-    val className: String,
+  /** The test function name. */
+  val functionName: String,
 
-    /** The test function name. */
-    val functionName: String,
-
-    private val block: () -> Unit,
-  ) {
-    /**
-     * Runs the next interceptor in the chain if there is one.
-     *
-     * If there isn't, it runs the following in sequence:
-     *
-     *  * The `@BeforeTest` functions (if any)
-     *  * The `@Test` function
-     *  * The `@AfterTest` functions (if any)
-     */
-    operator fun invoke() {
-      block()
-    }
+  private val block: () -> Unit,
+) {
+  /**
+   * Runs the next interceptor in the chain if there is one.
+   *
+   * If there isn't, it runs the following in sequence:
+   *
+   *  * The `@BeforeTest` functions (if any)
+   *  * The `@Test` function
+   *  * The `@AfterTest` functions (if any)
+   */
+  operator fun invoke() {
+    block()
   }
+}
+
+interface TestInterceptor {
+  fun intercept(testFunction: TestFunction)
 }
 
 @Target(AnnotationTarget.PROPERTY)
