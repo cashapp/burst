@@ -17,23 +17,19 @@ package app.cash.burst.kotlin
 
 import assertk.assertThat
 import assertk.assertions.containsExactly
-import assertk.assertions.isInstanceOf
-import assertk.assertions.isNotNull
-import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
-import java.lang.reflect.InvocationTargetException
 import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 
 @OptIn(ExperimentalCompilerApi::class)
 class TestInterceptorKotlinPluginTest {
   @Test
   fun interceptor() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "SampleTest.kt",
+    val log = BurstTester(
+      packageName = "com.example",
+    ).compileAndRun(
+      SourceFile.kotlin(
+        "Main.kt",
         """
         package com.example
 
@@ -45,45 +41,48 @@ class TestInterceptorKotlinPluginTest {
         import kotlin.test.Test
 
         class SampleTest {
-          val log = mutableListOf<String>()
-
           @InterceptTest
           val interceptor = object : TestInterceptor {
             override fun intercept(testFunction: TestFunction) {
-              log += "intercepting ${'$'}{testFunction.packageName} ${'$'}{testFunction.className} ${'$'}{testFunction.functionName}"
+              log("intercepting")
+              log("  packageName=${'$'}{testFunction.packageName}")
+              log("  className=${'$'}{testFunction.className}")
+              log("  functionName=${'$'}{testFunction.functionName}")
               testFunction()
+              log("intercepted")
             }
           }
 
           @Test
           fun happyPath() {
-            log += "running happyPath"
+            log("running happyPath")
           }
+        }
+
+        fun main(vararg args: String) {
+          SampleTest().happyPath()
         }
         """,
       ),
     )
-    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
-    val testClass = result.classLoader.loadClass("com.example.SampleTest")
-
-    val testInstance = testClass.constructors.single().newInstance()
-    val log = testClass.getMethod("getLog").invoke(testInstance) as MutableList<*>
-
-    val happyPath = testClass.methods.single { it.name == "happyPath" }
-    happyPath.invoke(testInstance)
     assertThat(log).containsExactly(
-      "intercepting com.example SampleTest happyPath",
+      "intercepting",
+      "  packageName=com.example",
+      "  className=SampleTest",
+      "  functionName=happyPath",
       "running happyPath",
+      "intercepted",
     )
-    log.clear()
   }
 
   @Test
   fun multipleInterceptorsExecutedInSequence() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "SampleTest.kt",
+    val log = BurstTester(
+      packageName = "com.example",
+    ).compileAndRun(
+      SourceFile.kotlin(
+        "Main.kt",
         """
         package com.example
 
@@ -95,52 +94,46 @@ class TestInterceptorKotlinPluginTest {
         import kotlin.test.Test
 
         class SampleTest {
-          val log = mutableListOf<String>()
-
           @InterceptTest
           val interceptorA = object : TestInterceptor {
             override fun intercept(testFunction: TestFunction) {
-              log += "start A"
+              log("start A")
               testFunction()
-              log += "end A"
+              log("end A")
             }
           }
 
           @InterceptTest
           val interceptorB = object : TestInterceptor {
             override fun intercept(testFunction: TestFunction) {
-              log += "start B"
+              log("start B")
               testFunction()
-              log += "end B"
+              log("end B")
             }
           }
 
           @InterceptTest
           val interceptorC = object : TestInterceptor {
             override fun intercept(testFunction: TestFunction) {
-              log += "start C"
+              log("start C")
               testFunction()
-              log += "end C"
+              log("end C")
             }
           }
 
           @Test
           fun happyPath() {
-            log += "running test"
+            log("running test")
           }
+        }
+
+        fun main(vararg args: String) {
+          SampleTest().happyPath()
         }
         """,
       ),
     )
-    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
-    val testClass = result.classLoader.loadClass("com.example.SampleTest")
-
-    val testInstance = testClass.constructors.single().newInstance()
-    val log = testClass.getMethod("getLog").invoke(testInstance) as MutableList<*>
-
-    val happyPath = testClass.methods.single { it.name == "happyPath" }
-    happyPath.invoke(testInstance)
     assertThat(log).containsExactly(
       "start A",
       "start B",
@@ -150,14 +143,15 @@ class TestInterceptorKotlinPluginTest {
       "end B",
       "end A",
     )
-    log.clear()
   }
 
   @Test
   fun beforeTestIsCalledByInterceptor() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "SampleTest.kt",
+    val log = BurstTester(
+      packageName = "com.example",
+    ).compileAndRun(
+      SourceFile.kotlin(
+        "Main.kt",
         """
         package com.example
 
@@ -169,53 +163,48 @@ class TestInterceptorKotlinPluginTest {
         import kotlin.test.Test
 
         class SampleTest {
-          val log = mutableListOf<String>()
-
           @InterceptTest
           val interceptor = object : TestInterceptor {
             override fun intercept(testFunction: TestFunction) {
-              log += "intercepting test"
+              log("intercepting test")
               testFunction()
-              log += "intercepted test"
+              log("intercepted test")
             }
           }
 
           @BeforeTest
           fun beforeTest() {
-            log += "before test"
+            log("before test")
           }
 
           @Test
           fun happyPath() {
-            log += "running test"
+            log("running test")
           }
+        }
+
+        fun main(vararg args: String) {
+          SampleTest().happyPath()
         }
         """,
       ),
     )
-    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
-    val testClass = result.classLoader.loadClass("com.example.SampleTest")
-
-    val testInstance = testClass.constructors.single().newInstance()
-    val log = testClass.getMethod("getLog").invoke(testInstance) as MutableList<*>
-
-    val happyPath = testClass.methods.single { it.name == "happyPath" }
-    happyPath.invoke(testInstance)
     assertThat(log).containsExactly(
       "intercepting test",
       "before test",
       "running test",
       "intercepted test",
     )
-    log.clear()
   }
 
   @Test
   fun afterTestIsCalledByInterceptor() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "SampleTest.kt",
+    val log = BurstTester(
+      packageName = "com.example",
+    ).compileAndRun(
+      SourceFile.kotlin(
+        "Main.kt",
         """
         package com.example
 
@@ -227,53 +216,48 @@ class TestInterceptorKotlinPluginTest {
         import kotlin.test.Test
 
         class SampleTest {
-          val log = mutableListOf<String>()
-
           @InterceptTest
           val interceptor = object : TestInterceptor {
             override fun intercept(testFunction: TestFunction) {
-              log += "intercepting test"
+              log("intercepting test")
               testFunction()
-              log += "intercepted test"
+              log("intercepted test")
             }
           }
 
           @AfterTest
           fun afterTest() {
-            log += "after test"
+            log("after test")
           }
 
           @Test
           fun happyPath() {
-            log += "running test"
+            log("running test")
           }
+        }
+
+        fun main(vararg args: String) {
+          SampleTest().happyPath()
         }
         """,
       ),
     )
-    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
-    val testClass = result.classLoader.loadClass("com.example.SampleTest")
-
-    val testInstance = testClass.constructors.single().newInstance()
-    val log = testClass.getMethod("getLog").invoke(testInstance) as MutableList<*>
-
-    val happyPath = testClass.methods.single { it.name == "happyPath" }
-    happyPath.invoke(testInstance)
     assertThat(log).containsExactly(
       "intercepting test",
       "running test",
       "after test",
       "intercepted test",
     )
-    log.clear()
   }
 
   @Test
   fun afterTestIsCalledWhenTestThrows() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "SampleTest.kt",
+    val log = BurstTester(
+      packageName = "com.example",
+    ).compileAndRun(
+      SourceFile.kotlin(
+        "Main.kt",
         """
         package com.example
 
@@ -285,16 +269,14 @@ class TestInterceptorKotlinPluginTest {
         import kotlin.test.Test
 
         class SampleTest {
-          val log = mutableListOf<String>()
-
           @InterceptTest
           val interceptor = object : TestInterceptor {
             override fun intercept(testFunction: TestFunction) {
-              log += "intercepting test"
+              log("intercepting test")
               try {
                 testFunction()
-              } catch (e: AssertionError) {
-                log += "intercepted test"
+              } catch (e: Exception) {
+                log("intercepted test")
                 throw e
               }
             }
@@ -302,42 +284,41 @@ class TestInterceptorKotlinPluginTest {
 
           @AfterTest
           fun afterTest() {
-            log += "after test"
+            log("after test")
           }
 
           @Test
           fun happyPath() {
-            throw AssertionError("test failed")
+            throw Exception("boom!")
+          }
+        }
+
+        fun main(vararg args: String) {
+          try {
+            SampleTest().happyPath()
+          } catch (e: Exception) {
+            log("test failed: ${'$'}{e.message}")
           }
         }
         """,
       ),
     )
-    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
-    val testClass = result.classLoader.loadClass("com.example.SampleTest")
-
-    val testInstance = testClass.constructors.single().newInstance()
-    val log = testClass.getMethod("getLog").invoke(testInstance) as MutableList<*>
-
-    val happyPath = testClass.methods.single { it.name == "happyPath" }
-    val failure = assertFailsWith<InvocationTargetException> {
-      happyPath.invoke(testInstance)
-    }
-    assertThat(failure.cause).isNotNull().isInstanceOf<AssertionError>()
     assertThat(log).containsExactly(
       "intercepting test",
       "after test",
       "intercepted test",
+      "test failed: boom!",
     )
-    log.clear()
   }
 
   @Test
   fun inheritance() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "InterceptInSuperclassTest.kt",
+    val log = BurstTester(
+      packageName = "com.example",
+    ).compileAndRun(
+      SourceFile.kotlin(
+        "Main.kt",
         """
         package com.example
 
@@ -346,48 +327,36 @@ class TestInterceptorKotlinPluginTest {
         import app.cash.burst.TestInterceptor
         import kotlin.test.Test
 
-        class InterceptInSuperclassTest {
-          companion object {
-            @JvmStatic
-            val log = mutableListOf<String>()
-          }
+        open class ShapeTest {
+          @InterceptTest
+          val shapeInterceptor = LoggingInterceptor("shape")
+        }
 
-          open class ShapeTest {
-            @InterceptTest
-            val shapeInterceptor = LoggingInterceptor("shape")
-          }
+        class CircleTest : ShapeTest() {
+          @InterceptTest
+          val circleInterceptor = LoggingInterceptor("circle")
 
-          class CircleTest : ShapeTest() {
-            @InterceptTest
-            val circleInterceptor = LoggingInterceptor("circle")
-
-            @Test
-            fun happyPath() {
-              log += "running"
-            }
+          @Test
+          fun happyPath() {
+            log("running")
           }
+        }
 
-          class LoggingInterceptor(val name: String) : TestInterceptor {
-            override fun intercept(testFunction: TestFunction) {
-              log += "intercepting ${'$'}name"
-              testFunction()
-              log += "intercepted ${'$'}name"
-            }
+        class LoggingInterceptor(val name: String) : TestInterceptor {
+          override fun intercept(testFunction: TestFunction) {
+            log("intercepting ${'$'}name")
+            testFunction()
+            log("intercepted ${'$'}name")
           }
+        }
+
+        fun main(vararg args: String) {
+          CircleTest().happyPath()
         }
         """,
       ),
     )
-    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
-    val enclosingClass = result.classLoader.loadClass("com.example.InterceptInSuperclassTest")
-    val testClass = result.classLoader.loadClass("com.example.InterceptInSuperclassTest\$CircleTest")
-
-    val testInstance = testClass.constructors.single().newInstance()
-    val log = enclosingClass.getMethod("getLog").invoke(null) as MutableList<*>
-
-    val happyPath = testClass.methods.single { it.name == "happyPath" }
-    happyPath.invoke(testInstance)
     assertThat(log).containsExactly(
       "intercepting shape",
       "intercepting circle",
