@@ -3,4 +3,13 @@ $dokka.linkExtension:html
 $dokka.location:app.cash.burst////PointingToDeclaration/burst/app.cash.burst/index.html
 $dokka.location:app.cash.burst//burstValues/#TypeParam(bounds=[kotlin.Any?])#kotlin.Array[TypeParam(bounds=[kotlin.Any?])]/PointingToDeclaration/burst/app.cash.burst/burst-values.html
 $dokka.location:app.cash.burst/Burst///PointingToDeclaration/burst/app.cash.burst/-burst/index.html
+$dokka.location:app.cash.burst/InterceptTest///PointingToDeclaration/burst/app.cash.burst/-intercept-test/index.html
+$dokka.location:app.cash.burst/TestFunction///PointingToDeclaration/burst/app.cash.burst/-test-function/index.html
+$dokka.location:app.cash.burst/TestFunction/TestFunction/#kotlin.String#kotlin.String#kotlin.String#kotlin.Function0[kotlin.Unit]/PointingToDeclaration/burst/app.cash.burst/-test-function/-test-function.html
+$dokka.location:app.cash.burst/TestFunction/className/#/PointingToDeclaration/burst/app.cash.burst/-test-function/class-name.html
+$dokka.location:app.cash.burst/TestFunction/functionName/#/PointingToDeclaration/burst/app.cash.burst/-test-function/function-name.html
+$dokka.location:app.cash.burst/TestFunction/invoke/#/PointingToDeclaration/burst/app.cash.burst/-test-function/invoke.html
+$dokka.location:app.cash.burst/TestFunction/packageName/#/PointingToDeclaration/burst/app.cash.burst/-test-function/package-name.html
+$dokka.location:app.cash.burst/TestInterceptor///PointingToDeclaration/burst/app.cash.burst/-test-interceptor/index.html
+$dokka.location:app.cash.burst/TestInterceptor/intercept/#app.cash.burst.TestFunction/PointingToDeclaration/burst/app.cash.burst/-test-interceptor/intercept.html
 app.cash.burst
