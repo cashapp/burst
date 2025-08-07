@@ -20,6 +20,8 @@ import org.jetbrains.kotlin.ir.declarations.IrAnnotationContainer
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
+import org.jetbrains.kotlin.ir.symbols.IrPropertySymbol
+import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.types.classOrNull
 import org.jetbrains.kotlin.ir.util.hasAnnotation
 
@@ -27,13 +29,51 @@ import org.jetbrains.kotlin.ir.util.hasAnnotation
 internal class BurstApis private constructor(
   pluginContext: IrPluginContext,
   private val testClassSymbols: List<IrClassSymbol>,
+  val beforeTestSymbols: List<IrClassSymbol>,
+  val afterTestSymbols: List<IrClassSymbol>,
 ) {
   val burstValues: IrFunctionSymbol = pluginContext.referenceFunctions(burstValuesId).single()
+
+  val testInterceptor: IrClassSymbol =
+    pluginContext.referenceClass(testInterceptorClassId)!!
+
+  val testFunction: IrClassSymbol =
+    pluginContext.referenceClass(testFunctionClassId)!!
+
+  val testInterceptorIntercept: IrSimpleFunctionSymbol =
+    pluginContext.referenceFunctions(testInterceptorInterceptId).single()
+
+  val testFunctionPackageName: IrPropertySymbol =
+    pluginContext.referenceProperties(testFunctionPackageNameId).single()
+
+  val testFunctionClassName: IrPropertySymbol =
+    pluginContext.referenceProperties(testFunctionClassNameId).single()
+
+  val testFunctionFunctionName: IrPropertySymbol =
+    pluginContext.referenceProperties(testFunctionFunctionNameId).single()
+
+  val testFunctionInvoke: IrSimpleFunctionSymbol =
+    pluginContext.referenceFunctions(testFunctionInvokeId).single()
+
+  val throwableAddSuppressed: IrSimpleFunctionSymbol =
+    pluginContext.referenceFunctions(throwableAddSuppressedId).single()
 
   fun findTestAnnotation(function: IrSimpleFunction): IrClassSymbol? {
     return function.annotations
       .mapNotNull { it.type.classOrNull }
       .firstOrNull { it in testClassSymbols }
+  }
+
+  fun findBeforeTestAnnotation(function: IrSimpleFunction): IrClassSymbol? {
+    return function.annotations
+      .mapNotNull { it.type.classOrNull }
+      .firstOrNull { it in beforeTestSymbols }
+  }
+
+  fun findAfterTestAnnotation(function: IrSimpleFunction): IrClassSymbol? {
+    return function.annotations
+      .mapNotNull { it.type.classOrNull }
+      .firstOrNull { it in afterTestSymbols }
   }
 
   companion object {
@@ -54,27 +94,61 @@ internal class BurstApis private constructor(
         return null
       }
 
-      return BurstApis(pluginContext, testClassSymbols)
+      val beforeTestSymbols = listOfNotNull(
+        pluginContext.referenceClass(junitBeforeTestClassId),
+        pluginContext.referenceClass(kotlinBeforeTestClassId),
+      )
+
+      val afterTestSymbols = listOfNotNull(
+        pluginContext.referenceClass(junitAfterTestClassId),
+        pluginContext.referenceClass(kotlinAfterTestClassId),
+      )
+
+      return BurstApis(
+        pluginContext = pluginContext,
+        testClassSymbols = testClassSymbols,
+        beforeTestSymbols = beforeTestSymbols,
+        afterTestSymbols = afterTestSymbols,
+      )
     }
   }
 }
+
+private val kotlinPackage = FqPackageName("kotlin")
+private val throwableAddSuppressedId = kotlinPackage.callableId("addSuppressed")
 
 private val burstFqPackage = FqPackageName("app.cash.burst")
 private val burstAnnotationId = burstFqPackage.classId("Burst")
 private val burstValuesId = burstFqPackage.callableId("burstValues")
 
+private val interceptTestAnnotationId = burstFqPackage.classId("InterceptTest")
+private val testFunctionClassId = burstFqPackage.classId("TestFunction")
+private val testInterceptorClassId = burstFqPackage.classId("TestInterceptor")
+private val testInterceptorInterceptId = testInterceptorClassId.callableId("intercept")
+private val testFunctionInvokeId = testFunctionClassId.callableId("invoke")
+private val testFunctionPackageNameId = testFunctionClassId.callableId("packageName")
+private val testFunctionClassNameId = testFunctionClassId.callableId("className")
+private val testFunctionFunctionNameId = testFunctionClassId.callableId("functionName")
+
 private val junitPackage = FqPackageName("org.junit")
 private val junitTestClassId = junitPackage.classId("Test")
+private val junitBeforeTestClassId = junitPackage.classId("Before")
+private val junitAfterTestClassId = junitPackage.classId("After")
 private val junit5Package = FqPackageName("org.junit.jupiter.api")
 private val junit5TestClassId = junit5Package.classId("Test")
 private val kotlinTestPackage = FqPackageName("kotlin.test")
 private val kotlinTestClassId = kotlinTestPackage.classId("Test")
+private val kotlinBeforeTestClassId = kotlinTestPackage.classId("BeforeTest")
+private val kotlinAfterTestClassId = kotlinTestPackage.classId("AfterTest")
 
 private val kotlinJvmFqPackage = FqPackageName("kotlin.jvm")
 private val jvmInlineAnnotationId = kotlinJvmFqPackage.classId("JvmInline")
 
 internal val IrAnnotationContainer.hasAtBurst: Boolean
   get() = hasAnnotation(burstAnnotationId)
+
+internal val IrAnnotationContainer.hasAtTestInterceptor: Boolean
+  get() = hasAnnotation(interceptTestAnnotationId)
 
 internal val IrAnnotationContainer.hasAtJvmInline: Boolean
   get() = hasAnnotation(jvmInlineAnnotationId)

@@ -971,7 +971,6 @@ fun compile(
 @ExperimentalCompilerApi
 fun compile(
   sourceFile: SourceFile,
-  plugin: CompilerPluginRegistrar = BurstCompilerPluginRegistrar(),
 ): JvmCompilationResult {
-  return compile(listOf(sourceFile), plugin)
+  return compile(listOf(sourceFile), BurstCompilerPluginRegistrar())
 }

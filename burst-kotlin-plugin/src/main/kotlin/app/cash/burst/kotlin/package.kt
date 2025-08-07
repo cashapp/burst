@@ -14,3 +14,5 @@ fun FqPackageName(name: String) = FqPackageName(FqName(name))
 fun FqPackageName.classId(name: String) = ClassId(fqName, Name.identifier(name))
 
 fun FqPackageName.callableId(name: String) = CallableId(fqName, Name.identifier(name))
+
+fun ClassId.callableId(name: String) = CallableId(this, Name.identifier(name))
