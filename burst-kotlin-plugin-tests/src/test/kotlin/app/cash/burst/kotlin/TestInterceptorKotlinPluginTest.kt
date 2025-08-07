@@ -76,72 +76,63 @@ class TestInterceptorKotlinPluginTest {
     )
   }
 
+  /**
+   * Note that this is different from JUnit 4, which executes @Rules in reverse alphabetical order.
+   */
   @Test
   fun multipleInterceptorsExecutedInSequence() {
     val log = BurstTester(
-      packageName = "com.example",
+      packageName = "app.cash.burst.tests",
     ).compileAndRun(
       SourceFile.kotlin(
         "Main.kt",
         """
-        package com.example
+        package app.cash.burst.tests
 
         import app.cash.burst.InterceptTest
         import app.cash.burst.TestFunction
         import app.cash.burst.TestInterceptor
-        import kotlin.test.AfterTest
-        import kotlin.test.BeforeTest
         import kotlin.test.Test
 
-        class SampleTest {
+        class MultipleInterceptorsTest {
           @InterceptTest
-          val interceptorA = object : TestInterceptor {
-            override fun intercept(testFunction: TestFunction) {
-              log("start A")
-              testFunction()
-              log("end A")
-            }
-          }
+          val interceptorRed = LoggingInterceptor("red")
 
           @InterceptTest
-          val interceptorB = object : TestInterceptor {
-            override fun intercept(testFunction: TestFunction) {
-              log("start B")
-              testFunction()
-              log("end B")
-            }
-          }
+          val interceptorBlue = LoggingInterceptor("blue")
 
           @InterceptTest
-          val interceptorC = object : TestInterceptor {
-            override fun intercept(testFunction: TestFunction) {
-              log("start C")
-              testFunction()
-              log("end C")
-            }
-          }
+          val interceptorGreen = LoggingInterceptor("green")
 
           @Test
-          fun happyPath() {
-            log("running test")
+          fun passingTest() {
+            log("running")
+          }
+        }
+
+        class LoggingInterceptor(val name: String) : TestInterceptor {
+          override fun intercept(testFunction: TestFunction) {
+            log("intercepting ${'$'}name (${'$'}{testFunction.packageName} ${'$'}{testFunction.className} ${'$'}{testFunction.functionName})")
+            testFunction()
+            log("intercepted ${'$'}name")
           }
         }
 
         fun main(vararg args: String) {
-          SampleTest().happyPath()
+          MultipleInterceptorsTest().passingTest()
         }
         """,
       ),
     )
 
     assertThat(log).containsExactly(
-      "start A",
-      "start B",
-      "start C",
-      "running test",
-      "end C",
-      "end B",
-      "end A",
+      "intercepting red (app.cash.burst.tests MultipleInterceptorsTest passingTest)",
+      "intercepting blue (app.cash.burst.tests MultipleInterceptorsTest passingTest)",
+      "intercepting green (app.cash.burst.tests MultipleInterceptorsTest passingTest)",
+      "running",
+      "intercepted green",
+      "intercepted blue",
+      "intercepted red",
     )
   }
 
@@ -251,6 +242,324 @@ class TestInterceptorKotlinPluginTest {
     )
   }
 
+  /**
+   * Note that this is different from JUnit 4, which has this behavior:
+   *   multiple set up functions run in reverse alphabetical order
+   *   multiple tear down functions run in alphabetical order
+   */
+  @Test
+  fun multipleBeforesAndAfters() {
+    val log = BurstTester(
+      packageName = "app.cash.burst.tests",
+    ).compileAndRun(
+      SourceFile.kotlin(
+        "Main.kt",
+        """
+        package app.cash.burst.tests
+
+        import app.cash.burst.InterceptTest
+        import app.cash.burst.TestFunction
+        import app.cash.burst.TestInterceptor
+        import kotlin.test.AfterTest
+        import kotlin.test.BeforeTest
+        import kotlin.test.Test
+
+        class MultipleBeforesAndAftersTest {
+          @InterceptTest
+          val interceptor = BasicInterceptor()
+
+          @BeforeTest
+          fun beforeTestRed() {
+            log("beforeTest red")
+          }
+
+          @BeforeTest
+          fun beforeTestBlue() {
+            log("beforeTest blue")
+          }
+
+          @BeforeTest
+          fun beforeTestGreen() {
+            log("beforeTest green")
+          }
+
+          @AfterTest
+          fun afterTestRed() {
+            log("afterTest red")
+          }
+
+          @AfterTest
+          fun afterTestBlue() {
+            log("afterTest blue")
+          }
+
+          @AfterTest
+          fun afterTestGreen() {
+            log("afterTest green")
+          }
+
+          @Test
+          fun passingTest() {
+            log("running")
+          }
+        }
+
+        class BasicInterceptor : TestInterceptor {
+          override fun intercept(testFunction: TestFunction) {
+            log("intercepting")
+            testFunction()
+            log("intercepted")
+          }
+        }
+
+
+        fun main(vararg args: String) {
+          MultipleBeforesAndAftersTest().passingTest()
+        }
+        """,
+      ),
+    )
+
+    assertThat(log).containsExactly(
+      "intercepting",
+      "beforeTest red",
+      "beforeTest blue",
+      "beforeTest green",
+      "running",
+      "afterTest red",
+      "afterTest blue",
+      "afterTest green",
+      "intercepted",
+    )
+  }
+
+  @Test
+  fun multipleAftersAfterFailure() {
+    val log = BurstTester(
+      packageName = "app.cash.burst.tests",
+    ).compileAndRun(
+      SourceFile.kotlin(
+        "Main.kt",
+        """
+        package app.cash.burst.tests
+
+        import app.cash.burst.InterceptTest
+        import app.cash.burst.TestFunction
+        import app.cash.burst.TestInterceptor
+        import kotlin.test.AfterTest
+        import kotlin.test.Test
+
+        class MultipleAftersAfterFailureTest {
+          @InterceptTest
+          val interceptor = CatchingInterceptor()
+
+          @AfterTest
+          fun afterTestRed() {
+            log("afterTest red")
+          }
+
+          @AfterTest
+          fun afterTestBlue() {
+            log("afterTest blue")
+          }
+
+          @AfterTest
+          fun afterTestGreen() {
+            log("afterTest green")
+          }
+
+          @Test
+          fun failingTest() {
+            error("boom!")
+          }
+        }
+
+        class CatchingInterceptor : TestInterceptor {
+          override fun intercept(testFunction: TestFunction) {
+            try {
+              testFunction()
+            } catch (e: Throwable) {
+              log("re-throwing exception: ${'$'}{e.message}")
+              throw e
+            }
+          }
+        }
+
+        fun main(vararg args: String) {
+          try {
+            MultipleAftersAfterFailureTest().failingTest()
+          } catch (e: Throwable) {
+            log("caught: ${'$'}{e.message}")
+          }
+        }
+        """,
+      ),
+    )
+
+    assertThat(log).containsExactly(
+      "afterTest red",
+      "afterTest blue",
+      "afterTest green",
+      "re-throwing exception: boom!",
+      "caught: boom!",
+    )
+  }
+
+  /**
+   * If any @AfterTest throws, the other @AfterTest functions still execute.
+   */
+  @Test
+  fun afterTestThrows() {
+    val log = BurstTester(
+      packageName = "app.cash.burst.tests",
+    ).compileAndRun(
+      SourceFile.kotlin(
+        "Main.kt",
+        """
+        package app.cash.burst.tests
+
+        import app.cash.burst.InterceptTest
+        import app.cash.burst.TestFunction
+        import app.cash.burst.TestInterceptor
+        import kotlin.test.AfterTest
+        import kotlin.test.Test
+
+        class AfterTestThrowsTest {
+          @InterceptTest
+          val interceptor = CatchingInterceptor()
+
+          @AfterTest
+          fun afterTestRed() {
+            log("afterTest red")
+          }
+
+          @AfterTest
+          fun afterTestBlue() {
+            error("boom!")
+          }
+
+          @AfterTest
+          fun afterTestGreen() {
+            log("afterTest green")
+          }
+
+          @Test
+          fun passingTest() {
+            log("running")
+          }
+        }
+
+        class CatchingInterceptor : TestInterceptor {
+          override fun intercept(testFunction: TestFunction) {
+            try {
+              testFunction()
+            } catch (e: Throwable) {
+              log("re-throwing exception: ${'$'}{e.message}")
+              throw e
+            }
+          }
+        }
+
+        fun main(vararg args: String) {
+          try {
+            AfterTestThrowsTest().passingTest()
+          } catch (e: Throwable) {
+            log("caught: ${'$'}{e.message}")
+          }
+        }
+        """,
+      ),
+    )
+
+    assertThat(log).containsExactly(
+      "running",
+      "afterTest red",
+      "afterTest green",
+      "re-throwing exception: boom!",
+      "caught: boom!",
+    )
+  }
+
+  /**
+   * If any @BeforeTest throws, no more @BeforeTests run and neither does the test itself.
+   */
+  @Test
+  fun beforeTestThrows() {
+    val log = BurstTester(
+      packageName = "app.cash.burst.tests",
+    ).compileAndRun(
+      SourceFile.kotlin(
+        "Main.kt",
+        """
+        package app.cash.burst.tests
+
+        import app.cash.burst.InterceptTest
+        import app.cash.burst.TestFunction
+        import app.cash.burst.TestInterceptor
+        import kotlin.test.AfterTest
+        import kotlin.test.BeforeTest
+        import kotlin.test.Test
+
+        class BeforeTestThrowsTest {
+          @InterceptTest
+          val interceptor = CatchingInterceptor()
+
+          @BeforeTest
+          fun beforeTestRed() {
+            log("beforeTest red")
+          }
+
+          @BeforeTest
+          fun beforeTestBlue() {
+            error("boom!")
+          }
+
+          @BeforeTest
+          fun beforeTestGreen() {
+            log("beforeTest green")
+          }
+
+          @AfterTest
+          fun afterTest() {
+            log("afterTest")
+          }
+
+          @Test
+          fun passingTest() {
+            log("running")
+          }
+        }
+
+        class CatchingInterceptor : TestInterceptor {
+          override fun intercept(testFunction: TestFunction) {
+            try {
+              testFunction()
+            } catch (e: Throwable) {
+              log("re-throwing exception: ${'$'}{e.message}")
+              throw e
+            }
+          }
+        }
+
+        fun main(vararg args: String) {
+          try {
+            BeforeTestThrowsTest().passingTest()
+          } catch (e: Throwable) {
+            log("caught: ${'$'}{e.message}")
+          }
+        }
+        """,
+      ),
+    )
+
+    assertThat(log).containsExactly(
+      "beforeTest red",
+      "afterTest",
+      "re-throwing exception: boom!",
+      "caught: boom!",
+    )
+  }
+
   @Test
   fun afterTestIsCalledWhenTestThrows() {
     val log = BurstTester(
@@ -312,15 +621,18 @@ class TestInterceptorKotlinPluginTest {
     )
   }
 
+  /**
+   * In JUnit 4, superclass rules run before subclass rules.
+   */
   @Test
-  fun inheritance() {
+  fun interceptInSuperclass() {
     val log = BurstTester(
-      packageName = "com.example",
+      packageName = "app.cash.burst.tests",
     ).compileAndRun(
       SourceFile.kotlin(
         "Main.kt",
         """
-        package com.example
+        package app.cash.burst.tests
 
         import app.cash.burst.InterceptTest
         import app.cash.burst.TestFunction
@@ -337,12 +649,520 @@ class TestInterceptorKotlinPluginTest {
           val circleInterceptor = LoggingInterceptor("circle")
 
           @Test
-          fun happyPath() {
+          fun passingTest() {
             log("running")
           }
         }
 
         class LoggingInterceptor(val name: String) : TestInterceptor {
+          override fun intercept(testFunction: TestFunction) {
+            log("intercepting ${'$'}name (${'$'}{testFunction.packageName} ${'$'}{testFunction.className} ${'$'}{testFunction.functionName})")
+            testFunction()
+            log("intercepted ${'$'}name")
+          }
+        }
+
+        fun main(vararg args: String) {
+          CircleTest().passingTest()
+        }
+        """,
+      ),
+    )
+
+    assertThat(log).containsExactly(
+      "intercepting shape (app.cash.burst.tests CircleTest passingTest)",
+      "intercepting circle (app.cash.burst.tests CircleTest passingTest)",
+      "running",
+      "intercepted circle",
+      "intercepted shape",
+    )
+  }
+
+  @Test
+  fun symbolNames() {
+    val log = BurstTester(
+      packageName = "app.cash.burst.tests",
+    ).compileAndRun(
+      SourceFile.kotlin(
+        "Main.kt",
+        """
+        package app.cash.burst.tests
+
+        import app.cash.burst.InterceptTest
+        import app.cash.burst.TestFunction
+        import app.cash.burst.TestInterceptor
+        import kotlin.test.Test
+
+        class SymbolNamesTest {
+          @InterceptTest
+          val interceptor = BasicInterceptor()
+
+          @Test
+          fun test() {
+          }
+
+          @Test
+          fun `test function with spaces`() {
+          }
+
+          class Nested {
+            @InterceptTest
+            val interceptor = BasicInterceptor()
+
+            @Test
+            fun test() {
+            }
+          }
+
+          class Enclosing {
+            class TwiceNested {
+              @InterceptTest
+              val interceptor = BasicInterceptor()
+
+              @Test
+              fun test() {
+              }
+            }
+          }
+
+          class BasicInterceptor : TestInterceptor {
+            override fun intercept(testFunction: TestFunction) {
+              log("intercepting ${'$'}{testFunction.packageName} ${'$'}{testFunction.className} ${'$'}{testFunction.functionName}")
+              testFunction()
+            }
+          }
+        }
+
+        fun main(vararg args: String) {
+          SymbolNamesTest().test()
+          SymbolNamesTest().`test function with spaces`()
+          SymbolNamesTest.Nested().test()
+          SymbolNamesTest.Enclosing.TwiceNested().test()
+        }
+        """,
+      ),
+    )
+
+    assertThat(log).containsExactly(
+      "intercepting app.cash.burst.tests SymbolNamesTest test",
+      "intercepting app.cash.burst.tests SymbolNamesTest test function with spaces",
+      "intercepting app.cash.burst.tests SymbolNamesTest.Nested test",
+      "intercepting app.cash.burst.tests SymbolNamesTest.Enclosing.TwiceNested test",
+    )
+  }
+
+  @Test
+  fun emptyPackageName() {
+    val log = BurstTester(
+      packageName = "",
+    ).compileAndRun(
+      SourceFile.kotlin(
+        "Main.kt",
+        """
+        import app.cash.burst.InterceptTest
+        import app.cash.burst.TestFunction
+        import app.cash.burst.TestInterceptor
+        import kotlin.test.Test
+
+        class EmptyPackageNameTest {
+          @InterceptTest
+          val interceptor = BasicInterceptor()
+
+          @Test
+          fun test() {
+          }
+
+          class BasicInterceptor : TestInterceptor {
+            override fun intercept(testFunction: TestFunction) {
+              log("intercepting '${'$'}{testFunction.packageName}' '${'$'}{testFunction.className}' '${'$'}{testFunction.functionName}'")
+              testFunction()
+            }
+          }
+        }
+
+        fun main(vararg args: String) {
+          EmptyPackageNameTest().test()
+        }
+        """,
+      ),
+    )
+
+    assertThat(log).containsExactly(
+      "intercepting '' 'EmptyPackageNameTest' 'test'",
+    )
+  }
+
+  /**
+   * This is different from JUnit rules, which must be public.
+   */
+  @Test
+  fun privateInterceptor() {
+    val log = BurstTester(
+      packageName = "app.cash.burst.tests",
+    ).compileAndRun(
+      SourceFile.kotlin(
+        "Main.kt",
+        """
+        package app.cash.burst.tests
+
+        import app.cash.burst.InterceptTest
+        import app.cash.burst.TestFunction
+        import app.cash.burst.TestInterceptor
+        import kotlin.test.Test
+
+        class PrivateInterceptorTest {
+          @InterceptTest
+          private val interceptor = PrivateInterceptor()
+
+          @Test
+          fun test() {
+            log("running")
+          }
+
+          private class PrivateInterceptor : TestInterceptor {
+            override fun intercept(testFunction: TestFunction) {
+              log("intercepting")
+              testFunction()
+              log("intercepted")
+            }
+          }
+        }
+
+        fun main(vararg args: String) {
+          PrivateInterceptorTest().test()
+        }
+        """,
+      ),
+    )
+
+    assertThat(log).containsExactly(
+      "intercepting",
+      "running",
+      "intercepted",
+    )
+  }
+
+  @Test
+  fun repeatedTest() {
+    val log = BurstTester(
+      packageName = "app.cash.burst.tests",
+    ).compileAndRun(
+      SourceFile.kotlin(
+        "Main.kt",
+        """
+        package app.cash.burst.tests
+
+        import app.cash.burst.InterceptTest
+        import app.cash.burst.TestFunction
+        import app.cash.burst.TestInterceptor
+        import kotlin.test.AfterTest
+        import kotlin.test.BeforeTest
+        import kotlin.test.Test
+
+        class RepeatedTest {
+          @InterceptTest
+          val interceptor = RepeatingInterceptor()
+
+          @BeforeTest
+          fun beforeTest() {
+            log("before test")
+          }
+
+          @AfterTest
+          fun afterTest() {
+            log("after test")
+          }
+
+          @Test
+          fun test() {
+            log("running")
+          }
+        }
+
+        class RepeatingInterceptor : TestInterceptor {
+          override fun intercept(testFunction: TestFunction) {
+            for (i in 0 until 3) {
+              log("run ${'$'}i")
+              testFunction()
+            }
+          }
+        }
+
+        fun main(vararg args: String) {
+          RepeatedTest().test()
+        }
+        """,
+      ),
+    )
+
+    assertThat(log).containsExactly(
+      "run 0",
+      "before test",
+      "running",
+      "after test",
+      "run 1",
+      "before test",
+      "running",
+      "after test",
+      "run 2",
+      "before test",
+      "running",
+      "after test",
+    )
+  }
+
+  @Test
+  fun retryingTest() {
+    val log = BurstTester(
+      packageName = "app.cash.burst.tests",
+    ).compileAndRun(
+      SourceFile.kotlin(
+        "Main.kt",
+        """
+        package app.cash.burst.tests
+
+        import app.cash.burst.InterceptTest
+        import app.cash.burst.TestFunction
+        import app.cash.burst.TestInterceptor
+        import kotlin.test.AfterTest
+        import kotlin.test.BeforeTest
+        import kotlin.test.Test
+
+        class RetryingTest {
+          @InterceptTest
+          val interceptor = RetryingInterceptor()
+
+          var attempts = 0
+
+          @BeforeTest
+          fun beforeTest() {
+            log("before test")
+          }
+
+          @AfterTest
+          fun afterTest() {
+            log("after test")
+          }
+
+          @Test
+          fun test() {
+            check(++attempts == 3) { "not enough attempts" }
+          }
+        }
+
+        class RetryingInterceptor : TestInterceptor {
+          override fun intercept(testFunction: TestFunction) {
+            for (i in 0 until 5) {
+              try {
+                log("attempt ${'$'}i")
+                testFunction()
+                log("success")
+                return
+              } catch (e: Throwable) {
+                log("failed: ${'$'}{e.message}")
+              }
+            }
+          }
+        }
+
+        fun main(vararg args: String) {
+          RetryingTest().test()
+        }
+        """,
+      ),
+    )
+
+    assertThat(log).containsExactly(
+      "attempt 0",
+      "before test",
+      "after test",
+      "failed: not enough attempts",
+      "attempt 1",
+      "before test",
+      "after test",
+      "failed: not enough attempts",
+      "attempt 2",
+      "before test",
+      "after test",
+      "success",
+    )
+  }
+
+  @Test
+  fun reuseInterceptor() {
+    val log = BurstTester(
+      packageName = "app.cash.burst.tests",
+    ).compileAndRun(
+      SourceFile.kotlin(
+        "Main.kt",
+        """
+        package app.cash.burst.tests
+
+        import app.cash.burst.InterceptTest
+        import app.cash.burst.TestFunction
+        import app.cash.burst.TestInterceptor
+        import kotlin.test.Test
+
+        class ReuseInterceptorTest {
+          @InterceptTest
+          val interceptorA = BasicInterceptor()
+
+          @InterceptTest
+          val interceptorB = interceptorA
+
+          @InterceptTest
+          val interceptorC = interceptorA
+
+          @Test
+          fun passingTest() {
+            log("running")
+          }
+        }
+
+        class BasicInterceptor : TestInterceptor {
+          override fun intercept(testFunction: TestFunction) {
+            log("intercepting")
+            testFunction()
+            log("intercepted")
+          }
+        }
+
+        fun main(vararg args: String) {
+          ReuseInterceptorTest().passingTest()
+        }
+        """,
+      ),
+    )
+
+    assertThat(log).containsExactly(
+      "intercepting",
+      "intercepting",
+      "intercepting",
+      "running",
+      "intercepted",
+      "intercepted",
+      "intercepted",
+    )
+  }
+
+  @Test
+  fun interceptorThrows() {
+    val log = BurstTester(
+      packageName = "app.cash.burst.tests",
+    ).compileAndRun(
+      SourceFile.kotlin(
+        "Main.kt",
+        """
+        package app.cash.burst.tests
+
+        import app.cash.burst.InterceptTest
+        import app.cash.burst.TestFunction
+        import app.cash.burst.TestInterceptor
+        import kotlin.test.AfterTest
+        import kotlin.test.BeforeTest
+        import kotlin.test.Test
+
+        class InterceptorThrowsTest {
+          @InterceptTest
+          val interceptor = ThrowingInterceptor()
+
+          @BeforeTest
+          fun beforeTest() {
+            log("before test")
+          }
+
+          @AfterTest
+          fun afterTest() {
+            log("after test")
+          }
+
+          @Test
+          fun test() {
+            log("running")
+          }
+
+          class ThrowingInterceptor : TestInterceptor {
+            override fun intercept(testFunction: TestFunction) {
+              testFunction()
+              error("boom!")
+            }
+          }
+        }
+        fun main(vararg args: String) {
+          try {
+            InterceptorThrowsTest().test()
+          } catch (e: Throwable) {
+            log("caught: ${'$'}{e.message}")
+          }
+        }
+        """,
+      ),
+    )
+
+    assertThat(log).containsExactly(
+      "before test",
+      "running",
+      "after test",
+      "caught: boom!",
+    )
+  }
+
+  @Test
+  fun interceptorGetter() {
+    val log = BurstTester(
+      packageName = "app.cash.burst.tests",
+    ).compileAndRun(
+      SourceFile.kotlin(
+        "Main.kt",
+        """
+        package app.cash.burst.tests
+
+        import app.cash.burst.InterceptTest
+        import app.cash.burst.TestFunction
+        import app.cash.burst.TestInterceptor
+        import kotlin.test.AfterTest
+        import kotlin.test.BeforeTest
+        import kotlin.test.Test
+
+        class InterceptorGetterTest {
+          @InterceptTest
+          val interceptorRed: TestInterceptor
+            get() {
+              log("getting interceptor red")
+              return BasicInterceptor("red")
+            }
+
+          @InterceptTest
+          val interceptorBlue: TestInterceptor
+            get() {
+              log("getting interceptor blue")
+              return BasicInterceptor("blue")
+            }
+
+          @InterceptTest
+          val interceptorGreen: TestInterceptor
+            get() {
+              log("getting interceptor green")
+              return BasicInterceptor("green")
+            }
+
+          @BeforeTest
+          fun beforeTest() {
+            log("before test")
+          }
+
+          @AfterTest
+          fun afterTest() {
+            log("after test")
+          }
+
+          @Test
+          fun test() {
+            log("running")
+          }
+        }
+
+        class BasicInterceptor(val name: String) : TestInterceptor {
           override fun intercept(testFunction: TestFunction) {
             log("intercepting ${'$'}name")
             testFunction()
@@ -351,18 +1171,25 @@ class TestInterceptorKotlinPluginTest {
         }
 
         fun main(vararg args: String) {
-          CircleTest().happyPath()
+          InterceptorGetterTest().test()
         }
         """,
       ),
     )
 
     assertThat(log).containsExactly(
-      "intercepting shape",
-      "intercepting circle",
+      "getting interceptor red",
+      "intercepting red",
+      "getting interceptor blue",
+      "intercepting blue",
+      "getting interceptor green",
+      "intercepting green",
+      "before test",
       "running",
-      "intercepted circle",
-      "intercepted shape",
+      "after test",
+      "intercepted green",
+      "intercepted blue",
+      "intercepted red",
     )
   }
 }
