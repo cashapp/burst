@@ -22,23 +22,15 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isNotNull
 import assertk.assertions.isNull
 import org.gradle.testkit.runner.TaskOutcome
-import org.junit.BeforeClass
 import org.junit.Test
 
 class TestInterceptorGradlePluginTest {
-  companion object {
-    private val tester = GradleTester("interceptor")
-
-    @BeforeClass
-    @JvmStatic
-    fun beforeClass() {
-      val result = tester.cleanAndBuildAndFail(":lib:test")
-      assertThat(result.outcome).isEqualTo(TaskOutcome.FAILED)
-    }
-  }
-
   @Test
   fun happyPath() {
+    val tester = GradleTester("interceptor")
+    val result = tester.cleanAndBuildAndFail(":lib:test")
+    assertThat(result.outcome).isEqualTo(TaskOutcome.FAILED)
+
     with(tester.readTestSuite("app.cash.burst.tests.BasicTest")) {
       assertThat(testCases.single().failureMessage).isNull()
       assertThat(systemOut).isEqualTo(
@@ -59,6 +51,10 @@ class TestInterceptorGradlePluginTest {
 
   @Test
   fun failingTest() {
+    val tester = GradleTester("interceptor")
+    val result = tester.cleanAndBuildAndFail(":lib:test")
+    assertThat(result.outcome).isEqualTo(TaskOutcome.FAILED)
+
     with(tester.readTestSuite("app.cash.burst.tests.FailingTest")) {
       assertThat(testCases.single().failureMessage).isNotNull().contains("boom!")
       assertThat(systemOut).isEqualTo(
@@ -77,6 +73,10 @@ class TestInterceptorGradlePluginTest {
    */
   @Test
   fun beforeTestInSuperclass() {
+    val tester = GradleTester("interceptor")
+    val result = tester.cleanAndBuildAndFail(":lib:test")
+    assertThat(result.outcome).isEqualTo(TaskOutcome.FAILED)
+
     with(tester.readTestSuite("app.cash.burst.tests.BeforeTestInSuperclassTest${'$'}CircleTest")) {
       assertThat(testCases.single().failureMessage).isNull()
       assertThat(systemOut).isEqualTo(
@@ -96,6 +96,10 @@ class TestInterceptorGradlePluginTest {
    */
   @Test
   fun afterTestInSuperclass() {
+    val tester = GradleTester("interceptor")
+    val result = tester.cleanAndBuildAndFail(":lib:test")
+    assertThat(result.outcome).isEqualTo(TaskOutcome.FAILED)
+
     with(tester.readTestSuite("app.cash.burst.tests.AfterTestInSuperclassTest${'$'}CircleTest")) {
       assertThat(testCases.single().failureMessage).isNull()
       assertThat(systemOut).isEqualTo(
@@ -104,6 +108,29 @@ class TestInterceptorGradlePluginTest {
         |running
         |intercepted
         |afterTest
+        |
+        """.trimMargin(),
+      )
+    }
+  }
+
+  @Test
+  fun interceptorAcrossModules() {
+    val tester = GradleTester("interceptorAcrossModules")
+    tester.cleanAndBuild(":lib:test")
+
+    with(tester.readTestSuite("app.cash.burst.tests.CircleTest")) {
+      assertThat(systemOut).isEqualTo(
+        """
+        |> intercepting shape
+        |> before test shape
+        |> intercepting circle
+        |> before test circle
+        |  running testShape
+        |< after test circle
+        |< intercepted circle
+        |< after test shape
+        |< intercepted shape
         |
         """.trimMargin(),
       )

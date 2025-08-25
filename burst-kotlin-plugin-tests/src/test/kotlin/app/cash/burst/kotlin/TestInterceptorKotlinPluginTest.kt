@@ -16,9 +16,12 @@
 package app.cash.burst.kotlin
 
 import assertk.assertThat
+import assertk.assertions.contains
 import assertk.assertions.containsExactly
+import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 
 @OptIn(ExperimentalCompilerApi::class)
@@ -1298,6 +1301,95 @@ class TestInterceptorKotlinPluginTest {
       "intercepted green",
       "intercepted blue",
       "intercepted red",
+    )
+  }
+
+  @Test
+  fun interceptedTestMustBeFinal() {
+    val result = compile(
+      SourceFile.kotlin(
+        "Main.kt",
+        """
+        package com.example
+
+        import app.cash.burst.InterceptTest
+        import app.cash.burst.TestFunction
+        import app.cash.burst.TestInterceptor
+        import kotlin.test.Test
+
+        open class SampleTest {
+          @InterceptTest
+          val interceptor = object : TestInterceptor {
+            override fun intercept(testFunction: TestFunction) {
+              testFunction()
+            }
+          }
+
+          @Test
+          open fun happyPath() {
+            println("running happyPath")
+          }
+        }
+        """,
+      ),
+    )
+    assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
+    assertThat(result.messages).contains(
+      "Main.kt:16:3 @InterceptTest cannot target test functions that are non-final",
+    )
+  }
+
+  @Test
+  fun interceptedTestMayOverrideSuperclassTest() {
+    val log = BurstTester(
+      packageName = "com.example",
+    ).compileAndRun(
+      SourceFile.kotlin(
+        "Main.kt",
+        """
+        package com.example
+
+        import app.cash.burst.InterceptTest
+        import app.cash.burst.TestFunction
+        import app.cash.burst.TestInterceptor
+        import kotlin.test.AfterTest
+        import kotlin.test.BeforeTest
+        import kotlin.test.Test
+
+        open class BaseTest {
+          @Test
+          open fun happyPath() {
+            log("running BaseTest.happyPath")
+          }
+        }
+
+        class SampleTest : BaseTest() {
+          @InterceptTest
+          val interceptor = object : TestInterceptor {
+            override fun intercept(testFunction: TestFunction) {
+              log("intercepting")
+              testFunction()
+            }
+          }
+
+          @Test
+          override fun happyPath() {
+            log("running happyPath")
+            super.happyPath()
+          }
+        }
+
+        fun main(vararg args: String) {
+          SampleTest().happyPath()
+        }
+        """,
+      ),
+    )
+
+    assertThat(log).containsExactly(
+      "intercepting",
+      "running happyPath",
+      "running BaseTest.happyPath",
     )
   }
 }

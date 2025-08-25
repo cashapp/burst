@@ -36,11 +36,14 @@ class TestInterceptorIrGenerationExtension(
       override fun visitClassNew(declaration: IrClass): IrStatement {
         val classDeclaration = super.visitClassNew(declaration) as IrClass
 
-        val hierarchyInterceptorInjector = HierarchyInterceptorInjector(
-          pluginContext = pluginContext,
-          burstApis = burstApis,
-        )
-        hierarchyInterceptorInjector.apply(classDeclaration)
+        try {
+          HierarchyInterceptorInjector(
+            pluginContext = pluginContext,
+            burstApis = burstApis,
+          ).apply(classDeclaration)
+        } catch (e: BurstCompilationException) {
+          messageCollector.report(e.severity, e.message, currentFile.locationOf(e.element))
+        }
 
         return classDeclaration
       }
