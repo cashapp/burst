@@ -21,15 +21,13 @@ import assertk.assertions.contains
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotNull
 import assertk.assertions.isNull
-import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Test
 
 class TestInterceptorGradlePluginTest {
   @Test
   fun happyPath() {
     val tester = GradleTester("interceptor")
-    val result = tester.cleanAndBuildAndFail(":lib:test")
-    assertThat(result.outcome).isEqualTo(TaskOutcome.FAILED)
+    tester.cleanAndBuildAndFail(":lib:test")
 
     with(tester.readTestSuite("app.cash.burst.tests.BasicTest")) {
       assertThat(testCases.single().failureMessage).isNull()
@@ -52,8 +50,7 @@ class TestInterceptorGradlePluginTest {
   @Test
   fun failingTest() {
     val tester = GradleTester("interceptor")
-    val result = tester.cleanAndBuildAndFail(":lib:test")
-    assertThat(result.outcome).isEqualTo(TaskOutcome.FAILED)
+    tester.cleanAndBuildAndFail(":lib:test")
 
     with(tester.readTestSuite("app.cash.burst.tests.FailingTest")) {
       assertThat(testCases.single().failureMessage).isNotNull().contains("boom!")
@@ -74,8 +71,7 @@ class TestInterceptorGradlePluginTest {
   @Test
   fun beforeTestInSuperclass() {
     val tester = GradleTester("interceptor")
-    val result = tester.cleanAndBuildAndFail(":lib:test")
-    assertThat(result.outcome).isEqualTo(TaskOutcome.FAILED)
+    tester.cleanAndBuildAndFail(":lib:test")
 
     with(tester.readTestSuite("app.cash.burst.tests.BeforeTestInSuperclassTest${'$'}CircleTest")) {
       assertThat(testCases.single().failureMessage).isNull()
@@ -97,8 +93,7 @@ class TestInterceptorGradlePluginTest {
   @Test
   fun afterTestInSuperclass() {
     val tester = GradleTester("interceptor")
-    val result = tester.cleanAndBuildAndFail(":lib:test")
-    assertThat(result.outcome).isEqualTo(TaskOutcome.FAILED)
+    tester.cleanAndBuildAndFail(":lib:test")
 
     with(tester.readTestSuite("app.cash.burst.tests.AfterTestInSuperclassTest${'$'}CircleTest")) {
       assertThat(testCases.single().failureMessage).isNull()
