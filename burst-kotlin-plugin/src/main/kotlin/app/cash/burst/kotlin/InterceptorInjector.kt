@@ -50,7 +50,6 @@ import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.packageFqName
 import org.jetbrains.kotlin.ir.util.parentClassOrNull
 import org.jetbrains.kotlin.ir.util.patchDeclarationParents
-import org.jetbrains.kotlin.ir.util.statements
 import org.jetbrains.kotlin.ir.util.superClass
 import org.jetbrains.kotlin.name.Name
 
@@ -364,7 +363,7 @@ internal class InterceptorInjector(
     // If there's no function body to rewrite, we're probably looking at a superclass from another
     // module. The rewrite won't be emitted anywhere, but we still need to generate its symbols for
     // subclasses to call.
-    val originalBody = original.body ?: return
+    if (original.body == null) return
 
     if (original.modality != Modality.FINAL && originalParent.modality != Modality.FINAL) {
       unexpectedOpenFunction(original)
@@ -380,9 +379,7 @@ internal class InterceptorInjector(
         arguments[0] = irString(packageName)
         arguments[1] = irString(className)
         arguments[2] = irString(original.name.asString())
-        arguments[3] = localLambda(original.symbol) {
-          +originalBody.statements
-        }
+        arguments[3] = moveBodyToLocalLambda(original)
       }
 
       +irCall(
