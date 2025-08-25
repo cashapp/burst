@@ -18,7 +18,6 @@
 package app.cash.burst.kotlin
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
-import org.jetbrains.kotlin.backend.jvm.ir.isInCurrentModule
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
@@ -48,14 +47,9 @@ internal class HierarchyInterceptorInjector(
     val existing = classDeclaration.interceptFunction
     if (existing != null) return existing
 
+    // Rewrite the superclass first!
     val superClass = classDeclaration.superClass
-    val superClassInterceptFunction = when {
-      // Rewrite the superclass first!
-      superClass?.isInCurrentModule() == true -> apply(superClass)
-
-      // Classes from other modules will have 'intercept()' functions injected already.
-      else -> classDeclaration.superclasses.firstNotNullOfOrNull { it.interceptFunction }
-    }
+    val superClassInterceptFunction = superClass?.let { apply(it) }
 
     val interceptorProperties = classDeclaration.properties.filter {
       it.hasAtTestInterceptor && it.overriddenSymbols.isEmpty()
@@ -90,8 +84,6 @@ internal class HierarchyInterceptorInjector(
     val result = interceptorInjector.defineIntercept()
 
     for (function in originalFunctions) {
-      if (function.overriddenSymbols.isNotEmpty()) continue
-
       if (burstApis.findTestAnnotation(function) != null) {
         interceptorInjector.inject(function)
       }
@@ -99,10 +91,6 @@ internal class HierarchyInterceptorInjector(
 
     return result
   }
-
-  /** Returns a sequence that does not include this class itself. */
-  private val IrClass.superclasses: Sequence<IrClass>
-    get() = generateSequence(superClass) { it.superClass }
 
   /** The `intercept()` function declared by this class. */
   private val IrClass.interceptFunction: IrSimpleFunction?

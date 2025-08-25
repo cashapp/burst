@@ -32,6 +32,7 @@ import org.jetbrains.kotlin.ir.builders.irNull
 import org.jetbrains.kotlin.ir.builders.irString
 import org.jetbrains.kotlin.ir.builders.irTemporary
 import org.jetbrains.kotlin.ir.declarations.IrClass
+import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.IrValueDeclaration
@@ -360,6 +361,15 @@ internal class InterceptorInjector(
     val interceptFunctionSymbol = this.interceptFunctionSymbol
       ?: error("call defineIntercept() first")
 
+    // If there's no function body to rewrite, we're probably looking at a superclass from another
+    // module. The rewrite won't be emitted anywhere, but we still need to generate its symbols for
+    // subclasses to call.
+    val originalBody = original.body ?: return
+
+    if (original.modality != Modality.FINAL && originalParent.modality != Modality.FINAL) {
+      unexpectedOpenFunction(original)
+    }
+
     original.irFunctionBody(
       context = pluginContext,
       scopeOwnerSymbol = original.symbol,
@@ -371,7 +381,7 @@ internal class InterceptorInjector(
         arguments[1] = irString(className)
         arguments[2] = irString(original.name.asString())
         arguments[3] = localLambda(original.symbol) {
-          +original.body!!.statements
+          +originalBody.statements
         }
       }
 
@@ -386,5 +396,12 @@ internal class InterceptorInjector(
     }
 
     original.patchDeclarationParents()
+  }
+
+  private fun unexpectedOpenFunction(function: IrFunction): Nothing {
+    throw BurstCompilationException(
+      "@InterceptTest cannot target test functions that are non-final",
+      function,
+    )
   }
 }
