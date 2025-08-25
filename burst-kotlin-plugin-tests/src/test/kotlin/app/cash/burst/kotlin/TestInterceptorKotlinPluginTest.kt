@@ -1305,6 +1305,94 @@ class TestInterceptorKotlinPluginTest {
   }
 
   @Test
+  fun interceptorGetterThrows() {
+    val log = BurstTester(
+      packageName = "app.cash.burst.tests",
+    ).compileAndRun(
+      SourceFile.kotlin(
+        "Main.kt",
+        """
+        package app.cash.burst.tests
+
+        import app.cash.burst.InterceptTest
+        import app.cash.burst.TestFunction
+        import app.cash.burst.TestInterceptor
+        import kotlin.test.AfterTest
+        import kotlin.test.BeforeTest
+        import kotlin.test.Test
+
+        class InterceptorGetterThrowsTest {
+          @InterceptTest
+          val workingInterceptor = BasicInterceptor("working")
+
+          @InterceptTest
+          val brokenInterceptor: TestInterceptor
+            get() = error("boom!")
+
+          @Test
+          fun test() {
+            log("running")
+          }
+        }
+
+        class BasicInterceptor(val name: String) : TestInterceptor {
+          override fun intercept(testFunction: TestFunction) {
+            log("intercepting ${'$'}name")
+            try {
+              testFunction()
+            } finally {
+              log("intercepted ${'$'}name")
+            }
+          }
+        }
+
+        fun main(vararg args: String) {
+          try {
+            InterceptorGetterThrowsTest().test()
+          } catch (e: Throwable) {
+            log("caught: ${'$'}{e.message}")
+          }
+        }
+        """,
+      ),
+    )
+
+    assertThat(log).containsExactly(
+      "intercepting working",
+      "intercepted working",
+      "caught: boom!",
+    )
+  }
+
+  @Test
+  fun interceptorMustBeTheRightType() {
+    val result = compile(
+      SourceFile.kotlin(
+        "Main.kt",
+        """
+        package com.example
+
+        import app.cash.burst.InterceptTest
+        import kotlin.test.Test
+
+        class InterceptorMustBeTheRightType {
+          @InterceptTest
+          val wrongType: String = "hello"
+
+          @Test
+          fun test() {
+          }
+        }
+        """,
+      ),
+    )
+    assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
+    assertThat(result.messages).contains(
+      "Main.kt:7:3 @InterceptTest properties must be assignable to TestInterceptor",
+    )
+  }
+
+  @Test
   fun interceptedTestMustBeFinal() {
     val result = compile(
       SourceFile.kotlin(

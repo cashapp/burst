@@ -19,9 +19,11 @@ package app.cash.burst.kotlin
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.declarations.IrClass
+import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.util.functions
+import org.jetbrains.kotlin.ir.util.isSubtypeOfClass
 import org.jetbrains.kotlin.ir.util.properties
 import org.jetbrains.kotlin.ir.util.superClass
 
@@ -60,6 +62,13 @@ internal class HierarchyInterceptorInjector(
       return null
     }
 
+    // Check the @InterceptTest property types.
+    for (property in interceptorProperties) {
+      if (property.getter?.returnType?.isSubtypeOfClass(burstApis.testInterceptor) != true) {
+        unexpectedInterceptTest(property)
+      }
+    }
+
     val originalFunctions = classDeclaration.functions.toList()
 
     val interceptorInjector = InterceptorInjector(
@@ -95,4 +104,11 @@ internal class HierarchyInterceptorInjector(
   /** The `intercept()` function declared by this class. */
   private val IrClass.interceptFunction: IrSimpleFunction?
     get() = functions.firstOrNull { burstApis.testInterceptorIntercept in it.overriddenSymbols }
+
+  private fun unexpectedInterceptTest(property: IrProperty): Nothing {
+    throw BurstCompilationException(
+      "@InterceptTest properties must be assignable to TestInterceptor",
+      property,
+    )
+  }
 }
