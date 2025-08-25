@@ -43,11 +43,9 @@ import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin.Companion.VARIABLE_
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.classOrNull
-import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.makeNullable
 import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.defaultType
-import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.packageFqName
 import org.jetbrains.kotlin.ir.util.parentClassOrNull
 import org.jetbrains.kotlin.ir.util.patchDeclarationParents
@@ -121,6 +119,7 @@ internal class InterceptorInjector(
   private val burstApis: BurstApis,
   private val originalParent: IrClass,
   private val interceptorProperties: List<IrProperty>,
+  private val superclassIntercept: IrSimpleFunction?,
 ) {
   private val packageName = originalParent.packageFqName?.asString() ?: ""
   private val className = generateSequence(originalParent) { it.parentClassOrNull }
@@ -136,13 +135,6 @@ internal class InterceptorInjector(
 
   /** The `intercept()` function we defined. */
   private var interceptFunctionSymbol: IrSimpleFunctionSymbol? = null
-
-  /** The `intercept()` function declared by the superclass. */
-  // TODO: run an InterceptorInjector on the superclass first if necessary?!
-  private val superclassIntercept: IrSimpleFunction? =
-    originalParent.superClass?.functions?.firstOrNull {
-      burstApis.testInterceptorIntercept in it.overriddenSymbols
-    }
 
   /** Remove the `@BeforeTest` annotation on [function]. */
   fun adoptBeforeTest(function: IrSimpleFunction) {
@@ -162,11 +154,11 @@ internal class InterceptorInjector(
     afterTestFunctionSymbols += function.symbol
   }
 
-  fun defineIntercept() {
+  fun defineIntercept(): IrSimpleFunction {
     check(interceptFunctionSymbol == null) { "already defined?!" }
 
     // TODO: don't add 'implements TestInterceptor' if it already does.
-    originalParent.superTypes += burstApis.testInterceptor.defaultType
+    originalParent.superTypes += burstApis.testInterceptorType
 
     val function = originalParent.factory.buildFun {
       initDefaults(originalParent)
@@ -181,7 +173,7 @@ internal class InterceptorInjector(
       addValueParameter {
         initDefaults(originalParent)
         name = Name.identifier("testFunction")
-        type = burstApis.testFunction.defaultType
+        type = burstApis.testFunctionType
       }
     }
 
@@ -302,6 +294,8 @@ internal class InterceptorInjector(
     originalParent.addDeclaration(function)
 
     this.interceptFunctionSymbol = function.symbol
+
+    return function
   }
 
   private fun IrBlockBodyBuilder.newTestInstance(
