@@ -1,14 +1,18 @@
 Burst
 =====
 
-Burst is a library for parameterizing unit tests.
+Burst is a Kotlin compiler plug-in for more capable tests. It supports all Kotlin platforms and
+works great in multiplatform projects.
 
-It is similar to [TestParameterInjector] in usage, but Burst is implemented as a Kotlin compiler
-plug-in. Burst supports all Kotlin platforms and works great in multiplatform projects.
+ * `@Burst` is used to parameterize unit tests. It is similar to [TestParameterInjector] in
+   capability.
+
+ * `@InterceptTest` is used to set up and tear down unit tests. It is similar to [JUnit Rules] in
+   capability.
 
 
-Usage
------
+@Burst
+------
 
 Annotate your test class with `@Burst`.
 
@@ -98,6 +102,105 @@ The test will be specialized for each combination of arguments.
  * `drinkSoda("Coke", false, Distribution.Can)`
  * `drinkSoda("Coke", false, Distribution.Bottle)`
 
+@InterceptTest
+--------------
+
+Implement the `TestInterceptor` interface. Your `intercept` function should call `testFunction` to
+run the subject test function.
+
+```kotlin
+class RepeatInterceptor(
+  private val attemptCount: Int,
+) : TestInterceptor {
+  override fun intercept(testFunction: TestFunction) {
+    for (i in 0 until attemptCount) {
+      println("running ${testFunction.functionName} attempt $i")
+      testFunction()
+    }
+  }
+}
+```
+
+Next, declare a property for your interceptor in your test class and annotate it `@InterceptTest`:
+
+```kotlin
+class DrinkSodaTest {
+  @InterceptTest
+  val repeatInterceptor = RepeatInterceptor(3)
+
+  @Test
+  fun drinkSoda() {
+    println("drinking a Pepsi")
+  }
+}
+```
+
+When you execute this test, it is intercepted:
+
+```
+running drinkSoda attempt 0
+drinking a Pepsi
+running drinkSoda attempt 1
+drinking a Pepsi
+running drinkSoda attempt 2
+drinking a Pepsi
+```
+
+### BeforeTest and AfterTest
+
+If your test has these functions, the interceptor intercepts them. Here’s such a test:
+
+```kotlin
+class DrinkSodaTest {
+  @InterceptTest
+  val loggingInterceptor = object : TestInterceptor {
+    override fun intercept(testFunction: TestFunction) {
+      println("intercepting ${testFunction.functionName}")
+      testFunction()
+      println("intercepted ${testFunction.functionName}")
+    }
+  }
+
+  @BeforeTest
+  fun beforeTest() {
+    println("getting ready")
+  }
+
+  @AfterTest
+  fun afterTest() {
+    println("cleaning up")
+  }
+
+  @Test
+  fun drinkSoda() {
+    println("drinking a Pepsi")
+  }
+}
+```
+
+And here’s its output:
+
+```
+intercepting drinkSoda
+getting ready
+drinking a Pepsi
+cleaning up
+intercepted drinkSoda
+```
+
+### Features and Limitations
+
+You can have multiple test interceptors in each class. They are executed in declaration order.
+
+You can use test interceptors and inheritance together. The superclass interceptors are executed
+first.
+
+You can use `try/catch/finally` to execute code when tests fail.
+
+Intercepted test functions must be `final`. Mixing `@InterceptTest` with non-final test functions
+will cause a compilation error.
+
+
 Gradle Setup
 ------------
 
@@ -156,4 +259,5 @@ License
     See the License for the specific language governing permissions and
     limitations under the License.
 
+[JUnit Rules]: https://junit.org/junit4/javadoc/4.12/org/junit/Rule.html
 [TestParameterInjector]: https://github.com/google/TestParameterInjector
