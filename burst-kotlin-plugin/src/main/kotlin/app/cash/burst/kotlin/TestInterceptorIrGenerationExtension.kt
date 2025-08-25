@@ -23,8 +23,6 @@ import org.jetbrains.kotlin.ir.IrStatement
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
-import org.jetbrains.kotlin.ir.util.functions
-import org.jetbrains.kotlin.ir.util.properties
 
 @UnsafeDuringIrConstructionAPI // To use IrDeclarationContainer.declarations.
 class TestInterceptorIrGenerationExtension(
@@ -38,43 +36,11 @@ class TestInterceptorIrGenerationExtension(
       override fun visitClassNew(declaration: IrClass): IrStatement {
         val classDeclaration = super.visitClassNew(declaration) as IrClass
 
-        val interceptorProperties = classDeclaration.properties.filter {
-          it.hasAtTestInterceptor && it.overriddenSymbols.isEmpty()
-        }.toList()
-
-        if (interceptorProperties.isEmpty()) {
-          return classDeclaration
-        }
-
-        val originalFunctions = classDeclaration.functions.toList()
-
-        val interceptorInjector = InterceptorInjector(
+        val hierarchyInterceptorInjector = HierarchyInterceptorInjector(
           pluginContext = pluginContext,
           burstApis = burstApis,
-          originalParent = classDeclaration,
-          interceptorProperties = interceptorProperties,
         )
-
-        for (function in originalFunctions) {
-          if (function.overriddenSymbols.isNotEmpty()) continue
-
-          if (burstApis.findBeforeTestAnnotation(function) != null) {
-            interceptorInjector.adoptBeforeTest(function)
-          }
-          if (burstApis.findAfterTestAnnotation(function) != null) {
-            interceptorInjector.adoptAfterTest(function)
-          }
-        }
-
-        interceptorInjector.defineIntercept()
-
-        for (function in originalFunctions) {
-          if (function.overriddenSymbols.isNotEmpty()) continue
-
-          if (burstApis.findTestAnnotation(function) != null) {
-            interceptorInjector.inject(function)
-          }
-        }
+        hierarchyInterceptorInjector.apply(classDeclaration)
 
         return classDeclaration
       }

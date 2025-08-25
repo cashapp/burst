@@ -22,7 +22,9 @@ import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.IrPropertySymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
+import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.classOrNull
+import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.util.hasAnnotation
 
 /** Looks up APIs used by the code rewriters. */
@@ -37,8 +39,12 @@ internal class BurstApis private constructor(
   val testInterceptor: IrClassSymbol =
     pluginContext.referenceClass(testInterceptorClassId)!!
 
+  val testInterceptorType: IrType = testInterceptor.defaultType
+
   val testFunction: IrClassSymbol =
     pluginContext.referenceClass(testFunctionClassId)!!
+
+  val testFunctionType: IrType = testFunction.defaultType
 
   val testInterceptorIntercept: IrSimpleFunctionSymbol =
     pluginContext.referenceFunctions(testInterceptorInterceptId).single()

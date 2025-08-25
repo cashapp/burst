@@ -678,6 +678,114 @@ class TestInterceptorKotlinPluginTest {
     )
   }
 
+  /**
+   * Like [interceptInSuperclass], but the declaration order is flipped. We're sensitive to this
+   * because each test class inspects its superclass to decide if it must call `super.intercept()`.
+   */
+  @Test
+  fun interceptInSuperclassDeclaredAfterTestClass() {
+    val log = BurstTester(
+      packageName = "app.cash.burst.tests",
+    ).compileAndRun(
+      SourceFile.kotlin(
+        "Main.kt",
+        """
+        package app.cash.burst.tests
+
+        import app.cash.burst.InterceptTest
+        import app.cash.burst.TestFunction
+        import app.cash.burst.TestInterceptor
+        import kotlin.test.Test
+
+        class CircleTest : ShapeTest() {
+          @InterceptTest
+          val circleInterceptor = LoggingInterceptor("circle")
+
+          @Test
+          fun passingTest() {
+            log("running")
+          }
+        }
+
+        open class ShapeTest {
+          @InterceptTest
+          val shapeInterceptor = LoggingInterceptor("shape")
+        }
+
+        class LoggingInterceptor(val name: String) : TestInterceptor {
+          override fun intercept(testFunction: TestFunction) {
+            log("intercepting ${'$'}name (${'$'}{testFunction.packageName} ${'$'}{testFunction.className} ${'$'}{testFunction.functionName})")
+            testFunction()
+            log("intercepted ${'$'}name")
+          }
+        }
+
+        fun main(vararg args: String) {
+          CircleTest().passingTest()
+        }
+        """,
+      ),
+    )
+
+    assertThat(log).containsExactly(
+      "intercepting shape (app.cash.burst.tests CircleTest passingTest)",
+      "intercepting circle (app.cash.burst.tests CircleTest passingTest)",
+      "running",
+      "intercepted circle",
+      "intercepted shape",
+    )
+  }
+
+  /** Like [interceptInSuperclass], but the test class doesn't have its own interceptor. */
+  @Test
+  fun interceptInSuperclassButNotTestClass() {
+    val log = BurstTester(
+      packageName = "app.cash.burst.tests",
+    ).compileAndRun(
+      SourceFile.kotlin(
+        "Main.kt",
+        """
+        package app.cash.burst.tests
+
+        import app.cash.burst.InterceptTest
+        import app.cash.burst.TestFunction
+        import app.cash.burst.TestInterceptor
+        import kotlin.test.Test
+
+        class CircleTest : ShapeTest() {
+          @Test
+          fun passingTest() {
+            log("running")
+          }
+        }
+
+        open class ShapeTest {
+          @InterceptTest
+          val shapeInterceptor = LoggingInterceptor("shape")
+        }
+
+        class LoggingInterceptor(val name: String) : TestInterceptor {
+          override fun intercept(testFunction: TestFunction) {
+            log("intercepting ${'$'}name (${'$'}{testFunction.packageName} ${'$'}{testFunction.className} ${'$'}{testFunction.functionName})")
+            testFunction()
+            log("intercepted ${'$'}name")
+          }
+        }
+
+        fun main(vararg args: String) {
+          CircleTest().passingTest()
+        }
+        """,
+      ),
+    )
+
+    assertThat(log).containsExactly(
+      "intercepting shape (app.cash.burst.tests CircleTest passingTest)",
+      "running",
+      "intercepted shape",
+    )
+  }
+
   @Test
   fun symbolNames() {
     val log = BurstTester(
