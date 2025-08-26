@@ -1480,4 +1480,59 @@ class TestInterceptorKotlinPluginTest {
       "running BaseTest.happyPath",
     )
   }
+
+  /**
+   * Our initial implementation failed bytecode validation when a function returned 'void' when the
+   * interceptor required it to return 'Unit'.
+   */
+  @Test
+  fun earlyReturn() {
+    val log = BurstTester(
+      packageName = "com.example",
+    ).compileAndRun(
+      SourceFile.kotlin(
+        "Main.kt",
+        """
+        package com.example
+
+        import app.cash.burst.InterceptTest
+        import app.cash.burst.TestFunction
+        import app.cash.burst.TestInterceptor
+        import kotlin.test.AfterTest
+        import kotlin.test.BeforeTest
+        import kotlin.test.Test
+
+        class SampleTest {
+          @InterceptTest
+          val interceptor = object : TestInterceptor {
+            override fun intercept(testFunction: TestFunction) {
+              log("intercepting")
+              testFunction()
+              log("intercepted")
+            }
+          }
+
+          @Test
+          fun happyPath() {
+            if (true) {
+              log("early return")
+              return
+            }
+            log("no early return")
+          }
+        }
+
+        fun main(vararg args: String) {
+          SampleTest().happyPath()
+        }
+        """,
+      ),
+    )
+
+    assertThat(log).containsExactly(
+      "intercepting",
+      "early return",
+      "intercepted",
+    )
+  }
 }

@@ -15,6 +15,7 @@
  */
 package app.cash.burst.kotlin
 
+import org.jetbrains.kotlin.backend.common.ir.moveBodyTo
 import org.jetbrains.kotlin.backend.common.lower.DeclarationIrBuilder
 import org.jetbrains.kotlin.backend.common.lower.irCatch
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageLocationWithRange
@@ -222,6 +223,26 @@ fun IrBlockBodyBuilder.localLambda(
       ) {
         block()
       }
+    },
+    origin = IrStatementOrigin.Companion.LAMBDA,
+  )
+}
+
+/** Moves the body of [original] to a newly-created local lambda. */
+fun IrBlockBodyBuilder.moveBodyToLocalLambda(
+  original: IrSimpleFunction,
+): IrFunctionExpressionImpl {
+  return IrFunctionExpressionImpl(
+    startOffset = startOffset,
+    endOffset = endOffset,
+    type = context.irBuiltIns.functionN(0).typeWith(context.irBuiltIns.unitType),
+    function = context.irFactory.buildFun {
+      this.name = Name.special("<anonymous>")
+      this.returnType = context.irBuiltIns.unitType
+      this.origin = IrDeclarationOrigin.Companion.LOCAL_FUNCTION_FOR_LAMBDA
+      this.visibility = DescriptorVisibilities.LOCAL
+    }.apply {
+      body = original.moveBodyTo(this, mapOf())
     },
     origin = IrStatementOrigin.Companion.LAMBDA,
   )
