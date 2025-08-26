@@ -120,6 +120,7 @@ internal class InterceptorInjector(
   private val originalParent: IrClass,
   private val interceptorProperties: List<IrProperty>,
   private val superclassIntercept: IrSimpleFunction?,
+  private val existingIntercept: IrSimpleFunction?,
 ) {
   private val packageName = originalParent.packageFqName?.asString() ?: ""
   private val className = generateSequence(originalParent) { it.parentClassOrNull }
@@ -156,6 +157,11 @@ internal class InterceptorInjector(
 
   fun defineIntercept(): IrSimpleFunction {
     check(interceptFunctionSymbol == null) { "already defined?!" }
+
+    // If there's already a fake override, remove it.
+    if (existingIntercept != null) {
+      originalParent.declarations.remove(existingIntercept)
+    }
 
     // TODO: don't add 'implements TestInterceptor' if it already does.
     originalParent.superTypes += burstApis.testInterceptorType
@@ -294,6 +300,11 @@ internal class InterceptorInjector(
     originalParent.addDeclaration(function)
 
     this.interceptFunctionSymbol = function.symbol
+
+    // Make this function visible to subclasses in other modules.
+    if (existingIntercept == null) {
+      pluginContext.metadataDeclarationRegistrar.registerFunctionAsMetadataVisible(function)
+    }
 
     return function
   }

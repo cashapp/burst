@@ -1535,4 +1535,70 @@ class TestInterceptorKotlinPluginTest {
       "intercepted",
     )
   }
+
+  @Test
+  fun abstractClassInTheMiddle() {
+    val log = BurstTester(
+      packageName = "com.example",
+    ).compileAndRun(
+      SourceFile.kotlin(
+        "Main.kt",
+        """
+        package com.example
+
+        import app.cash.burst.InterceptTest
+        import app.cash.burst.TestFunction
+        import app.cash.burst.TestInterceptor
+        import kotlin.test.AfterTest
+        import kotlin.test.BeforeTest
+        import kotlin.test.Test
+
+        abstract class TopTest {
+          @InterceptTest
+          val interceptor = object : TestInterceptor {
+            override fun intercept(testFunction: TestFunction) {
+              log("intercepting ${'$'}{testFunction.className}.${'$'}{testFunction.functionName}")
+              testFunction()
+            }
+          }
+
+          @Test
+          fun testTop() {
+            log("top")
+          }
+        }
+
+        abstract class MiddleTest : TopTest() {
+          @Test
+          fun testMiddle() {
+            log("middle")
+          }
+        }
+
+        class BottomTest : MiddleTest() {
+          @Test
+          fun testBottom() {
+            log("bottom")
+          }
+        }
+
+        fun main(vararg args: String) {
+          val test = BottomTest()
+          test.testTop()
+          test.testMiddle()
+          test.testBottom()
+        }
+        """,
+      ),
+    )
+
+    assertThat(log).containsExactly(
+      "intercepting TopTest.testTop",
+      "top",
+      "intercepting MiddleTest.testMiddle",
+      "middle",
+      "intercepting BottomTest.testBottom",
+      "bottom",
+    )
+  }
 }
