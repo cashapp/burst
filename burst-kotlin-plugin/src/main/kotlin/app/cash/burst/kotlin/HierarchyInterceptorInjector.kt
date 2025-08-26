@@ -18,10 +18,12 @@
 package app.cash.burst.kotlin
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
+import org.jetbrains.kotlin.ir.backend.js.utils.isDispatchReceiver
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
+import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.isSubtypeOfClass
 import org.jetbrains.kotlin.ir.util.properties
@@ -47,7 +49,7 @@ internal class HierarchyInterceptorInjector(
     // If this class directly declares an intercept() function, return that. Otherwise, our injected
     // symbol would collide with that one.
     val existing = classDeclaration.interceptFunction
-    if (existing != null) return existing
+    if (existing != null && !existing.isFakeOverride) return existing
 
     // Rewrite the superclass first!
     val superClass = classDeclaration.superClass
@@ -77,6 +79,7 @@ internal class HierarchyInterceptorInjector(
       originalParent = classDeclaration,
       interceptorProperties = interceptorProperties,
       superclassIntercept = superClassInterceptFunction,
+      existingIntercept = existing,
     )
 
     for (function in originalFunctions) {
@@ -103,7 +106,15 @@ internal class HierarchyInterceptorInjector(
 
   /** The `intercept()` function declared by this class. */
   private val IrClass.interceptFunction: IrSimpleFunction?
-    get() = functions.firstOrNull { burstApis.testInterceptorIntercept in it.overriddenSymbols }
+    get() {
+      val other = burstApis.testInterceptorIntercept.owner
+      return functions.firstOrNull {
+        it.name == other.name &&
+          it.parameters.size == other.parameters.size &&
+          it.parameters[0].isDispatchReceiver &&
+          it.parameters[1].type.classFqName == other.parameters[1].type.classFqName
+      }
+    }
 
   private fun unexpectedInterceptTest(property: IrProperty): Nothing {
     throw BurstCompilationException(

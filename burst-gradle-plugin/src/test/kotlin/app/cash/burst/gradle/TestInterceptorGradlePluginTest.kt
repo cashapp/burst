@@ -131,4 +131,27 @@ class TestInterceptorGradlePluginTest {
       )
     }
   }
+
+  @Test
+  fun abstractClassHasSuperClassThatIntercepts() {
+    val tester = GradleTester("interceptorAcrossModules")
+    tester.cleanAndBuild(":lib:test")
+
+    with(tester.readTestSuite("app.cash.burst.tests.BottomTest")) {
+      assertThat(systemOut).isEqualTo(
+        """
+        |> intercepting top
+        |  running bottom
+        |< intercepted top
+        |> intercepting top
+        |  running middle
+        |< intercepted top
+        |> intercepting top
+        |  running top
+        |< intercepted top
+        |
+        """.trimMargin(),
+      )
+    }
+  }
 }
