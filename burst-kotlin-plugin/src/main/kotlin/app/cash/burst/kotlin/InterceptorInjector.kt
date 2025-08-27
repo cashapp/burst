@@ -16,11 +16,16 @@
 package app.cash.burst.kotlin
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
+import org.jetbrains.kotlin.backend.common.ir.moveBodyTo
 import org.jetbrains.kotlin.backend.common.lower.irNot
 import org.jetbrains.kotlin.backend.common.lower.irThrow
+import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.ir.builders.IrBlockBodyBuilder
+import org.jetbrains.kotlin.ir.builders.declarations.addConstructor
+import org.jetbrains.kotlin.ir.builders.declarations.addFunction
 import org.jetbrains.kotlin.ir.builders.declarations.addValueParameter
+import org.jetbrains.kotlin.ir.builders.declarations.buildClass
 import org.jetbrains.kotlin.ir.builders.declarations.buildFun
 import org.jetbrains.kotlin.ir.builders.declarations.buildReceiverParameter
 import org.jetbrains.kotlin.ir.builders.irBlock
@@ -43,15 +48,20 @@ import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin.Companion.IMPLICIT_
 import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin.Companion.VARIABLE_AS_FUNCTION
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
+import org.jetbrains.kotlin.ir.types.IrTypeSystemContextImpl
 import org.jetbrains.kotlin.ir.types.classOrNull
+import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.makeNullable
+import org.jetbrains.kotlin.ir.util.addFakeOverrides
 import org.jetbrains.kotlin.ir.util.constructors
+import org.jetbrains.kotlin.ir.util.createThisReceiverParameter
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.packageFqName
 import org.jetbrains.kotlin.ir.util.parentClassOrNull
 import org.jetbrains.kotlin.ir.util.patchDeclarationParents
 import org.jetbrains.kotlin.ir.util.superClass
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.util.capitalizeDecapitalize.capitalizeAsciiOnly
 
 /**
  * This starts with an interceptor property like this:
@@ -267,28 +277,34 @@ internal class InterceptorInjector(
       }
 
       for (interceptor in interceptorProperties.reversed()) {
+        val testFunctionClass = createTestFunctionClass(
+          nameHint = "${interceptor.name.asString().capitalizeAsciiOnly()}TestFunction",
+          packageName = packageNameLocal,
+          className = classNameLocal,
+          functionName = functionNameLocal,
+          proceed = proceed,
+        )
+        +testFunctionClass
         proceed = callInterceptorIntercept(
           receiverLocal = function.dispatchReceiverParameter!!,
           interceptorProperty = interceptor,
-          testInstance = newTestInstance(
-            packageName = packageNameLocal,
-            className = classNameLocal,
-            functionName = functionNameLocal,
-            proceed = proceed,
-          ),
+          testInstance = irCall(callee = testFunctionClass.constructors.single()),
         )
       }
 
       if (superclassIntercept != null) {
+        val testFunctionClass = createTestFunctionClass(
+          nameHint = "CallSuperTestFunction",
+          packageName = packageNameLocal,
+          className = classNameLocal,
+          functionName = functionNameLocal,
+          proceed = proceed,
+        )
+        +testFunctionClass
         proceed = callSuperIntercept(
           superclassIntercept,
           interceptFunction = function,
-          testInstance = newTestInstance(
-            packageName = packageNameLocal,
-            className = classNameLocal,
-            functionName = functionNameLocal,
-            proceed = proceed,
-          ),
+          testInstance = irCall(callee = testFunctionClass.constructors.single()),
         )
       }
 
@@ -307,24 +323,6 @@ internal class InterceptorInjector(
     }
 
     return function
-  }
-
-  private fun IrBlockBodyBuilder.newTestInstance(
-    packageName: IrValueDeclaration,
-    className: IrValueDeclaration,
-    functionName: IrValueDeclaration,
-    proceed: IrExpression,
-  ): IrExpression {
-    return irCall(
-      callee = burstApis.testFunction.constructors.single(),
-    ).apply {
-      arguments[0] = irGet(packageName)
-      arguments[1] = irGet(className)
-      arguments[2] = irGet(functionName)
-      arguments[3] = localLambda(scope.scopeOwnerSymbol) {
-        +proceed
-      }
-    }
   }
 
   /** Passes [testInstance] to the `intercept` function of [interceptorProperty]. */
@@ -384,14 +382,15 @@ internal class InterceptorInjector(
       context = pluginContext,
       scopeOwnerSymbol = original.symbol,
     ) {
-      val testFunctionInstance = irCall(
-        callee = burstApis.testFunction.constructors.single(),
-      ).apply {
-        arguments[0] = irString(packageName)
-        arguments[1] = irString(className)
-        arguments[2] = irString(original.name.asString())
-        arguments[3] = moveBodyToLocalLambda(original)
-      }
+      val testFunctionClass = createTestFunctionClass(
+        nameHint = "${original.name.asString().capitalizeAsciiOnly()}TestFunction",
+        packageName = irString(packageName),
+        className = irString(className),
+        functionName = irString(original.name.asString()),
+        buildBody = { body = original.moveBodyTo(this, mapOf()) },
+      )
+      +testFunctionClass
+      val testFunctionInstance = irCall(testFunctionClass.constructors.single())
 
       +irCall(
         callee = interceptFunctionSymbol,
@@ -404,6 +403,86 @@ internal class InterceptorInjector(
     }
 
     original.patchDeclarationParents()
+  }
+
+  private fun IrBlockBodyBuilder.createTestFunctionClass(
+    nameHint: String,
+    packageName: IrValueDeclaration,
+    className: IrValueDeclaration,
+    functionName: IrValueDeclaration,
+    proceed: IrExpression,
+  ): IrClass {
+    return createTestFunctionClass(
+      nameHint = nameHint,
+      packageName = irGet(packageName),
+      className = irGet(className),
+      functionName = irGet(functionName),
+    ) {
+      irFunctionBody(
+        context = context,
+        scopeOwnerSymbol = scope.scopeOwnerSymbol,
+      ) {
+        +proceed
+      }
+    }
+  }
+
+  /** Create a subclass of `TestFunction` and returns its constructor. */
+  private fun createTestFunctionClass(
+    nameHint: String,
+    packageName: IrExpression,
+    className: IrExpression,
+    functionName: IrExpression,
+    buildBody: IrSimpleFunction.() -> Unit,
+  ): IrClass {
+    val testFunctionClass = pluginContext.irFactory.buildClass {
+      initDefaults(originalParent)
+      name = Name.identifier(nameHint)
+      visibility = DescriptorVisibilities.LOCAL
+    }.apply {
+      parent = originalParent
+      superTypes = listOf(burstApis.testFunction.defaultType)
+      createThisReceiverParameter()
+    }
+
+    testFunctionClass.addConstructor {
+      initDefaults(originalParent)
+    }.apply {
+      irConstructorBody(pluginContext) { statements ->
+        statements += irDelegatingConstructorCall(
+          context = pluginContext,
+          symbol = burstApis.testFunction.constructors.single(),
+        ) {
+          arguments[0] = packageName
+          arguments[1] = className
+          arguments[2] = functionName
+        }
+        statements += irInstanceInitializerCall(
+          context = pluginContext,
+          classSymbol = testFunctionClass.symbol,
+        )
+      }
+    }
+
+    val invokeFunction = testFunctionClass.addFunction {
+      initDefaults(originalParent)
+      name = burstApis.testFunctionInvoke.owner.name
+      returnType = pluginContext.irBuiltIns.unitType
+    }.apply {
+      parameters += buildReceiverParameter {
+        initDefaults(originalParent)
+        type = testFunctionClass.defaultType
+      }
+      overriddenSymbols = listOf(burstApis.testFunctionInvoke)
+      buildBody()
+    }
+
+    testFunctionClass.addFakeOverrides(
+      IrTypeSystemContextImpl(pluginContext.irBuiltIns),
+      listOf(invokeFunction),
+    )
+
+    return testFunctionClass
   }
 
   private fun unexpectedOpenFunction(function: IrFunction): Nothing {
