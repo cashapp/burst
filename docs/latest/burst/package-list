@@ -5,7 +5,7 @@ $dokka.location:app.cash.burst//burstValues/#TypeParam(bounds=[kotlin.Any?])#kot
 $dokka.location:app.cash.burst/Burst///PointingToDeclaration/burst/app.cash.burst/-burst/index.html
 $dokka.location:app.cash.burst/InterceptTest///PointingToDeclaration/burst/app.cash.burst/-intercept-test/index.html
 $dokka.location:app.cash.burst/TestFunction///PointingToDeclaration/burst/app.cash.burst/-test-function/index.html
-$dokka.location:app.cash.burst/TestFunction/TestFunction/#kotlin.String#kotlin.String#kotlin.String#kotlin.Function0[kotlin.Unit]/PointingToDeclaration/burst/app.cash.burst/-test-function/-test-function.html
+$dokka.location:app.cash.burst/TestFunction/TestFunction/#kotlin.String#kotlin.String#kotlin.String/PointingToDeclaration/burst/app.cash.burst/-test-function/-test-function.html
 $dokka.location:app.cash.burst/TestFunction/className/#/PointingToDeclaration/burst/app.cash.burst/-test-function/class-name.html
 $dokka.location:app.cash.burst/TestFunction/functionName/#/PointingToDeclaration/burst/app.cash.burst/-test-function/function-name.html
 $dokka.location:app.cash.burst/TestFunction/invoke/#/PointingToDeclaration/burst/app.cash.burst/-test-function/invoke.html
