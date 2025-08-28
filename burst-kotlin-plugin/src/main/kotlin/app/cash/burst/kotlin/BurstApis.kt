@@ -101,11 +101,13 @@ internal class BurstApis private constructor(
       }
 
       val beforeTestSymbols = listOfNotNull(
+        pluginContext.referenceClass(junit5BeforeEachClassId),
         pluginContext.referenceClass(junitBeforeTestClassId),
         pluginContext.referenceClass(kotlinBeforeTestClassId),
       )
 
       val afterTestSymbols = listOfNotNull(
+        pluginContext.referenceClass(junit5AfterEachClassId),
         pluginContext.referenceClass(junitAfterTestClassId),
         pluginContext.referenceClass(kotlinAfterTestClassId),
       )
@@ -141,6 +143,8 @@ private val junitTestClassId = junitPackage.classId("Test")
 private val junitBeforeTestClassId = junitPackage.classId("Before")
 private val junitAfterTestClassId = junitPackage.classId("After")
 private val junit5Package = FqPackageName("org.junit.jupiter.api")
+private val junit5BeforeEachClassId = junit5Package.classId("BeforeEach")
+private val junit5AfterEachClassId = junit5Package.classId("AfterEach")
 private val junit5TestClassId = junit5Package.classId("Test")
 private val kotlinTestPackage = FqPackageName("kotlin.test")
 private val kotlinTestClassId = kotlinTestPackage.classId("Test")

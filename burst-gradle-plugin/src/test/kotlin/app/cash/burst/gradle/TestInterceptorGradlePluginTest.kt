@@ -154,4 +154,61 @@ class TestInterceptorGradlePluginTest {
       )
     }
   }
+
+  @Test
+  fun junit5KotlinTest() {
+    val tester = GradleTester("interceptorJunit5")
+    tester.cleanAndBuild(":lib:test")
+
+    with(tester.readTestSuite("app.cash.burst.tests.KotlinTestTest")) {
+      assertThat(systemOut).isEqualTo(
+        """
+        |intercepting kotlinTestTest
+        |@kotlin.test.BeforeTest before test
+        |@kotlin.test.Test running
+        |@kotlin.test.AfterTest after test
+        |intercepted kotlinTestTest
+        |
+        """.trimMargin(),
+      )
+    }
+  }
+
+  @Test
+  fun junit5OrgJunitTest() {
+    val tester = GradleTester("interceptorJunit5")
+    tester.cleanAndBuild(":lib:test")
+
+    with(tester.readTestSuite("app.cash.burst.tests.OrgJunitTest")) {
+      assertThat(systemOut).isEqualTo(
+        """
+        |intercepting orgJunitTest
+        |@org.junit.Before before test
+        |@org.junit.Test running
+        |@org.junit.After after test
+        |intercepted orgJunitTest
+        |
+        """.trimMargin(),
+      )
+    }
+  }
+
+  @Test
+  fun junit5OrgJunitJupiterApiTest() {
+    val tester = GradleTester("interceptorJunit5")
+    tester.cleanAndBuild(":lib:test")
+
+    with(tester.readTestSuite("app.cash.burst.tests.OrgJunitJupiterApiTest")) {
+      assertThat(systemOut).isEqualTo(
+        """
+        |intercepting orgJunitJupiterApiTest
+        |@org.junit.jupiter.api.BeforeEach before test
+        |@org.junit.jupiter.api.Test running
+        |@org.junit.jupiter.api.AfterEach after test
+        |intercepted orgJunitJupiterApiTest
+        |
+        """.trimMargin(),
+      )
+    }
+  }
 }
