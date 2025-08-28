@@ -15,6 +15,53 @@
  */
 package app.cash.burst
 
+/**
+ * Intercepts the execution of a test function, including its `@BeforeTest` and `@AfterTest`
+ * functions.
+ *
+ * This sample creates a directory before a test runs and deletes it after.
+ *
+ * ```
+ * class TemporaryDirectory : TestInterceptor {
+ *   lateinit var path: Path
+ *     private set
+ *
+ *   override fun intercept(testFunction: TestFunction) {
+ *     path = createTemporaryDirectory(testFunction)
+ *     try {
+ *       testFunction()
+ *     } finally {
+ *       deleteTemporaryDirectory(path)
+ *     }
+ *   }
+ * }
+ * ```
+ *
+ * Adopt an interceptor in your test by declaring a property of this type (or any subtype) and
+ * annotating it `@InterceptTest`:
+ *
+ * ```
+ * class DocumentStorageTest {
+ *   @InterceptTest
+ *   val temporaryDirectory = TemporaryDirectory()
+ *
+ *   @Test
+ *   fun happyPath() {
+ *     val original = SampleData.document
+ *     DocumentWriter().write(original, temporaryDirectory.path)
+ *     val decoded = DocumentReader().read(temporaryDirectory.path)
+ *     assertThat(decoded).isEqualTo(original)
+ *   }
+ * }
+ * ```
+ */
+interface TestInterceptor {
+  fun intercept(testFunction: TestFunction)
+}
+
+@Target(AnnotationTarget.PROPERTY)
+annotation class InterceptTest
+
 abstract class TestFunction(
   /** The package that this test is defined in, or "" it has none. */
   val packageName: String,
@@ -35,11 +82,19 @@ abstract class TestFunction(
    *  * The `@AfterTest` functions (if any)
    */
   abstract operator fun invoke()
-}
 
-interface TestInterceptor {
-  fun intercept(testFunction: TestFunction)
+  /**
+   * Returns the full test name, like `com.example.project.FeatureTest.testMyFeature`.
+   */
+  override fun toString(): String {
+    return buildString {
+      if (packageName.isNotEmpty()) {
+        append(packageName)
+        append(".")
+      }
+      append(className)
+      append(".")
+      append(functionName)
+    }
+  }
 }
-
-@Target(AnnotationTarget.PROPERTY)
-annotation class InterceptTest
