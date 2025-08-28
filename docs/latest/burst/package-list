@@ -10,6 +10,7 @@ $dokka.location:app.cash.burst/TestFunction/className/#/PointingToDeclaration/b
 $dokka.location:app.cash.burst/TestFunction/functionName/#/PointingToDeclaration/burst/app.cash.burst/-test-function/function-name.html
 $dokka.location:app.cash.burst/TestFunction/invoke/#/PointingToDeclaration/burst/app.cash.burst/-test-function/invoke.html
 $dokka.location:app.cash.burst/TestFunction/packageName/#/PointingToDeclaration/burst/app.cash.burst/-test-function/package-name.html
+$dokka.location:app.cash.burst/TestFunction/toString/#/PointingToDeclaration/burst/app.cash.burst/-test-function/to-string.html
 $dokka.location:app.cash.burst/TestInterceptor///PointingToDeclaration/burst/app.cash.burst/-test-interceptor/index.html
 $dokka.location:app.cash.burst/TestInterceptor/intercept/#app.cash.burst.TestFunction/PointingToDeclaration/burst/app.cash.burst/-test-interceptor/intercept.html
 app.cash.burst
