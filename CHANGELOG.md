@@ -6,6 +6,14 @@
 Nothing yet!
 
 
+## [2.7.0] *(2025-08-28)*
+[2.7.0]: https://github.com/cashapp/burst/releases/tag/2.7.0
+
+**Added**
+
+* New `@InterceptTest` is a Kotlin-multiplatform way to intercept tests. It’s similar to JUnit’s `Rule` in capability.
+
+
 ## [2.6.0] *(2025-06-23)*
 [2.6.0]: https://github.com/cashapp/burst/releases/tag/2.6.0
 
