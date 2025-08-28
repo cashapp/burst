@@ -86,14 +86,15 @@ import org.jetbrains.kotlin.util.capitalizeDecapitalize.capitalizeAsciiOnly
  * @Test
  * fun happyPath() {
  *   intercept(
- *     TestFunction(
+ *     object : TestFunction(
  *       packageName = "com.example",
  *       className = "SampleTest",
  *       functionName = "happyPath",
- *       block = {
+ *     ) {
+ *       override fun invoke() {
  *         assertThat(5 + 5).isEqualTo(10)
  *       }
- *     )
+ *     }
  *   )
  * }
  * ```
@@ -103,14 +104,15 @@ import org.jetbrains.kotlin.util.capitalizeDecapitalize.capitalizeAsciiOnly
  * ```kotlin
  * override fun intercept(testFunction: TestFunction) {
  *   interceptor.intercept(
- *     TestInterceptor.Test(
+ *     object : TestFunction(
  *       packageName = testFunction.packageName,
  *       className = testFunction.className,
  *       functionName = testFunction.functionName,
- *       block = {
+ *     ) {
+ *       override fun invoke() {
  *         testFunction()
  *       }
- *     )
+ *     }
  *   )
  * }
  * ```

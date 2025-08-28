@@ -163,11 +163,11 @@ class TestInterceptorGradlePluginTest {
     with(tester.readTestSuite("app.cash.burst.tests.KotlinTestTest")) {
       assertThat(systemOut).isEqualTo(
         """
-        |intercepting kotlinTestTest
+        |intercepting app.cash.burst.tests.KotlinTestTest.kotlinTestTest
         |@kotlin.test.BeforeTest before test
         |@kotlin.test.Test running
         |@kotlin.test.AfterTest after test
-        |intercepted kotlinTestTest
+        |intercepted app.cash.burst.tests.KotlinTestTest.kotlinTestTest
         |
         """.trimMargin(),
       )
@@ -182,11 +182,11 @@ class TestInterceptorGradlePluginTest {
     with(tester.readTestSuite("app.cash.burst.tests.OrgJunitTest")) {
       assertThat(systemOut).isEqualTo(
         """
-        |intercepting orgJunitTest
+        |intercepting app.cash.burst.tests.OrgJunitTest.orgJunitTest
         |@org.junit.Before before test
         |@org.junit.Test running
         |@org.junit.After after test
-        |intercepted orgJunitTest
+        |intercepted app.cash.burst.tests.OrgJunitTest.orgJunitTest
         |
         """.trimMargin(),
       )
@@ -201,11 +201,11 @@ class TestInterceptorGradlePluginTest {
     with(tester.readTestSuite("app.cash.burst.tests.OrgJunitJupiterApiTest")) {
       assertThat(systemOut).isEqualTo(
         """
-        |intercepting orgJunitJupiterApiTest
+        |intercepting app.cash.burst.tests.OrgJunitJupiterApiTest.orgJunitJupiterApiTest
         |@org.junit.jupiter.api.BeforeEach before test
         |@org.junit.jupiter.api.Test running
         |@org.junit.jupiter.api.AfterEach after test
-        |intercepted orgJunitJupiterApiTest
+        |intercepted app.cash.burst.tests.OrgJunitJupiterApiTest.orgJunitJupiterApiTest
         |
         """.trimMargin(),
       )

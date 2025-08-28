@@ -47,10 +47,7 @@ class TestInterceptorKotlinPluginTest {
           @InterceptTest
           val interceptor = object : TestInterceptor {
             override fun intercept(testFunction: TestFunction) {
-              log("intercepting")
-              log("  packageName=${'$'}{testFunction.packageName}")
-              log("  className=${'$'}{testFunction.className}")
-              log("  functionName=${'$'}{testFunction.functionName}")
+              log("intercepting ${'$'}testFunction")
               testFunction()
               log("intercepted")
             }
@@ -70,10 +67,7 @@ class TestInterceptorKotlinPluginTest {
     )
 
     assertThat(log).containsExactly(
-      "intercepting",
-      "  packageName=com.example",
-      "  className=SampleTest",
-      "  functionName=happyPath",
+      "intercepting com.example.SampleTest.happyPath",
       "running happyPath",
       "intercepted",
     )
@@ -115,7 +109,7 @@ class TestInterceptorKotlinPluginTest {
 
         class LoggingInterceptor(val name: String) : TestInterceptor {
           override fun intercept(testFunction: TestFunction) {
-            log("intercepting ${'$'}name (${'$'}{testFunction.packageName} ${'$'}{testFunction.className} ${'$'}{testFunction.functionName})")
+            log("intercepting ${'$'}name ${'$'}testFunction")
             testFunction()
             log("intercepted ${'$'}name")
           }
@@ -129,9 +123,9 @@ class TestInterceptorKotlinPluginTest {
     )
 
     assertThat(log).containsExactly(
-      "intercepting red (app.cash.burst.tests MultipleInterceptorsTest passingTest)",
-      "intercepting blue (app.cash.burst.tests MultipleInterceptorsTest passingTest)",
-      "intercepting green (app.cash.burst.tests MultipleInterceptorsTest passingTest)",
+      "intercepting red app.cash.burst.tests.MultipleInterceptorsTest.passingTest",
+      "intercepting blue app.cash.burst.tests.MultipleInterceptorsTest.passingTest",
+      "intercepting green app.cash.burst.tests.MultipleInterceptorsTest.passingTest",
       "running",
       "intercepted green",
       "intercepted blue",
@@ -659,7 +653,7 @@ class TestInterceptorKotlinPluginTest {
 
         class LoggingInterceptor(val name: String) : TestInterceptor {
           override fun intercept(testFunction: TestFunction) {
-            log("intercepting ${'$'}name (${'$'}{testFunction.packageName} ${'$'}{testFunction.className} ${'$'}{testFunction.functionName})")
+            log("intercepting ${'$'}name ${'$'}testFunction")
             testFunction()
             log("intercepted ${'$'}name")
           }
@@ -673,8 +667,8 @@ class TestInterceptorKotlinPluginTest {
     )
 
     assertThat(log).containsExactly(
-      "intercepting shape (app.cash.burst.tests CircleTest passingTest)",
-      "intercepting circle (app.cash.burst.tests CircleTest passingTest)",
+      "intercepting shape app.cash.burst.tests.CircleTest.passingTest",
+      "intercepting circle app.cash.burst.tests.CircleTest.passingTest",
       "running",
       "intercepted circle",
       "intercepted shape",
@@ -717,7 +711,7 @@ class TestInterceptorKotlinPluginTest {
 
         class LoggingInterceptor(val name: String) : TestInterceptor {
           override fun intercept(testFunction: TestFunction) {
-            log("intercepting ${'$'}name (${'$'}{testFunction.packageName} ${'$'}{testFunction.className} ${'$'}{testFunction.functionName})")
+            log("intercepting ${'$'}name ${'$'}testFunction")
             testFunction()
             log("intercepted ${'$'}name")
           }
@@ -731,8 +725,8 @@ class TestInterceptorKotlinPluginTest {
     )
 
     assertThat(log).containsExactly(
-      "intercepting shape (app.cash.burst.tests CircleTest passingTest)",
-      "intercepting circle (app.cash.burst.tests CircleTest passingTest)",
+      "intercepting shape app.cash.burst.tests.CircleTest.passingTest",
+      "intercepting circle app.cash.burst.tests.CircleTest.passingTest",
       "running",
       "intercepted circle",
       "intercepted shape",
@@ -769,7 +763,7 @@ class TestInterceptorKotlinPluginTest {
 
         class LoggingInterceptor(val name: String) : TestInterceptor {
           override fun intercept(testFunction: TestFunction) {
-            log("intercepting ${'$'}name (${'$'}{testFunction.packageName} ${'$'}{testFunction.className} ${'$'}{testFunction.functionName})")
+            log("intercepting ${'$'}name ${'$'}testFunction")
             testFunction()
             log("intercepted ${'$'}name")
           }
@@ -783,7 +777,7 @@ class TestInterceptorKotlinPluginTest {
     )
 
     assertThat(log).containsExactly(
-      "intercepting shape (app.cash.burst.tests CircleTest passingTest)",
+      "intercepting shape app.cash.burst.tests.CircleTest.passingTest",
       "running",
       "intercepted shape",
     )
@@ -1557,7 +1551,7 @@ class TestInterceptorKotlinPluginTest {
           @InterceptTest
           val interceptor = object : TestInterceptor {
             override fun intercept(testFunction: TestFunction) {
-              log("intercepting ${'$'}{testFunction.className}.${'$'}{testFunction.functionName}")
+              log("intercepting ${'$'}testFunction")
               testFunction()
             }
           }
@@ -1593,11 +1587,11 @@ class TestInterceptorKotlinPluginTest {
     )
 
     assertThat(log).containsExactly(
-      "intercepting TopTest.testTop",
+      "intercepting com.example.TopTest.testTop",
       "top",
-      "intercepting MiddleTest.testMiddle",
+      "intercepting com.example.MiddleTest.testMiddle",
       "middle",
-      "intercepting BottomTest.testBottom",
+      "intercepting com.example.BottomTest.testBottom",
       "bottom",
     )
   }

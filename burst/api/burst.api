@@ -14,6 +14,7 @@ public abstract class app/cash/burst/TestFunction {
 	public final fun getFunctionName ()Ljava/lang/String;
 	public final fun getPackageName ()Ljava/lang/String;
 	public abstract fun invoke ()V
+	public fun toString ()Ljava/lang/String;
 }
 
 public abstract interface class app/cash/burst/TestInterceptor {

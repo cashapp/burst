@@ -114,7 +114,7 @@ class RepeatInterceptor(
 ) : TestInterceptor {
   override fun intercept(testFunction: TestFunction) {
     for (i in 0 until attemptCount) {
-      println("running ${testFunction.functionName} attempt $i")
+      println("running $testFunction attempt $i")
       testFunction()
     }
   }
@@ -138,11 +138,11 @@ class DrinkSodaTest {
 When you execute this test, it is intercepted:
 
 ```
-running drinkSoda attempt 0
+running DrinkSodaTest.drinkSoda attempt 0
 drinking a Pepsi
-running drinkSoda attempt 1
+running DrinkSodaTest.drinkSoda attempt 1
 drinking a Pepsi
-running drinkSoda attempt 2
+running DrinkSodaTest.drinkSoda attempt 2
 drinking a Pepsi
 ```
 
@@ -155,9 +155,9 @@ class DrinkSodaTest {
   @InterceptTest
   val loggingInterceptor = object : TestInterceptor {
     override fun intercept(testFunction: TestFunction) {
-      println("intercepting ${testFunction.functionName}")
+      println("intercepting $testFunction")
       testFunction()
-      println("intercepted ${testFunction.functionName}")
+      println("intercepted $testFunction")
     }
   }
 
@@ -181,11 +181,11 @@ class DrinkSodaTest {
 And here’s its output:
 
 ```
-intercepting drinkSoda
+intercepting DrinkSodaTest.drinkSoda
 getting ready
 drinking a Pepsi
 cleaning up
-intercepted drinkSoda
+intercepted DrinkSodaTest.drinkSoda
 ```
 
 ### Features and Limitations
