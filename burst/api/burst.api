@@ -8,12 +8,12 @@ public final class app/cash/burst/BurstKt {
 public abstract interface annotation class app/cash/burst/InterceptTest : java/lang/annotation/Annotation {
 }
 
-public final class app/cash/burst/TestFunction {
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function0;)V
+public abstract class app/cash/burst/TestFunction {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
 	public final fun getClassName ()Ljava/lang/String;
 	public final fun getFunctionName ()Ljava/lang/String;
 	public final fun getPackageName ()Ljava/lang/String;
-	public final fun invoke ()V
+	public abstract fun invoke ()V
 }
 
 public abstract interface class app/cash/burst/TestInterceptor {
