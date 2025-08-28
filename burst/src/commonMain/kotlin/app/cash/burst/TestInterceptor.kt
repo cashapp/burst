@@ -15,7 +15,7 @@
  */
 package app.cash.burst
 
-class TestFunction(
+abstract class TestFunction(
   /** The package that this test is defined in, or "" it has none. */
   val packageName: String,
 
@@ -24,8 +24,6 @@ class TestFunction(
 
   /** The test function name. */
   val functionName: String,
-
-  private val block: () -> Unit,
 ) {
   /**
    * Runs the next interceptor in the chain if there is one.
@@ -36,9 +34,7 @@ class TestFunction(
    *  * The `@Test` function
    *  * The `@AfterTest` functions (if any)
    */
-  operator fun invoke() {
-    block()
-  }
+  abstract operator fun invoke()
 }
 
 interface TestInterceptor {
