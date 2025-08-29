@@ -16,6 +16,7 @@
 package app.cash.burst.kotlin
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
+import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.ir.builders.declarations.buildFun
 import org.jetbrains.kotlin.ir.builders.declarations.buildReceiverParameter
 import org.jetbrains.kotlin.ir.builders.irCall
@@ -108,6 +109,7 @@ internal class FunctionSpecializer(
   ): IrSimpleFunction {
     val result = original.factory.buildFun {
       initDefaults(original)
+      modality = Modality.FINAL
       name = when {
         isDefaultSpecialization -> original.name
         else -> Name.identifier("${original.name.identifier}_${specialization.name}")
