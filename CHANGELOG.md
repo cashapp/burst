@@ -6,6 +6,14 @@
 Nothing yet!
 
 
+## [2.7.1] *(2025-08-29)*
+[2.7.1]: https://github.com/cashapp/burst/releases/tag/2.7.1
+
+**Fixed**
+
+* Don't fail to compile when using both `@Burst` and `@TestInterceptor` in an abstract test class.
+
+
 ## [2.7.0] *(2025-08-28)*
 [2.7.0]: https://github.com/cashapp/burst/releases/tag/2.7.0
 
