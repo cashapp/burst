@@ -211,4 +211,65 @@ class TestInterceptorGradlePluginTest {
       )
     }
   }
+
+  @Test
+  fun interceptorAndBurstConstructor() {
+    val tester = GradleTester("interceptorAndBurst")
+    tester.cleanAndBuild(":lib:test")
+
+    with(tester.readTestSuite("app.cash.burst.tests.InterceptorAndBurstConstructorTest_false")) {
+      assertThat(systemOut).isEqualTo(
+        """
+        |intercepting false test
+        |running false
+        |
+        """.trimMargin(),
+      )
+    }
+    with(tester.readTestSuite("app.cash.burst.tests.InterceptorAndBurstConstructorTest_true")) {
+      assertThat(systemOut).isEqualTo(
+        """
+        |intercepting true test
+        |running true
+        |
+        """.trimMargin(),
+      )
+    }
+  }
+
+  @Test
+  fun interceptorAndBurstFunction() {
+    val tester = GradleTester("interceptorAndBurst")
+    tester.cleanAndBuild(":lib:test")
+
+    with(tester.readTestSuite("app.cash.burst.tests.InterceptorAndBurstFunctionTest")) {
+      assertThat(systemOut).isEqualTo(
+        """
+        |intercepting function test_true
+        |running true
+        |intercepting function test_false
+        |running false
+        |
+        """.trimMargin(),
+      )
+    }
+  }
+
+  @Test
+  fun interceptorAndBurstSubclass() {
+    val tester = GradleTester("interceptorAndBurst")
+    tester.cleanAndBuild(":lib:test")
+
+    with(tester.readTestSuite("app.cash.burst.tests.InterceptorAndBurstSubclassTest")) {
+      assertThat(systemOut).isEqualTo(
+        """
+        |intercepting abstract test_true
+        |running subclass true
+        |intercepting abstract test_false
+        |running subclass false
+        |
+        """.trimMargin(),
+      )
+    }
+  }
 }
