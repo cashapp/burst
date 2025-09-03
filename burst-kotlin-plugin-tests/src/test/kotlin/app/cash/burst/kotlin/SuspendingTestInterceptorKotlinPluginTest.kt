@@ -76,6 +76,54 @@ class SuspendingTestInterceptorKotlinPluginTest {
   }
 
   @Test
+  fun useTestScopeInInterceptor() {
+    val log = BurstTester(
+      packageName = "com.example",
+    ).compileAndRun(
+      SourceFile.kotlin(
+        "Main.kt",
+        """
+        package com.example
+
+        import app.cash.burst.InterceptTest
+        import app.cash.burst.coroutines.CoroutineTestFunction
+        import app.cash.burst.coroutines.CoroutineTestInterceptor
+        import kotlin.test.Test
+        import kotlinx.coroutines.test.runTest
+        import kotlinx.coroutines.test.TestScope
+        import kotlin.time.Duration.Companion.seconds
+
+        class SampleTest {
+          @InterceptTest
+          val interceptor = object : CoroutineTestInterceptor {
+            override suspend fun intercept(testFunction: CoroutineTestFunction) {
+              log("advancing time in interceptor")
+              testFunction.scope.testScheduler.advanceTimeBy(1.seconds)
+              testFunction()
+            }
+          }
+
+          @Test
+          fun happyPath() = runTest {
+            log("advancing time in test")
+            testScheduler.advanceTimeBy(1.seconds)
+          }
+        }
+
+        fun main(vararg args: String) {
+          SampleTest().happyPath()
+        }
+        """,
+      ),
+    )
+
+    assertThat(log).containsExactly(
+      "advancing time in interceptor",
+      "advancing time in test",
+    )
+  }
+
+  @Test
   fun cannotUseNonCoroutineTestInterceptorWithCoroutineTestInterceptor() {
     val result = compile(
       SourceFile.kotlin(

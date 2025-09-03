@@ -1,8 +1,9 @@
 public abstract class app/cash/burst/coroutines/CoroutineTestFunction {
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public fun <init> (Lkotlinx/coroutines/test/TestScope;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
 	public final fun getClassName ()Ljava/lang/String;
 	public final fun getFunctionName ()Ljava/lang/String;
 	public final fun getPackageName ()Ljava/lang/String;
+	public final fun getScope ()Lkotlinx/coroutines/test/TestScope;
 	public abstract fun invoke (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun toString ()Ljava/lang/String;
 }

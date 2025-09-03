@@ -15,6 +15,8 @@
  */
 package app.cash.burst.coroutines
 
+import kotlinx.coroutines.test.TestScope
+
 interface CoroutineTestInterceptor {
   suspend fun intercept(
     testFunction: CoroutineTestFunction,
@@ -22,13 +24,10 @@ interface CoroutineTestInterceptor {
 }
 
 abstract class CoroutineTestFunction(
+  val scope: TestScope,
   val packageName: String,
-
   val className: String,
-
   val functionName: String,
-
-  // TODO(jwilson): add TestScope parameter?
 ) {
   abstract suspend operator fun invoke()
 
