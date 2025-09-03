@@ -206,6 +206,16 @@ internal class InterceptorInjector(
       context = pluginContext,
       scopeOwnerSymbol = originalParent.symbol,
     ) {
+      val testScopeLocal = testInterceptorApis.testScope?.let {
+        irTemporary(
+          value = irCall(testInterceptorApis.testScope.owner.getter!!).apply {
+            origin = IrStatementOrigin.Companion.GET_PROPERTY
+            dispatchReceiver = irGet(function.parameters[1])
+          },
+          nameHint = "testScope",
+        )
+      }
+
       val packageNameLocal = irTemporary(
         value = irCall(testInterceptorApis.packageName.owner.getter!!).apply {
           origin = IrStatementOrigin.Companion.GET_PROPERTY
@@ -288,6 +298,7 @@ internal class InterceptorInjector(
       for (interceptor in interceptorProperties.reversed()) {
         val testFunctionClass = createTestFunctionClass(
           nameHint = "${interceptor.name.asString().capitalizeAsciiOnly()}TestFunction",
+          testScope = testScopeLocal,
           packageName = packageNameLocal,
           className = classNameLocal,
           functionName = functionNameLocal,
@@ -304,6 +315,7 @@ internal class InterceptorInjector(
       if (superclassIntercept != null) {
         val testFunctionClass = createTestFunctionClass(
           nameHint = "CallSuperTestFunction",
+          testScope = testScopeLocal,
           packageName = packageNameLocal,
           className = classNameLocal,
           functionName = functionNameLocal,
@@ -404,6 +416,7 @@ internal class InterceptorInjector(
         ) {
           +callInterceptWithTestBody(
             original = original,
+            testScope = null,
           ) {
             body = original.moveBodyTo(this, mapOf())
           }
@@ -447,6 +460,7 @@ internal class InterceptorInjector(
     ) {
       +callInterceptWithTestBody(
         original = testFunction,
+        testScope = irGet(testBody.parameters[0]),
       ) {
         irFunctionBody(
           context = context,
@@ -478,6 +492,7 @@ internal class InterceptorInjector(
    */
   private fun IrStatementsBuilder<*>.callInterceptWithTestBody(
     original: IrSimpleFunction,
+    testScope: IrExpression?,
     buildBody: IrSimpleFunction.() -> Unit,
   ): IrCall {
     val interceptFunctionSymbol = interceptFunctionSymbol
@@ -485,6 +500,7 @@ internal class InterceptorInjector(
 
     val testFunctionClass = createTestFunctionClass(
       nameHint = "${original.name.asString().capitalizeAsciiOnly()}TestFunction",
+      testScope = testScope,
       packageName = irString(packageName),
       className = irString(className),
       functionName = irString(original.name.asString()),
@@ -505,6 +521,7 @@ internal class InterceptorInjector(
 
   private fun IrBlockBodyBuilder.createTestFunctionClass(
     nameHint: String,
+    testScope: IrValueDeclaration?,
     packageName: IrValueDeclaration,
     className: IrValueDeclaration,
     functionName: IrValueDeclaration,
@@ -512,6 +529,7 @@ internal class InterceptorInjector(
   ): IrClass {
     return createTestFunctionClass(
       nameHint = nameHint,
+      testScope = testScope?.let { irGet(it) },
       packageName = irGet(packageName),
       className = irGet(className),
       functionName = irGet(functionName),
@@ -528,6 +546,7 @@ internal class InterceptorInjector(
   /** Create a subclass of `TestFunction` and returns its constructor. */
   private fun createTestFunctionClass(
     nameHint: String,
+    testScope: IrExpression?,
     packageName: IrExpression,
     className: IrExpression,
     functionName: IrExpression,
@@ -551,9 +570,11 @@ internal class InterceptorInjector(
           context = pluginContext,
           symbol = testInterceptorApis.function.constructors.single(),
         ) {
-          arguments[0] = packageName
-          arguments[1] = className
-          arguments[2] = functionName
+          arguments.clear()
+          if (testScope != null) arguments += testScope
+          arguments += packageName
+          arguments += className
+          arguments += functionName
         }
         statements += irInstanceInitializerCall(
           context = pluginContext,
