@@ -35,12 +35,13 @@ class TestInterceptorIrGenerationExtension(
     val transformer = object : IrElementTransformerVoidWithContext() {
       override fun visitClassNew(declaration: IrClass): IrStatement {
         val classDeclaration = super.visitClassNew(declaration) as IrClass
-
+        val input = TestInterceptorsInputReader(burstApis, classDeclaration).read()
         try {
+          TestInterceptorsValidator(burstApis).validate(input)
           HierarchyInterceptorInjector(
             pluginContext = pluginContext,
             burstApis = burstApis,
-          ).apply(classDeclaration)
+          ).apply(input)
         } catch (e: BurstCompilationException) {
           messageCollector.report(e.severity, e.message, currentFile.locationOf(e.element))
         }

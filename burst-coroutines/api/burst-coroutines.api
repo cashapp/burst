@@ -1,0 +1,13 @@
+public abstract class app/cash/burst/coroutines/CoroutineTestFunction {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun getClassName ()Ljava/lang/String;
+	public final fun getFunctionName ()Ljava/lang/String;
+	public final fun getPackageName ()Ljava/lang/String;
+	public abstract fun invoke (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class app/cash/burst/coroutines/CoroutineTestInterceptor {
+	public abstract fun intercept (Lapp/cash/burst/coroutines/CoroutineTestFunction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+

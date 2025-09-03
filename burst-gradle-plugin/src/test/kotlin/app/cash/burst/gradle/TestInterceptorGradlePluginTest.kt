@@ -21,6 +21,8 @@ import assertk.assertions.contains
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotNull
 import assertk.assertions.isNull
+import org.jetbrains.kotlin.konan.target.HostManager
+import org.jetbrains.kotlin.konan.target.presetName
 import org.junit.Test
 
 class TestInterceptorGradlePluginTest {
@@ -267,6 +269,54 @@ class TestInterceptorGradlePluginTest {
         |running subclass true
         |intercepting abstract test_false
         |running subclass false
+        |
+        """.trimMargin(),
+      )
+    }
+  }
+
+  @Test
+  fun multiplatformJvm() {
+    multiplatform(testTaskName = "jvmTest")
+  }
+
+  @Test
+  fun multiplatformJs() {
+    multiplatform(testTaskName = "jsNodeTest")
+  }
+
+  @Test
+  fun multiplatformNative() {
+    // Like 'linuxX64' or 'macosArm64'.
+    val platformName = HostManager.host.presetName
+    multiplatform(testTaskName = "${platformName}Test")
+  }
+
+  private fun multiplatform(testTaskName: String) {
+    val tester = GradleTester("multiplatformInterceptor")
+    tester.cleanAndBuild(":lib:$testTaskName")
+
+    with(tester.readTestSuite("app.cash.burst.tests.BasicTest", testTaskName)) {
+      assertThat(systemOut).isEqualTo(
+        """
+        |intercepting app.cash.burst.tests.BasicTest.passingTest
+        |set up
+        |running
+        |tear down
+        |intercepted
+        |
+        """.trimMargin(),
+      )
+    }
+
+    with(tester.readTestSuite("app.cash.burst.tests.CoroutinesTest", testTaskName)) {
+      assertThat(systemOut).isEqualTo(
+        """
+        |intercepting app.cash.burst.tests.CoroutinesTest.passingTest in passingCoroutine
+        |set up
+        |running in passingCoroutine
+        |tear down
+        |intercepted
         |
         """.trimMargin(),
       )
