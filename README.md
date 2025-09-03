@@ -188,6 +188,40 @@ cleaning up
 intercepted DrinkSodaTest.drinkSoda
 ```
 
+### Coroutines
+
+If your tests use [kotlinx-coroutines-test], you must use `CoroutineTestInterceptor` instead of
+`TestInterceptor`. Its intercept function suspends:
+
+```kotlin
+class DrinkSodaTest {
+  @InterceptTest
+  val loggingInterceptor = object : CoroutineTestInterceptor {
+    override suspend fun intercept(testFunction: CoroutineTestFunction) {
+      println("intercepting $testFunction")
+      testFunction()
+    }
+  }
+
+  @Test
+  fun drinkSoda() = runTest {
+    println("drinking a Pepsi")
+  }
+}
+```
+
+The `CoroutineTestFunction` has the `TestScope` property so interceptors have the same capabilities
+as tests.
+
+You’ll also need this Gradle dependency:
+
+```kotlin
+dependencies {
+  testImplementation("app.cash.burst:burst-coroutines:2.7.1")
+  ...
+}
+```
+
 ### Features and Limitations
 
 You can have multiple test interceptors in each class. They are executed in declaration order.
@@ -199,6 +233,9 @@ You can use `try/catch/finally` to execute code when tests fail.
 
 Intercepted test functions must be `final`. Mixing `@InterceptTest` with non-final test functions
 will cause a compilation error.
+
+You cannot mix and match `CoroutinesTestInterceptor` and `TestInterceptor` in the same test. You
+cannot use `runTest()` with `TestInterceptor`, and you must use it with `CoroutinesTestInterceptor`.
 
 
 Gradle Setup
@@ -212,7 +249,7 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-    classpath("app.cash.burst:burst-gradle-plugin:2.6.0")
+    classpath("app.cash.burst:burst-gradle-plugin:2.7.1")
   }
 }
 ```
@@ -233,7 +270,7 @@ certain versions of Kotlin.
 
 | Kotlin          | Burst         |
 |-----------------|---------------|
-| 2.2.0           | 2.6.0         |
+| 2.2.0           | 2.6.0 - 2.7.1 |
 | 2.1.20          | 2.5.0         |
 | 2.1.0           | 2.2.0 - 2.4.0 |
 | 2.0.20 - 2.0.21 | 0.1.0 - 2.1.0 |
@@ -261,3 +298,4 @@ License
 
 [JUnit Rules]: https://junit.org/junit4/javadoc/4.12/org/junit/Rule.html
 [TestParameterInjector]: https://github.com/google/TestParameterInjector
+[kotlinx-coroutines-test]: https://github.com/Kotlin/kotlinx.coroutines/blob/master/kotlinx-coroutines-test/
