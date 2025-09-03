@@ -18,16 +18,7 @@
 package app.cash.burst.kotlin
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
-import org.jetbrains.kotlin.ir.backend.js.utils.isDispatchReceiver
-import org.jetbrains.kotlin.ir.declarations.IrClass
-import org.jetbrains.kotlin.ir.declarations.IrProperty
-import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
-import org.jetbrains.kotlin.ir.types.classFqName
-import org.jetbrains.kotlin.ir.util.functions
-import org.jetbrains.kotlin.ir.util.isSubtypeOfClass
-import org.jetbrains.kotlin.ir.util.properties
-import org.jetbrains.kotlin.ir.util.superClass
 
 /**
  * Adds `@InterceptTest` to the classes in a class hierarchy.
@@ -39,87 +30,51 @@ internal class HierarchyInterceptorInjector(
   private val burstApis: BurstApis,
 ) {
   /**
-   * Rewrites [classDeclaration] using [InterceptorInjector] if necessary.
+   * Rewrites the subject of [input] using [InterceptorInjector] if necessary.
    *
-   * This returns the `intercept()` function declared by [classDeclaration], which might be added as
-   * a consequence of calling this function. Returns null if this class doesn't declare such a
-   * function.
+   * This returns the updated input with a newly-created `intercept()` function declared by the
+   * subject class, which might be added as a consequence of calling this function.
    */
-  fun apply(classDeclaration: IrClass): IrSimpleFunction? {
-    // If this class directly declares an intercept() function, return that. Otherwise, our injected
+  fun apply(input: TestInterceptorsInput): TestInterceptorsInput {
+    val coroutinesApis = burstApis.coroutinesTestInterceptorApis
+    val testInterceptorApis = when {
+      coroutinesApis != null && input.usesCoroutineTestInterceptor -> coroutinesApis
+      input.usesTestInterceptor -> burstApis.testInterceptorApis
+      else -> return input // This class doesn't use test interceptors.
+    }
+
+    // If this class directly declares an intercept() function, do nothing. Otherwise, our injected
     // symbol would collide with that one.
-    val existing = classDeclaration.interceptFunction
-    if (existing != null && !existing.isFakeOverride) return existing
+    val existing = input.interceptFunction
+    if (existing != null && !existing.isFakeOverride) return input
 
     // Rewrite the superclass first!
-    val superClass = classDeclaration.superClass
-    val superClassInterceptFunction = superClass?.let { apply(it) }
-
-    val interceptorProperties = classDeclaration.properties.filter {
-      it.hasAtTestInterceptor && it.overriddenSymbols.isEmpty()
-    }.toList()
-
-    // If this class doesn't participate, we're done.
-    if (interceptorProperties.isEmpty() && superClassInterceptFunction == null) {
-      return null
-    }
-
-    // Check the @InterceptTest property types.
-    for (property in interceptorProperties) {
-      if (property.getter?.returnType?.isSubtypeOfClass(burstApis.testInterceptor) != true) {
-        unexpectedInterceptTest(property)
-      }
-    }
-
-    val originalFunctions = classDeclaration.functions.toList()
+    val superClassPlan = input.superClassInput
+    val superClassInput = superClassPlan?.let { apply(it) }
 
     val interceptorInjector = InterceptorInjector(
       pluginContext = pluginContext,
       burstApis = burstApis,
-      originalParent = classDeclaration,
-      interceptorProperties = interceptorProperties,
-      superclassIntercept = superClassInterceptFunction,
+      testInterceptorApis = testInterceptorApis,
+      originalParent = input.subject,
+      interceptorProperties = input.testInterceptors + input.coroutineTestInterceptors,
+      superclassIntercept = superClassInput?.interceptFunction,
       existingIntercept = existing,
     )
 
-    for (function in originalFunctions) {
-      if (function.overriddenSymbols.isNotEmpty()) continue
-
-      if (burstApis.findBeforeTestAnnotation(function) != null) {
-        interceptorInjector.adoptBeforeTest(function)
-      }
-      if (burstApis.findAfterTestAnnotation(function) != null) {
-        interceptorInjector.adoptAfterTest(function)
-      }
+    for (function in input.beforeTestFunctions) {
+      interceptorInjector.adoptBeforeTest(function)
+    }
+    for (function in input.afterTestFunctions) {
+      interceptorInjector.adoptAfterTest(function)
     }
 
-    val result = interceptorInjector.defineIntercept()
+    val newInterceptFunction = interceptorInjector.defineIntercept()
 
-    for (function in originalFunctions) {
-      if (burstApis.findTestAnnotation(function) != null) {
-        interceptorInjector.inject(function)
-      }
+    for (function in input.testFunctions) {
+      interceptorInjector.inject(function)
     }
 
-    return result
-  }
-
-  /** The `intercept()` function declared by this class. */
-  private val IrClass.interceptFunction: IrSimpleFunction?
-    get() {
-      val other = burstApis.testInterceptorIntercept.owner
-      return functions.firstOrNull {
-        it.name == other.name &&
-          it.parameters.size == other.parameters.size &&
-          it.parameters[0].isDispatchReceiver &&
-          it.parameters[1].type.classFqName == other.parameters[1].type.classFqName
-      }
-    }
-
-  private fun unexpectedInterceptTest(property: IrProperty): Nothing {
-    throw BurstCompilationException(
-      "@InterceptTest properties must be assignable to TestInterceptor",
-      property,
-    )
+    return input.copy(interceptFunction = newInterceptFunction)
   }
 }

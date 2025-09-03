@@ -1382,7 +1382,7 @@ class TestInterceptorKotlinPluginTest {
     )
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
     assertThat(result.messages).contains(
-      "Main.kt:7:3 @InterceptTest properties must be assignable to TestInterceptor",
+      "Main.kt:7:3 @InterceptTest properties must extend either TestInterceptor or CoroutineTestInterceptor",
     )
   }
 
@@ -1593,6 +1593,55 @@ class TestInterceptorKotlinPluginTest {
       "middle",
       "intercepting com.example.BottomTest.testBottom",
       "bottom",
+    )
+  }
+
+  /**
+   * This exercises an implementation detail of our compiler plug-in: rewriting tests causes them to
+   * implement the `TestInterceptor` interface. We test it here to simulate what happens when a base
+   * class is in a different compilation unit than its subclass.
+   */
+  @Test
+  fun superclassExtendsTestInterceptor() {
+    val log = BurstTester(
+      packageName = "com.example",
+    ).compileAndRun(
+      SourceFile.kotlin(
+        "Main.kt",
+        """
+        package com.example
+
+        import app.cash.burst.InterceptTest
+        import app.cash.burst.TestFunction
+        import app.cash.burst.TestInterceptor
+        import kotlin.test.AfterTest
+        import kotlin.test.BeforeTest
+        import kotlin.test.Test
+
+        open class BaseTest : TestInterceptor {
+          override fun intercept(testFunction: TestFunction) {
+            log("intercepting ${'$'}testFunction")
+            testFunction()
+          }
+        }
+
+        class SampleTest : BaseTest() {
+          @Test
+          fun happyPath() {
+            log("running happyPath")
+          }
+        }
+
+        fun main(vararg args: String) {
+          SampleTest().happyPath()
+        }
+        """,
+      ),
+    )
+
+    assertThat(log).containsExactly(
+      "intercepting com.example.SampleTest.happyPath",
+      "running happyPath",
     )
   }
 }

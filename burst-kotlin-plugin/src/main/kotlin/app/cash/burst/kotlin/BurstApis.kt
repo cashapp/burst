@@ -17,7 +17,9 @@ package app.cash.burst.kotlin
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.declarations.IrAnnotationContainer
+import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
+import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.IrPropertySymbol
@@ -26,6 +28,8 @@ import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.classOrNull
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.util.hasAnnotation
+import org.jetbrains.kotlin.ir.util.isSubtypeOfClass
+import org.jetbrains.kotlin.name.ClassId
 
 /** Looks up APIs used by the code rewriters. */
 internal class BurstApis private constructor(
@@ -33,36 +37,25 @@ internal class BurstApis private constructor(
   private val testClassSymbols: List<IrClassSymbol>,
   val beforeTestSymbols: List<IrClassSymbol>,
   val afterTestSymbols: List<IrClassSymbol>,
+  val runTestSymbols: List<IrFunctionSymbol>,
 ) {
   val burstValues: IrFunctionSymbol = pluginContext.referenceFunctions(burstValuesId).single()
 
-  val testInterceptor: IrClassSymbol =
-    pluginContext.referenceClass(testInterceptorClassId)!!
+  val testInterceptorApis: TestInterceptorApis = pluginContext.testInterceptorApis(
+    testFunctionClassId = burstFqPackage.classId("TestFunction"),
+    testInterceptorClassId = burstFqPackage.classId("TestInterceptor"),
+  )!!
 
-  val testInterceptorType: IrType = testInterceptor.defaultType
-
-  val testFunction: IrClassSymbol =
-    pluginContext.referenceClass(testFunctionClassId)!!
-
-  val testFunctionType: IrType = testFunction.defaultType
-
-  val testInterceptorIntercept: IrSimpleFunctionSymbol =
-    pluginContext.referenceFunctions(testInterceptorInterceptId).single()
-
-  val testFunctionPackageName: IrPropertySymbol =
-    pluginContext.referenceProperties(testFunctionPackageNameId).single()
-
-  val testFunctionClassName: IrPropertySymbol =
-    pluginContext.referenceProperties(testFunctionClassNameId).single()
-
-  val testFunctionFunctionName: IrPropertySymbol =
-    pluginContext.referenceProperties(testFunctionFunctionNameId).single()
-
-  val testFunctionInvoke: IrSimpleFunctionSymbol =
-    pluginContext.referenceFunctions(testFunctionInvokeId).single()
+  val coroutinesTestInterceptorApis: TestInterceptorApis? = pluginContext.testInterceptorApis(
+    testFunctionClassId = burstCoroutinesFqPackage.classId("CoroutineTestFunction"),
+    testInterceptorClassId = burstCoroutinesFqPackage.classId("CoroutineTestInterceptor"),
+  )
 
   val throwableAddSuppressed: IrSimpleFunctionSymbol =
     pluginContext.referenceFunctions(throwableAddSuppressedId).single()
+
+  /** Null if `kotlinx.coroutines.test` isn't in this build. */
+  val testScope: IrType? = pluginContext.referenceClass(testScopeId)?.defaultType
 
   fun findTestAnnotation(function: IrSimpleFunction): IrClassSymbol? {
     return function.annotations
@@ -80,6 +73,15 @@ internal class BurstApis private constructor(
     return function.annotations
       .mapNotNull { it.type.classOrNull }
       .firstOrNull { it in afterTestSymbols }
+  }
+
+  fun isEitherTestInterceptor(property: IrProperty): Boolean {
+    return testInterceptorApis.isTestInterceptor(property) ||
+      coroutinesTestInterceptorApis?.isTestInterceptor(property) == true
+  }
+
+  fun isRunTest(irCall: IrCall): Boolean {
+    return irCall.symbol in runTestSymbols
   }
 
   companion object {
@@ -112,31 +114,63 @@ internal class BurstApis private constructor(
         pluginContext.referenceClass(kotlinAfterTestClassId),
       )
 
+      val runTestSymbols = pluginContext.referenceFunctions(runTestId).toList()
+
       return BurstApis(
         pluginContext = pluginContext,
         testClassSymbols = testClassSymbols,
         beforeTestSymbols = beforeTestSymbols,
         afterTestSymbols = afterTestSymbols,
+        runTestSymbols = runTestSymbols,
       )
     }
   }
+}
+
+/** The interceptor APIs for either suspending or non-suspending calls. */
+internal class TestInterceptorApis(
+  val interceptor: IrClassSymbol,
+  val function: IrClassSymbol,
+  val intercept: IrSimpleFunctionSymbol,
+  val packageName: IrPropertySymbol,
+  val className: IrPropertySymbol,
+  val functionName: IrPropertySymbol,
+  val invoke: IrSimpleFunctionSymbol,
+) {
+  val interceptorType: IrType = interceptor.defaultType
+  val functionType: IrType = function.defaultType
+
+  fun isTestInterceptor(property: IrProperty): Boolean {
+    val returnType = property.getter?.returnType ?: return false
+    return returnType.isSubtypeOfClass(interceptor)
+  }
+}
+
+private fun IrPluginContext.testInterceptorApis(
+  testFunctionClassId: ClassId,
+  testInterceptorClassId: ClassId,
+): TestInterceptorApis? {
+  val interceptorClass = referenceClass(testInterceptorClassId) ?: return null
+  val functionClass = referenceClass(testFunctionClassId) ?: return null
+  return TestInterceptorApis(
+    interceptor = interceptorClass,
+    function = functionClass,
+    intercept = referenceFunctions(testInterceptorClassId.callableId("intercept")).single(),
+    packageName = referenceProperties(testFunctionClassId.callableId("packageName")).single(),
+    className = referenceProperties(testFunctionClassId.callableId("className")).single(),
+    functionName = referenceProperties(testFunctionClassId.callableId("functionName")).single(),
+    invoke = referenceFunctions(testFunctionClassId.callableId("invoke")).single(),
+  )
 }
 
 private val kotlinPackage = FqPackageName("kotlin")
 private val throwableAddSuppressedId = kotlinPackage.callableId("addSuppressed")
 
 private val burstFqPackage = FqPackageName("app.cash.burst")
+private val burstCoroutinesFqPackage = FqPackageName("app.cash.burst.coroutines")
 private val burstAnnotationId = burstFqPackage.classId("Burst")
 private val burstValuesId = burstFqPackage.callableId("burstValues")
-
 private val interceptTestAnnotationId = burstFqPackage.classId("InterceptTest")
-private val testFunctionClassId = burstFqPackage.classId("TestFunction")
-private val testInterceptorClassId = burstFqPackage.classId("TestInterceptor")
-private val testInterceptorInterceptId = testInterceptorClassId.callableId("intercept")
-private val testFunctionInvokeId = testFunctionClassId.callableId("invoke")
-private val testFunctionPackageNameId = testFunctionClassId.callableId("packageName")
-private val testFunctionClassNameId = testFunctionClassId.callableId("className")
-private val testFunctionFunctionNameId = testFunctionClassId.callableId("functionName")
 
 private val junitPackage = FqPackageName("org.junit")
 private val junitTestClassId = junitPackage.classId("Test")
@@ -153,6 +187,10 @@ private val kotlinAfterTestClassId = kotlinTestPackage.classId("AfterTest")
 
 private val kotlinJvmFqPackage = FqPackageName("kotlin.jvm")
 private val jvmInlineAnnotationId = kotlinJvmFqPackage.classId("JvmInline")
+
+private val kotlinxCoroutinesTestPackage = FqPackageName("kotlinx.coroutines.test")
+private val runTestId = kotlinxCoroutinesTestPackage.callableId("runTest")
+private val testScopeId = kotlinxCoroutinesTestPackage.classId("TestScope")
 
 internal val IrAnnotationContainer.hasAtBurst: Boolean
   get() = hasAnnotation(burstAnnotationId)

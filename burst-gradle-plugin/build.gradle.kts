@@ -60,6 +60,11 @@ tasks {
     dependsOn(":burst:publishKotlinMultiplatformPublicationToTestMavenRepository")
     dependsOn(":burst:publishLinuxX64PublicationToTestMavenRepository")
     dependsOn(":burst:publishMacosArm64PublicationToTestMavenRepository")
+    dependsOn(":burst-coroutines:publishJsPublicationToTestMavenRepository")
+    dependsOn(":burst-coroutines:publishJvmPublicationToTestMavenRepository")
+    dependsOn(":burst-coroutines:publishKotlinMultiplatformPublicationToTestMavenRepository")
+    dependsOn(":burst-coroutines:publishLinuxX64PublicationToTestMavenRepository")
+    dependsOn(":burst-coroutines:publishMacosArm64PublicationToTestMavenRepository")
   }
 }
 
