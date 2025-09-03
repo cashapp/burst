@@ -56,7 +56,7 @@ kotlin {
   sourceSets {
     val commonMain by getting {
       dependencies {
-        api(project(":burst"))
+        api(projects.burst)
         api(libs.kotlinx.coroutines.core)
         api(libs.kotlinx.coroutines.test)
       }
