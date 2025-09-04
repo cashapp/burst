@@ -6,6 +6,14 @@
 Nothing yet!
 
 
+## [2.8.1] *(2025-09-04)*
+[2.8.1]: https://github.com/cashapp/burst/releases/tag/2.8.1
+
+**Fixed**
+
+* Don't edit a coroutine test’s signature in place, as that can cause linking errors during compile. This was a regression introduced in today’s 2.8.0 release.
+
+
 ## [2.8.0] *(2025-09-04)*
 [2.8.0]: https://github.com/cashapp/burst/releases/tag/2.8.0
 
