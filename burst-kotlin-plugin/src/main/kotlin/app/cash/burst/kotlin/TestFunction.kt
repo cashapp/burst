@@ -54,7 +54,16 @@ internal class TestFunctionReader(
   /** Returns non-null if [function] is annotated `@Test`. */
   fun readOrNull(function: IrSimpleFunction): TestFunction? {
     val testAnnotation = burstApis.findTestAnnotation(function) ?: return null
-    var runTestCall: IrCall? = null
+    val runTestCall = readRunTestCall(function)
+
+    return when {
+      runTestCall != null -> TestFunction.Suspending(function, testAnnotation, runTestCall)
+      else -> TestFunction.NonSuspending(function, testAnnotation)
+    }
+  }
+
+  fun readRunTestCall(function: IrSimpleFunction): IrCall? {
+    var result: IrCall? = null
 
     function.body?.transform(
       object : IrTransformer<Unit>() {
@@ -62,8 +71,8 @@ internal class TestFunctionReader(
           expression: IrCall,
           data: Unit,
         ): IrElement {
-          if (runTestCall == null && burstApis.isRunTest(expression)) {
-            runTestCall = expression
+          if (result == null && burstApis.isRunTest(expression)) {
+            result = expression
           }
           return super.visitCall(expression, data)
         }
@@ -71,9 +80,6 @@ internal class TestFunctionReader(
       Unit,
     )
 
-    return when {
-      runTestCall != null -> TestFunction.Suspending(function, testAnnotation, runTestCall)
-      else -> TestFunction.NonSuspending(function, testAnnotation)
-    }
+    return result
   }
 }

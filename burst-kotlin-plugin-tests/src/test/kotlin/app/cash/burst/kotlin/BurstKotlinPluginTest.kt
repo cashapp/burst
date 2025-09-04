@@ -945,6 +945,99 @@ class BurstKotlinPluginTest {
     )
   }
 
+  @Test
+  fun coroutines() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "CoffeeTest.kt",
+        """
+        import app.cash.burst.Burst
+        import app.cash.burst.burstValues
+        import kotlin.test.Test
+        import kotlin.time.Duration.Companion.milliseconds
+        import kotlinx.coroutines.delay
+        import kotlinx.coroutines.test.runTest
+
+        @Burst
+        class CoffeeTest {
+          val log = mutableListOf<String>()
+
+          @Test
+          fun test(espresso: Espresso) = runTest {
+            delay(1000.milliseconds)
+            log += "running ${'$'}espresso"
+          }
+        }
+
+        enum class Espresso { Decaf, Regular, Double }
+        """,
+      ),
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val baseClass = result.classLoader.loadClass("CoffeeTest")
+    val baseInstance = baseClass.constructors.single().newInstance()
+    val baseLog = baseClass.getMethod("getLog").invoke(baseInstance) as MutableList<*>
+
+    baseClass.getMethod("test_Decaf").invoke(baseInstance)
+    assertThat(baseLog).containsExactly(
+      "running Decaf",
+    )
+  }
+
+  /**
+   * We had a bug where we changed the signatures of user-defined functions, which would cause
+   * problems if those functions had other callsites.
+   */
+  @Test
+  fun coroutinesAndTestComposition() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "CoffeeTest.kt",
+        """
+        import app.cash.burst.Burst
+        import app.cash.burst.burstValues
+        import kotlin.test.Test
+        import kotlin.time.Duration.Companion.milliseconds
+        import kotlinx.coroutines.delay
+        import kotlinx.coroutines.test.runTest
+
+        @Burst
+        abstract class CoffeeTest {
+          abstract val log: MutableList<String>
+
+          @Test
+          fun test(espresso: Espresso) = runTest {
+            delay(1000.milliseconds)
+            log += "running ${'$'}espresso"
+          }
+        }
+
+        class RealCoffeeTest : CoffeeTest() {
+          override val log = mutableListOf<String>()
+
+          @Test
+          fun anotherTest() = test(Espresso.Double)
+        }
+
+        enum class Espresso { Decaf, Regular, Double }
+        """,
+      ),
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val baseClass = result.classLoader.loadClass("RealCoffeeTest")
+    val baseInstance = baseClass.constructors.single().newInstance()
+    val baseLog = baseClass.getMethod("getLog").invoke(baseInstance) as MutableList<*>
+
+    baseClass.getMethod("test_Decaf").invoke(baseInstance)
+    baseClass.getMethod("anotherTest").invoke(baseInstance)
+    assertThat(baseLog).containsExactly(
+      "running Decaf",
+      "running Double",
+    )
+  }
+
   private val Class<*>.testSuffixes: List<String>
     get() = methods.mapNotNull {
       when {
