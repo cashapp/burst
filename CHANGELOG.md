@@ -1,7 +1,7 @@
 # Change Log
 
 ## [Unreleased]
-[Unreleased]: https://github.com/cashapp/burst/compare/2.6.0...HEAD
+[Unreleased]: https://github.com/cashapp/burst/compare/2.7.1...HEAD
 
 Nothing yet!
 

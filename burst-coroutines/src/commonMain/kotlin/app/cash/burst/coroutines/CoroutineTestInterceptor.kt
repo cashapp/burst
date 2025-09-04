@@ -17,6 +17,12 @@ package app.cash.burst.coroutines
 
 import kotlinx.coroutines.test.TestScope
 
+/**
+ * Intercepts the execution of a test function, including its `@BeforeTest` and `@AfterTest`
+ * functions.
+ *
+ * Test functions must make a single call to `kotlinx.coroutines.test.runTest` in their test body.
+ */
 interface CoroutineTestInterceptor {
   suspend fun intercept(
     testFunction: CoroutineTestFunction,
@@ -25,12 +31,27 @@ interface CoroutineTestInterceptor {
 
 abstract class CoroutineTestFunction(
   val scope: TestScope,
+  /** The package that this test is defined in, or "" it has none. */
   val packageName: String,
+  /** The classes that enclose the test function, separated by '.'. */
   val className: String,
+  /** The test function name. */
   val functionName: String,
 ) {
+  /**
+   * Runs the next interceptor in the chain if there is one.
+   *
+   * If there isn't, it runs the following in sequence:
+   *
+   *  * The `@BeforeTest` functions (if any)
+   *  * The `@Test` function
+   *  * The `@AfterTest` functions (if any)
+   */
   abstract suspend operator fun invoke()
 
+  /**
+   * Returns the full test name, like `com.example.project.FeatureTest.testMyFeature`.
+   */
   override fun toString(): String {
     return buildString {
       if (packageName.isNotEmpty()) {
