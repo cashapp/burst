@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:OptIn(UnsafeDuringIrConstructionAPI::class)
+
 package app.cash.burst.kotlin
 
-import org.jetbrains.kotlin.backend.common.ir.moveBodyTo
+import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.lower.DeclarationIrBuilder
 import org.jetbrains.kotlin.backend.common.lower.irCatch
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageLocationWithRange
@@ -34,6 +36,7 @@ import org.jetbrains.kotlin.ir.builders.declarations.IrClassBuilder
 import org.jetbrains.kotlin.ir.builders.declarations.IrFunctionBuilder
 import org.jetbrains.kotlin.ir.builders.declarations.IrValueParameterBuilder
 import org.jetbrains.kotlin.ir.builders.declarations.buildFun
+import org.jetbrains.kotlin.ir.builders.declarations.buildReceiverParameter
 import org.jetbrains.kotlin.ir.builders.declarations.buildVariable
 import org.jetbrains.kotlin.ir.builders.irCall
 import org.jetbrains.kotlin.ir.builders.irGet
@@ -56,6 +59,7 @@ import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
 import org.jetbrains.kotlin.ir.expressions.IrDelegatingConstructorCall
 import org.jetbrains.kotlin.ir.expressions.IrExpression
+import org.jetbrains.kotlin.ir.expressions.IrFunctionExpression
 import org.jetbrains.kotlin.ir.expressions.IrInstanceInitializerCall
 import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
 import org.jetbrains.kotlin.ir.expressions.impl.IrConstructorCallImpl
@@ -65,11 +69,9 @@ import org.jetbrains.kotlin.ir.expressions.impl.IrInstanceInitializerCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.fromSymbolOwner
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrConstructorSymbol
-import org.jetbrains.kotlin.ir.symbols.IrSymbol
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.symbols.impl.IrSimpleFunctionSymbolImpl
 import org.jetbrains.kotlin.ir.types.starProjectedType
-import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.name.Name
@@ -189,61 +191,49 @@ fun DeclarationIrBuilder.irInstanceInitializerCall(
 
 fun IrSimpleFunction.irFunctionBody(
   context: IrGeneratorContext,
-  scopeOwnerSymbol: IrSymbol,
   blockBody: IrBlockBodyBuilder.() -> Unit,
 ) {
   val bodyBuilder = IrBlockBodyBuilder(
     startOffset = startOffset,
     endOffset = endOffset,
     context = context,
-    scope = Scope(scopeOwnerSymbol),
+    scope = Scope(symbol),
   )
   body = bodyBuilder.blockBody {
     blockBody()
   }
 }
 
-fun IrBlockBodyBuilder.localLambda(
-  scopeOwnerSymbol: IrSymbol,
-  block: IrBlockBodyBuilder.() -> Unit,
-): IrFunctionExpressionImpl {
+/** Builds a lambda like `suspend TestScope.() -> Unit`. */
+internal fun irTestBodyLambda(
+  context: IrPluginContext,
+  burstApis: BurstApis,
+  original: IrElement,
+  blockBody: IrBlockBodyBuilder.(testScope: IrValueParameter) -> Unit,
+): IrFunctionExpression {
+  val function = context.irFactory.buildFun {
+    this.name = Name.special("<anonymous>")
+    this.returnType = context.irBuiltIns.unitType
+    this.origin = IrDeclarationOrigin.Companion.LOCAL_FUNCTION_FOR_LAMBDA
+    this.visibility = DescriptorVisibilities.LOCAL
+    this.isSuspend = true
+  }.apply {
+    parameters += buildReceiverParameter {
+      initDefaults(original)
+      this.kind = IrParameterKind.ExtensionReceiver
+      this.type = burstApis.testScope!!
+    }
+    irFunctionBody(
+      context = context,
+    ) {
+      blockBody(parameters[0])
+    }
+  }
   return IrFunctionExpressionImpl(
-    startOffset = startOffset,
-    endOffset = endOffset,
-    type = context.irBuiltIns.functionN(0).typeWith(context.irBuiltIns.unitType),
-    function = context.irFactory.buildFun {
-      this.name = Name.special("<anonymous>")
-      this.returnType = context.irBuiltIns.unitType
-      this.origin = IrDeclarationOrigin.Companion.LOCAL_FUNCTION_FOR_LAMBDA
-      this.visibility = DescriptorVisibilities.LOCAL
-    }.apply {
-      irFunctionBody(
-        context = context,
-        scopeOwnerSymbol = scopeOwnerSymbol,
-      ) {
-        block()
-      }
-    },
-    origin = IrStatementOrigin.Companion.LAMBDA,
-  )
-}
-
-/** Moves the body of [original] to a newly-created local lambda. */
-fun IrBlockBodyBuilder.moveBodyToLocalLambda(
-  original: IrSimpleFunction,
-): IrFunctionExpressionImpl {
-  return IrFunctionExpressionImpl(
-    startOffset = startOffset,
-    endOffset = endOffset,
-    type = context.irBuiltIns.functionN(0).typeWith(context.irBuiltIns.unitType),
-    function = context.irFactory.buildFun {
-      this.name = Name.special("<anonymous>")
-      this.returnType = context.irBuiltIns.unitType
-      this.origin = IrDeclarationOrigin.Companion.LOCAL_FUNCTION_FOR_LAMBDA
-      this.visibility = DescriptorVisibilities.LOCAL
-    }.apply {
-      body = original.moveBodyTo(this, mapOf())
-    },
+    startOffset = original.startOffset,
+    endOffset = original.endOffset,
+    type = burstApis.runTestSymbol!!.owner.parameters.last().type,
+    function = function,
     origin = IrStatementOrigin.Companion.LAMBDA,
   )
 }

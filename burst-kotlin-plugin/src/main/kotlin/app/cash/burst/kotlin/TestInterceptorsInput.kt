@@ -17,16 +17,13 @@
 
 package app.cash.burst.kotlin
 
-import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.backend.js.utils.isDispatchReceiver
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
-import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.util.superClass
-import org.jetbrains.kotlin.ir.visitors.IrTransformer
 
 /**
  * The declarations on a class that are interesting to test interceptors.
@@ -45,7 +42,7 @@ internal data class TestInterceptorsInput(
   val otherInterceptTestProperties: List<IrProperty>,
   val beforeTestFunctions: List<IrSimpleFunction>,
   val afterTestFunctions: List<IrSimpleFunction>,
-  val testFunctions: List<Function>,
+  val testFunctions: List<TestFunction>,
 ) {
   /** True if there's a `TestInterceptor` property in this or a superclass. */
   val usesTestInterceptor: Boolean
@@ -58,27 +55,14 @@ internal data class TestInterceptorsInput(
     get() = interceptFunction?.isSuspend == true ||
       coroutineTestInterceptors.isNotEmpty() ||
       superClassInput?.usesCoroutineTestInterceptor == true
-
-  sealed interface Function {
-    val function: IrSimpleFunction
-
-    /** A test that calls `runTest()` in its body. */
-    data class Suspending(
-      override val function: IrSimpleFunction,
-      val runTestCall: IrCall,
-    ) : Function
-
-    /** A test that does not call `runTest()`. */
-    data class NonSuspending(
-      override val function: IrSimpleFunction,
-    ) : Function
-  }
 }
 
 internal class TestInterceptorsInputReader(
-  val burstApis: BurstApis,
-  val classDeclaration: IrClass,
+  private val burstApis: BurstApis,
+  private val classDeclaration: IrClass,
 ) {
+  private val testFunctionReader = TestFunctionReader(burstApis)
+
   internal fun read(): TestInterceptorsInput {
     val superClassPlan = classDeclaration.superClass?.let {
       TestInterceptorsInputReader(burstApis, it).read()
@@ -89,7 +73,7 @@ internal class TestInterceptorsInputReader(
     val otherInterceptTestProperties = mutableListOf<IrProperty>()
     val beforeTestFunctions = mutableListOf<IrSimpleFunction>()
     val afterTestFunctions = mutableListOf<IrSimpleFunction>()
-    val testFunctions = mutableListOf<TestInterceptorsInput.Function>()
+    val testFunctions = mutableListOf<TestFunction>()
 
     for (declaration in classDeclaration.declarations) {
       if (declaration is IrProperty) {
@@ -137,8 +121,9 @@ internal class TestInterceptorsInputReader(
         }
 
         // @Test
-        if (burstApis.findTestAnnotation(declaration) != null) {
-          testFunctions += readTestFunction(declaration)
+        val testFunction = testFunctionReader.readOrNull(declaration)
+        if (testFunction != null) {
+          testFunctions += testFunction
         }
       }
     }
@@ -154,32 +139,6 @@ internal class TestInterceptorsInputReader(
       afterTestFunctions = afterTestFunctions,
       testFunctions = testFunctions,
     )
-  }
-
-  private fun readTestFunction(
-    function: IrSimpleFunction,
-  ): TestInterceptorsInput.Function {
-    var runTestCall: IrCall? = null
-
-    function.body?.transform(
-      object : IrTransformer<Unit>() {
-        override fun visitCall(
-          expression: IrCall,
-          data: Unit,
-        ): IrElement {
-          if (runTestCall == null && burstApis.isRunTest(expression)) {
-            runTestCall = expression
-          }
-          return super.visitCall(expression, data)
-        }
-      },
-      Unit,
-    )
-
-    return when {
-      runTestCall != null -> TestInterceptorsInput.Function.Suspending(function, runTestCall)
-      else -> TestInterceptorsInput.Function.NonSuspending(function)
-    }
   }
 
   /** The `intercept()` function declared by this class. Null if it is a fake override. */

@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:OptIn(UnsafeDuringIrConstructionAPI::class)
+
 package app.cash.burst.kotlin
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
@@ -24,7 +26,9 @@ import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.IrPropertySymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrType
+import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.types.classOrNull
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.util.hasAnnotation
@@ -37,7 +41,8 @@ internal class BurstApis private constructor(
   private val testClassSymbols: List<IrClassSymbol>,
   val beforeTestSymbols: List<IrClassSymbol>,
   val afterTestSymbols: List<IrClassSymbol>,
-  val runTestSymbols: List<IrFunctionSymbol>,
+  /** Null if `kotlinx.coroutines.test` isn't in this build. */
+  val runTestSymbol: IrFunctionSymbol?,
 ) {
   val burstValues: IrFunctionSymbol = pluginContext.referenceFunctions(burstValuesId).single()
 
@@ -46,6 +51,7 @@ internal class BurstApis private constructor(
     testInterceptorClassId = burstFqPackage.classId("TestInterceptor"),
   )!!
 
+  /** Null if `app.cash.burst.coroutines` isn't in this build. */
   val coroutinesTestInterceptorApis: TestInterceptorApis? = pluginContext.testInterceptorApis(
     testFunctionClassId = burstCoroutinesFqPackage.classId("CoroutineTestFunction"),
     testInterceptorClassId = burstCoroutinesFqPackage.classId("CoroutineTestInterceptor"),
@@ -75,13 +81,8 @@ internal class BurstApis private constructor(
       .firstOrNull { it in afterTestSymbols }
   }
 
-  fun isEitherTestInterceptor(property: IrProperty): Boolean {
-    return testInterceptorApis.isTestInterceptor(property) ||
-      coroutinesTestInterceptorApis?.isTestInterceptor(property) == true
-  }
-
   fun isRunTest(irCall: IrCall): Boolean {
-    return irCall.symbol in runTestSymbols
+    return runTestSymbol != null && irCall.symbol == runTestSymbol
   }
 
   companion object {
@@ -114,14 +115,18 @@ internal class BurstApis private constructor(
         pluginContext.referenceClass(kotlinAfterTestClassId),
       )
 
-      val runTestSymbols = pluginContext.referenceFunctions(runTestId).toList()
+      val runTestSymbol = pluginContext.referenceFunctions(runTestId).singleOrNull {
+        it.owner.parameters.size == 3 &&
+          it.owner.parameters[0].type.classFqName == coroutineContextId.asSingleFqName() &&
+          it.owner.parameters[1].type.classFqName == durationId.asSingleFqName()
+      }
 
       return BurstApis(
         pluginContext = pluginContext,
         testClassSymbols = testClassSymbols,
         beforeTestSymbols = beforeTestSymbols,
         afterTestSymbols = afterTestSymbols,
-        runTestSymbols = runTestSymbols,
+        runTestSymbol = runTestSymbol,
       )
     }
   }
@@ -167,6 +172,12 @@ private fun IrPluginContext.testInterceptorApis(
 
 private val kotlinPackage = FqPackageName("kotlin")
 private val throwableAddSuppressedId = kotlinPackage.callableId("addSuppressed")
+
+private val kotlinCoroutinePackage = FqPackageName("kotlin.coroutines")
+private val coroutineContextId = kotlinCoroutinePackage.callableId("CoroutineContext")
+
+private val kotlinTimeFqPackage = FqPackageName("kotlin.time")
+private val durationId = kotlinTimeFqPackage.classId("Duration")
 
 private val burstFqPackage = FqPackageName("app.cash.burst")
 private val burstCoroutinesFqPackage = FqPackageName("app.cash.burst.coroutines")

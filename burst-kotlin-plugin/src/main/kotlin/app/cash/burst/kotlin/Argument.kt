@@ -43,9 +43,6 @@ internal sealed interface Argument {
   /** True if this argument matches the default parameter value. */
   val isDefault: Boolean
 
-  /** Where to assign this argument to in a call. */
-  val indexInParameters: Int
-
   /** A string that's safe to use in a declaration name. */
   val name: String
 
@@ -64,9 +61,6 @@ private class EnumValueArgument(
 ) : Argument {
   override val name = value.name.identifier
 
-  override val indexInParameters: Int
-    get() = original.indexInParameters
-
   override fun expression() =
     IrGetEnumValueImpl(original.startOffset, original.endOffset, type, value.symbol)
 
@@ -83,9 +77,6 @@ private class BooleanArgument(
 ) : Argument {
   override val name = value.toString()
 
-  override val indexInParameters: Int
-    get() = original.indexInParameters
-
   override fun expression() =
     IrConstImpl.boolean(original.startOffset, original.endOffset, booleanType, value)
 
@@ -101,9 +92,6 @@ private class NullArgument(
 ) : Argument {
   override val name = "null"
 
-  override val indexInParameters: Int
-    get() = original.indexInParameters
-
   override fun expression() = IrConstImpl.constNull(original.startOffset, original.endOffset, type)
 
   override fun <R, D> accept(visitor: IrVisitor<R, D>, data: D): R {
@@ -118,8 +106,6 @@ private class BurstValuesArgument(
   index: Int,
 ) : Argument {
   override val isDefault = index == 0
-  override val indexInParameters: Int
-    get() = parameter.indexInParameters
   override val name = value.suggestedName() ?: index.toString()
 
   override fun expression() = value.deepCopyWithSymbols(parameter.parent)

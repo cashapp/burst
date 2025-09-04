@@ -65,7 +65,7 @@ internal class TestInterceptorsValidator(
         )
       }
 
-      if (usesTestInterceptor && function is TestInterceptorsInput.Function.Suspending) {
+      if (usesTestInterceptor && function is TestFunction.Suspending) {
         val testInterceptor = input.testInterceptors.firstOrNull()
         throw BurstCompilationException(
           "${testInterceptor?.nameForError ?: "TestInterceptor"} cannot intercept a coroutine test function",
@@ -73,7 +73,7 @@ internal class TestInterceptorsValidator(
         )
       }
 
-      if (usesCoroutineTestInterceptor && function is TestInterceptorsInput.Function.NonSuspending) {
+      if (usesCoroutineTestInterceptor && function is TestFunction.NonSuspending) {
         val testInterceptor = input.coroutineTestInterceptors.firstOrNull()
         throw BurstCompilationException(
           "${testInterceptor?.nameForError ?: "CoroutineTestInterceptor"} cannot intercept a non-coroutine test function",

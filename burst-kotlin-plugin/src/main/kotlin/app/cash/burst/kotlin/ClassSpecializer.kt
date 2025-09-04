@@ -148,8 +148,9 @@ internal class ClassSpecializer(
           context = pluginContext,
           symbol = superConstructor.symbol,
         ) {
+          arguments.clear()
           for (argument in specialization.arguments) {
-            arguments[argument.indexInParameters] = argument.expression()
+            arguments += argument.expression()
           }
         }
         statements += irInstanceInitializerCall(
@@ -176,8 +177,9 @@ internal class ClassSpecializer(
           context = pluginContext,
           symbol = superConstructor.symbol,
         ) {
+          arguments.clear()
           for (argument in specialization.arguments) {
-            arguments[argument.indexInParameters] = argument.expression()
+            arguments += argument.expression()
           }
         }
       }

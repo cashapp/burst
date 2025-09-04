@@ -16,19 +16,21 @@
 package app.cash.burst.kotlin
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
+import org.jetbrains.kotlin.backend.jvm.functionByName
 import org.jetbrains.kotlin.descriptors.Modality
+import org.jetbrains.kotlin.ir.builders.declarations.addValueParameter
 import org.jetbrains.kotlin.ir.builders.declarations.buildFun
 import org.jetbrains.kotlin.ir.builders.declarations.buildReceiverParameter
 import org.jetbrains.kotlin.ir.builders.irCall
 import org.jetbrains.kotlin.ir.builders.irGet
+import org.jetbrains.kotlin.ir.builders.irReturn
 import org.jetbrains.kotlin.ir.builders.irTemporary
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
-import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
-import org.jetbrains.kotlin.ir.types.classOrNull
+import org.jetbrains.kotlin.ir.util.deepCopyWithSymbols
 import org.jetbrains.kotlin.ir.util.patchDeclarationParents
 import org.jetbrains.kotlin.name.Name
 
@@ -57,31 +59,92 @@ import org.jetbrains.kotlin.name.Name
  * ```
  *
  * This way, the default specialization is executed when you run the test in the IDE.
+ *
+ * Coroutines
+ * ----------
+ *
+ * If the original test uses `runTest()` for coroutines, we do these transformations:
+ *
+ *  1. A `TestScope` parameter is added.
+ *  2. A `suspend` modifier is added.
+ *  3. The `runTest()` call is removed.
+ *  4. The `testBody` lambda is executed inline.
+ *
+ * For example, this test:
+ *
+ * ```
+ * @Test
+ * fun test(espresso: Espresso, dairy: Dairy) = runTest {
+ *   doTestThings(espresso, dairy)
+ * }
+ * ```
+ *
+ * Is transformed into this:
+ *
+ * ```
+ * suspend fun test(espresso: Espresso, dairy: Dairy, testScope: TestScope) {
+ *   val testBody: suspend TestScope.() -> Unit = {
+ *     doTestThings(espresso, dairy)
+ *   }
+ *   testScope.testBody()
+ * }
+ * ```
+ *
+ * Each generated specialization wraps the original call in `runTest()`.
+ *
+ * ```
+ * @Test fun test_Decaf_None() = runTest {
+ *   test(
+ *     espresso = Espresso.Decaf,
+ *     dairy = Dairy.None,
+ *     testScope = this,
+ *   )
+ * }
+ * ```
  */
 @OptIn(UnsafeDuringIrConstructionAPI::class)
 internal class FunctionSpecializer(
   private val pluginContext: IrPluginContext,
   private val burstApis: BurstApis,
   private val originalParent: IrClass,
-  private val original: IrSimpleFunction,
-  private val testAnnotationClassSymbol: IrClassSymbol,
+  private val original: TestFunction,
 ) {
   fun generateSpecializations() {
-    val valueParameters = original.valueParameters()
+    val function = original.function
+    val valueParameters = function.valueParameters()
     if (valueParameters.isEmpty()) return // Nothing to do.
 
-    val originalDispatchReceiver = original.dispatchReceiverParameter
-      ?: throw BurstCompilationException("Unexpected dispatch receiver", original)
+    val originalDispatchReceiver = function.dispatchReceiverParameter
+      ?: throw BurstCompilationException("Unexpected dispatch receiver", function)
 
-    // Drop `@Test` from the original's annotations.
-    original.annotations = original.annotations.filter {
-      it.type.classOrNull != testAnnotationClassSymbol
-    }
+    original.dropAtTest()
 
     // Skip overrides. Burst will specialize the overridden function, and that's sufficient! (And
     // we can't do anything here anyway, because overrides don't support default parameters.)
-    if (original.overriddenSymbols.isNotEmpty()) {
+    if (function.overriddenSymbols.isNotEmpty()) {
       return
+    }
+
+    // If the function body starts with runTest(), remove that call and call its testBody directly.
+    if (original is TestFunction.Suspending) {
+      function.isSuspend = true
+      function.addValueParameter {
+        initDefaults(function)
+        name = Name.identifier("testScope")
+        type = burstApis.testScope!!
+      }
+      function.irFunctionBody(
+        context = pluginContext,
+      ) {
+        +irCall(
+          callee = pluginContext.irBuiltIns.suspendFunctionN(1).symbol.functionByName("invoke"),
+        ).apply {
+          arguments[0] = original.runTestCall.arguments[2]
+          arguments[1] = irGet(function.parameters.last())
+          type = pluginContext.irBuiltIns.unitType
+        }
+      }
+      function.returnType = pluginContext.irBuiltIns.unitType
     }
 
     val specializations = specializations(pluginContext, burstApis, valueParameters)
@@ -107,14 +170,18 @@ internal class FunctionSpecializer(
     specialization: Specialization,
     isDefaultSpecialization: Boolean,
   ): IrSimpleFunction {
-    val result = original.factory.buildFun {
-      initDefaults(original)
+    val function = original.function
+    val result = function.factory.buildFun {
+      initDefaults(function)
       modality = Modality.FINAL
       name = when {
-        isDefaultSpecialization -> original.name
-        else -> Name.identifier("${original.name.identifier}_${specialization.name}")
+        isDefaultSpecialization -> function.name
+        else -> Name.identifier("${function.name.identifier}_${specialization.name}")
       }
-      returnType = original.returnType
+      returnType = when {
+        original is TestFunction.Suspending -> burstApis.runTestSymbol!!.owner.returnType
+        else -> function.returnType
+      }
     }.apply {
       parameters += buildReceiverParameter {
         initDefaults(originalDispatchReceiver)
@@ -122,11 +189,10 @@ internal class FunctionSpecializer(
       }
     }
 
-    result.annotations += testAnnotationClassSymbol.asAnnotation()
+    result.annotations += original.testAnnotation.asAnnotation()
 
     result.irFunctionBody(
       context = pluginContext,
-      scopeOwnerSymbol = original.symbol,
     ) {
       val receiverLocal = irTemporary(
         value = irGet(result.dispatchReceiverParameter!!),
@@ -136,13 +202,48 @@ internal class FunctionSpecializer(
         origin = IrDeclarationOrigin.DEFINED
       }
 
-      +irCall(
-        callee = original.symbol,
-      ).apply {
-        this.dispatchReceiver = irGet(receiverLocal)
-        for (argument in specialization.arguments) {
-          arguments[argument.indexInParameters] = argument.expression()
+      val argumentLocals = specialization.arguments.map { argument ->
+        irTemporary(
+          value = argument.expression(),
+          nameHint = argument.name,
+          isMutable = false,
+        ).apply {
+          origin = IrDeclarationOrigin.DEFINED
         }
+      }
+
+      val callOriginal = irCall(
+        callee = function.symbol,
+      ).apply {
+        arguments.clear()
+        arguments += irGet(receiverLocal)
+        for (argumentLocal in argumentLocals) {
+          arguments += irGet(argumentLocal)
+        }
+      }
+
+      if (original is TestFunction.Suspending) {
+        // Call runTest() with the original's arguments, but this specialization's body.
+        +irReturn(
+          irCall(
+            callee = burstApis.runTestSymbol!!,
+          ).apply {
+            arguments.clear()
+            // TODO: patch these arguments with the specialized arguments.
+            arguments += original.runTestCall.arguments[0]?.deepCopyWithSymbols(result)
+            arguments += original.runTestCall.arguments[1]?.deepCopyWithSymbols(result)
+            arguments += irTestBodyLambda(
+              context = pluginContext,
+              burstApis = burstApis,
+              original = originalParent,
+            ) { testScope ->
+              callOriginal.arguments += irGet(testScope)
+              +callOriginal
+            }
+          },
+        )
+      } else {
+        +callOriginal
       }
     }
 
