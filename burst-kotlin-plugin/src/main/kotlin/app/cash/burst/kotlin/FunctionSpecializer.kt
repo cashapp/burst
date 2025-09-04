@@ -63,7 +63,8 @@ import org.jetbrains.kotlin.name.Name
  * Coroutines
  * ----------
  *
- * If the original test uses `runTest()` for coroutines, we do these transformations:
+ * If the original test uses `runTest()` for coroutines, we copy it into a new function with these
+ * transformations:
  *
  *  1. A `TestScope` parameter is added.
  *  2. A `suspend` modifier is added.
@@ -125,26 +126,15 @@ internal class FunctionSpecializer(
       return
     }
 
-    // If the function body starts with runTest(), remove that call and call its testBody directly.
-    if (original is TestFunction.Suspending) {
-      function.isSuspend = true
-      function.addValueParameter {
-        initDefaults(function)
-        name = Name.identifier("testScope")
-        type = burstApis.testScope!!
+    val delegate = when (original) {
+      is TestFunction.Suspending -> {
+        createSuspendingOverload(original)
+          .also {
+            originalParent.addDeclaration(it)
+          }
       }
-      function.irFunctionBody(
-        context = pluginContext,
-      ) {
-        +irCall(
-          callee = pluginContext.irBuiltIns.suspendFunctionN(1).symbol.functionByName("invoke"),
-        ).apply {
-          arguments[0] = original.runTestCall.arguments[2]
-          arguments[1] = irGet(function.parameters.last())
-          type = pluginContext.irBuiltIns.unitType
-        }
-      }
-      function.returnType = pluginContext.irBuiltIns.unitType
+
+      is TestFunction.NonSuspending -> original.function
     }
 
     val specializations = specializations(pluginContext, burstApis, valueParameters)
@@ -155,6 +145,7 @@ internal class FunctionSpecializer(
         originalDispatchReceiver = originalDispatchReceiver,
         specialization = specialization,
         isDefaultSpecialization = index == indexOfDefaultSpecialization,
+        delegate = delegate,
       )
     }
 
@@ -165,22 +156,54 @@ internal class FunctionSpecializer(
     }
   }
 
+  /**
+   * If the function body starts with `runTest()`, move its body to a new function that is
+   * suspending and that accepts a `TestScope` parameter.
+   */
+  private fun createSuspendingOverload(original: TestFunction.Suspending): IrSimpleFunction {
+    val result = original.function.deepCopyWithSymbols(originalParent)
+    val runTestCall = TestFunctionReader(burstApis).readRunTestCall(result)!!
+
+    result.isSuspend = true
+    result.addValueParameter {
+      initDefaults(result)
+      name = Name.identifier("testScope")
+      type = burstApis.testScope!!
+    }
+
+    result.irFunctionBody(
+      context = pluginContext,
+    ) {
+      +irCall(
+        callee = pluginContext.irBuiltIns.suspendFunctionN(1).symbol.functionByName("invoke"),
+      ).apply {
+        arguments[0] = runTestCall.arguments[2]
+        arguments[1] = irGet(result.parameters.last())
+        type = pluginContext.irBuiltIns.unitType
+      }
+    }
+    result.returnType = pluginContext.irBuiltIns.unitType
+
+    result.patchDeclarationParents()
+    return result
+  }
+
   private fun createFunction(
     originalDispatchReceiver: IrValueParameter,
     specialization: Specialization,
     isDefaultSpecialization: Boolean,
+    delegate: IrSimpleFunction,
   ): IrSimpleFunction {
-    val function = original.function
-    val result = function.factory.buildFun {
-      initDefaults(function)
+    val result = pluginContext.irFactory.buildFun {
+      initDefaults(delegate)
       modality = Modality.FINAL
       name = when {
-        isDefaultSpecialization -> function.name
-        else -> Name.identifier("${function.name.identifier}_${specialization.name}")
+        isDefaultSpecialization -> delegate.name
+        else -> Name.identifier("${delegate.name.identifier}_${specialization.name}")
       }
       returnType = when {
         original is TestFunction.Suspending -> burstApis.runTestSymbol!!.owner.returnType
-        else -> function.returnType
+        else -> delegate.returnType
       }
     }.apply {
       parameters += buildReceiverParameter {
@@ -212,8 +235,8 @@ internal class FunctionSpecializer(
         }
       }
 
-      val callOriginal = irCall(
-        callee = function.symbol,
+      val callDelegate = irCall(
+        callee = delegate.symbol,
       ).apply {
         arguments.clear()
         arguments += irGet(receiverLocal)
@@ -222,28 +245,34 @@ internal class FunctionSpecializer(
         }
       }
 
-      if (original is TestFunction.Suspending) {
-        // Call runTest() with the original's arguments, but this specialization's body.
-        +irReturn(
-          irCall(
-            callee = burstApis.runTestSymbol!!,
+      when (original) {
+        // Call runTest() with the original's runTest() arguments. The test body calls the delegate.
+        is TestFunction.Suspending -> {
+          +irReturn(
+            irCall(
+              callee = burstApis.runTestSymbol!!,
+            ).apply {
+              arguments.clear()
+              // TODO: patch these arguments with the specialized arguments.
+              arguments += original.runTestCall.arguments[0]?.deepCopyWithSymbols(result)
+              arguments += original.runTestCall.arguments[1]?.deepCopyWithSymbols(result)
+              arguments += irTestBodyLambda(
+                context = pluginContext,
+                burstApis = burstApis,
+                original = originalParent,
+              ) { testScope ->
+                callDelegate.arguments += irGet(testScope)
+                +callDelegate
+              }
+            },
           ).apply {
-            arguments.clear()
-            // TODO: patch these arguments with the specialized arguments.
-            arguments += original.runTestCall.arguments[0]?.deepCopyWithSymbols(result)
-            arguments += original.runTestCall.arguments[1]?.deepCopyWithSymbols(result)
-            arguments += irTestBodyLambda(
-              context = pluginContext,
-              burstApis = burstApis,
-              original = originalParent,
-            ) { testScope ->
-              callOriginal.arguments += irGet(testScope)
-              +callOriginal
-            }
-          },
-        )
-      } else {
-        +callOriginal
+            type = burstApis.runTestSymbol.owner.returnType
+          }
+        }
+
+        is TestFunction.NonSuspending -> {
+          +callDelegate
+        }
       }
     }
 
