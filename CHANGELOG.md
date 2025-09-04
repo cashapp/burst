@@ -6,6 +6,19 @@
 Nothing yet!
 
 
+## [2.8.0] *(2025-09-04)*
+[2.8.0]: https://github.com/cashapp/burst/releases/tag/2.8.0
+
+**Added**
+
+* `@InterceptTest` now supports coroutines tests via the `CoroutineTestInterceptor` interface in our new `burst-coroutines` artifact. Note that you cannot use both `CoroutineTestInterceptor` and `TestInterceptor` in the same test.
+
+
+**Fixed**
+
+* Return a promise in `runTest()` coroutines tests on Kotlin/JS. We had a bug where Burst returned `Unit` for these, which caused tests to complete prematurely.
+
+
 ## [2.7.1] *(2025-08-29)*
 [2.7.1]: https://github.com/cashapp/burst/releases/tag/2.7.1
 

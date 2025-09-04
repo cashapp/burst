@@ -16,6 +16,9 @@ Releasing
     sed -i "" \
       "s/VERSION_NAME=.*/VERSION_NAME=$RELEASE_VERSION/g" \
       gradle.properties
+    sed -i "" \
+      "s/\"app.cash.burst:\([^\:]*\):[^\"]*\"/\"app.cash.burst:\1:$RELEASE_VERSION\"/g" \
+      `find . -name "*.md"`
 
     git commit -am "Prepare version $RELEASE_VERSION"
     git tag -am "Version $RELEASE_VERSION" $RELEASE_VERSION
