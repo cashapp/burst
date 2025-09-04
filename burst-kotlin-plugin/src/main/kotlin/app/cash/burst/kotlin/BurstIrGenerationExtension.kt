@@ -33,6 +33,7 @@ class BurstIrGenerationExtension(
   override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
     // Skip the rewrite if the Burst APIs aren't loaded. We don't expect to find @Burst anywhere.
     val burstApis = BurstApis.maybeCreate(pluginContext) ?: return
+    val testFunctionReader = TestFunctionReader(burstApis)
 
     val transformer = object : IrElementTransformerVoidWithContext() {
       override fun visitClassNew(declaration: IrClass): IrStatement {
@@ -61,7 +62,7 @@ class BurstIrGenerationExtension(
         val originalFunctions = classDeclaration.functions.toList()
 
         for (function in originalFunctions) {
-          val testAnnotationClassSymbol = burstApis.findTestAnnotation(function) ?: continue
+          val testFunction = testFunctionReader.readOrNull(function) ?: continue
           if (!classHasAtBurst && !function.hasAtBurst) continue
 
           try {
@@ -69,8 +70,7 @@ class BurstIrGenerationExtension(
               pluginContext = pluginContext,
               burstApis = burstApis,
               originalParent = classDeclaration,
-              original = function,
-              testAnnotationClassSymbol = testAnnotationClassSymbol,
+              original = testFunction,
             )
             specializer.generateSpecializations()
           } catch (e: BurstCompilationException) {

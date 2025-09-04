@@ -17,6 +17,7 @@
 package app.cash.burst.gradle
 
 import assertk.assertThat
+import assertk.assertions.contains
 import assertk.assertions.containsExactlyInAnyOrder
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
@@ -69,13 +70,29 @@ class BurstGradlePluginTest {
     // Each test class is executed normally with nothing skipped.
     with(tester.readTestSuite("CoffeeTest_Regular", testTaskName)) {
       assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
-        "test_Milk[$platformName]",
-        "test_None[$platformName]",
-        "test_Oat[$platformName]",
+        "basicTest_Milk[$platformName]",
+        "basicTest_None[$platformName]",
+        "basicTest_Oat[$platformName]",
+        "coroutinesTest_Milk[$platformName]",
+        "coroutinesTest_None[$platformName]",
+        "coroutinesTest_Oat[$platformName]",
       )
 
-      val sampleSpecialization = testCases.single { it.name == "test_Milk[$platformName]" }
+      val sampleSpecialization = testCases.single { it.name == "basicTest_Milk[$platformName]" }
       assertThat(sampleSpecialization.skipped).isFalse()
+
+      assertThat(systemOut).contains(
+        """
+        |set up Regular
+        |running Regular Oat in coffeeCoroutine
+        |
+        """.trimMargin(),
+        """
+        |set up Regular
+        |running Regular Oat
+        |
+        """.trimMargin(),
+      )
     }
 
     if (checkKlibMetadata) {
@@ -86,10 +103,14 @@ class BurstGradlePluginTest {
       val coffeeTestMetadata = klibMetadata.classes.first { it.name == "CoffeeTest" }
       assertThat(coffeeTestMetadata.functions.map { it.name }).containsExactlyInAnyOrder(
         "setUp",
-        "test",
-        "test_Milk",
-        "test_None",
-        "test_Oat",
+        "basicTest",
+        "basicTest_Milk",
+        "basicTest_None",
+        "basicTest_Oat",
+        "coroutinesTest",
+        "coroutinesTest_Milk",
+        "coroutinesTest_None",
+        "coroutinesTest_Oat",
       )
     }
   }

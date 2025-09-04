@@ -39,17 +39,15 @@ import org.jetbrains.kotlin.ir.builders.irNull
 import org.jetbrains.kotlin.ir.builders.irString
 import org.jetbrains.kotlin.ir.builders.irTemporary
 import org.jetbrains.kotlin.ir.declarations.IrClass
-import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
-import org.jetbrains.kotlin.ir.declarations.IrParameterKind
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.IrValueDeclaration
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrExpression
+import org.jetbrains.kotlin.ir.expressions.IrFunctionExpression
 import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
 import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin.Companion.IMPLICIT_ARGUMENT
 import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin.Companion.VARIABLE_AS_FUNCTION
-import org.jetbrains.kotlin.ir.expressions.impl.IrFunctionExpressionImpl
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrTypeSystemContextImpl
@@ -204,7 +202,6 @@ internal class InterceptorInjector(
 
     function.irFunctionBody(
       context = pluginContext,
-      scopeOwnerSymbol = originalParent.symbol,
     ) {
       val testScopeLocal = testInterceptorApis.testScope?.let {
         irTemporary(
@@ -393,7 +390,7 @@ internal class InterceptorInjector(
    *
    * If we're looking for a `TestFunction` instead, this rewrites the entire function body.
    */
-  fun inject(input: TestInterceptorsInput.Function) {
+  fun inject(input: TestFunction) {
     val original = input.function
     // If there's no function body to rewrite, we're probably looking at a superclass from another
     // module. The rewrite won't be emitted anywhere, but we still need to generate its symbols for
@@ -401,18 +398,16 @@ internal class InterceptorInjector(
     if (original.body == null) return
 
     when (input) {
-      is TestInterceptorsInput.Function.Suspending -> {
+      is TestFunction.Suspending -> {
         val runTestCall = input.runTestCall
         runTestCall.arguments[runTestCall.arguments.size - 1] = interceptTestBodyExpression(
           testFunction = original,
-          runTestCall = runTestCall,
           testBodyLambda = runTestCall.arguments[runTestCall.arguments.size - 1]!!,
         )
       }
       else -> {
         original.irFunctionBody(
           context = pluginContext,
-          scopeOwnerSymbol = original.symbol,
         ) {
           +callInterceptWithTestBody(
             original = original,
@@ -433,57 +428,31 @@ internal class InterceptorInjector(
    */
   private fun interceptTestBodyExpression(
     testFunction: IrSimpleFunction,
-    runTestCall: IrCall,
     testBodyLambda: IrExpression,
-  ): IrFunctionExpressionImpl {
-    val testBodyParameter = runTestCall.symbol.owner.parameters.last()
-
-    // Create a lambda for the new test body.
-    val testBody = pluginContext.irFactory.buildFun {
-      this.name = Name.special("<anonymous>")
-      this.returnType = pluginContext.irBuiltIns.unitType
-      this.origin = IrDeclarationOrigin.Companion.LOCAL_FUNCTION_FOR_LAMBDA
-      this.visibility = DescriptorVisibilities.LOCAL
-      this.isSuspend = true
-    }.apply {
-      parameters += buildReceiverParameter {
-        initDefaults(originalParent)
-        this.kind = IrParameterKind.ExtensionReceiver
-        this.type = burstApis.testScope!!
-      }
-    }
-
-    // The new lambda's body creates a `TestFunction` that delegates to the original test body.
-    testBody.irFunctionBody(
+  ): IrFunctionExpression {
+    // Create a lambda for the new test body. The new lambda's body creates a `TestFunction` that
+    // delegates to the original test body.
+    return irTestBodyLambda(
       context = pluginContext,
-      scopeOwnerSymbol = testFunction.symbol,
-    ) {
+      burstApis = burstApis,
+      original = originalParent,
+    ) { testScope ->
       +callInterceptWithTestBody(
         original = testFunction,
-        testScope = irGet(testBody.parameters[0]),
+        testScope = irGet(testScope),
       ) {
         irFunctionBody(
           context = context,
-          scopeOwnerSymbol = scope.scopeOwnerSymbol,
         ) {
           +irCall(
             callee = pluginContext.irBuiltIns.suspendFunctionN(1).symbol.functionByName("invoke"),
           ).apply {
             arguments[0] = testBodyLambda
-            arguments[1] = irGet(testBody.parameters[0])
-            type = pluginContext.irBuiltIns.unitType
+            arguments[1] = irGet(testScope)
           }
         }
       }
     }
-
-    return IrFunctionExpressionImpl(
-      startOffset = testFunction.startOffset,
-      endOffset = testFunction.endOffset,
-      type = testBodyParameter.type,
-      function = testBody,
-      origin = IrStatementOrigin.Companion.LAMBDA,
-    )
   }
 
   /**
@@ -536,7 +505,6 @@ internal class InterceptorInjector(
     ) {
       irFunctionBody(
         context = context,
-        scopeOwnerSymbol = scope.scopeOwnerSymbol,
       ) {
         +proceed
       }
