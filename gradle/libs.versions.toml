@@ -22,5 +22,5 @@ mavenPublish-gradle-plugin = { module = "com.vanniktech:gradle-maven-publish-plu
 
 [plugins]
 buildconfig = { id = "com.github.gmazzo.buildconfig", version = "5.6.8" }
-spotless = { id = "com.diffplug.spotless", version = "6.25.0" }
+spotless = { id = "com.diffplug.spotless", version = "7.2.1" }
 burst-kotlin = { id = "app.cash.burst.kotlin" }
