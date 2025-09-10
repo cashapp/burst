@@ -160,7 +160,7 @@ class SuspendingTestInterceptorKotlinPluginTest {
 
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
     assertThat(result.messages).contains(
-      "Main.kt:12:3 Cannot mix non-coroutine TestInterceptors with CoroutineTestInterceptors in the same test",
+      "Main.kt:13:3 Cannot mix non-coroutine TestInterceptors with CoroutineTestInterceptors in the same test",
     )
   }
 
@@ -196,7 +196,7 @@ class SuspendingTestInterceptorKotlinPluginTest {
 
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
     assertThat(result.messages).contains(
-      "Main.kt:17:3 com.example.SampleTest.simpleInterceptor cannot intercept a coroutine test function",
+      "Main.kt:18:3 com.example.SampleTest.simpleInterceptor cannot intercept a coroutine test function",
     )
   }
 
@@ -231,7 +231,7 @@ class SuspendingTestInterceptorKotlinPluginTest {
 
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
     assertThat(result.messages).contains(
-      "Main.kt:16:3 com.example.SampleTest.simpleInterceptor cannot intercept a non-coroutine test function",
+      "Main.kt:17:3 com.example.SampleTest.simpleInterceptor cannot intercept a non-coroutine test function",
     )
   }
 
@@ -268,7 +268,7 @@ class SuspendingTestInterceptorKotlinPluginTest {
 
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
     assertThat(result.messages).contains(
-      "Main.kt:18:3 CoroutineTestInterceptor cannot intercept a non-coroutine test function",
+      "Main.kt:19:3 CoroutineTestInterceptor cannot intercept a non-coroutine test function",
     )
   }
 
@@ -306,7 +306,7 @@ class SuspendingTestInterceptorKotlinPluginTest {
 
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
     assertThat(result.messages).contains(
-      "Main.kt:19:3 TestInterceptor cannot intercept a coroutine test function",
+      "Main.kt:20:3 TestInterceptor cannot intercept a coroutine test function",
     )
   }
 }

@@ -1382,7 +1382,7 @@ class TestInterceptorKotlinPluginTest {
     )
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
     assertThat(result.messages).contains(
-      "Main.kt:7:3 @InterceptTest properties must extend either TestInterceptor or CoroutineTestInterceptor",
+      "Main.kt:8:3 @InterceptTest properties must extend either TestInterceptor or CoroutineTestInterceptor",
     )
   }
 
@@ -1417,7 +1417,7 @@ class TestInterceptorKotlinPluginTest {
     )
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
     assertThat(result.messages).contains(
-      "Main.kt:16:3 @InterceptTest cannot target test functions that are non-final",
+      "Main.kt:17:8 @InterceptTest cannot target test functions that are non-final",
     )
   }
 
