@@ -2,15 +2,21 @@ Releasing
 =========
 
 1. Update `CHANGELOG.md`.
+   1. Change the `Unreleased` header to the release version.
+   2. Add a link URL to ensure the header link works.
+   3. Add a new `Unreleased` section to the top.
 
-2. Set versions:
+
+2. Update compatibility chart at the bottom of the `README.md`.
+
+3. Set versions:
 
     ```
     export RELEASE_VERSION=X.Y.Z
     export NEXT_VERSION=X.Y.Z-SNAPSHOT
     ```
 
-3. Update versions, tag the release, and prepare for the next release.
+4. Update versions, tag the release, and prepare for the next release.
 
     ```
     sed -i "" \
@@ -31,6 +37,6 @@ Releasing
     git push && git push --tags
     ```
 
-4. Wait for [GitHub Actions][github_actions] to build and promote the release.
+5. Wait for [GitHub Actions][github_actions] to build and promote the release.
 
 [github_actions]: https://github.com/cashapp/burst/actions

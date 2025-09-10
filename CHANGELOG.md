@@ -1,9 +1,17 @@
 # Change Log
 
 ## [Unreleased]
-[Unreleased]: https://github.com/cashapp/burst/compare/2.7.1...HEAD
+[Unreleased]: https://github.com/cashapp/burst/compare/2.9.0...HEAD
 
 Nothing yet!
+
+
+## [2.9.0] *(2025-09-04)*
+[2.9.0]: https://github.com/cashapp/burst/releases/tag/2.9.0
+
+**Added**
+
+* Support Kotlin 2.2.20
 
 
 ## [2.8.1] *(2025-09-04)*
