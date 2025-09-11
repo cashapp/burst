@@ -12,7 +12,7 @@ dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", vers
 google-ksp = "com.google.devtools.ksp:symbol-processing-gradle-plugin:2.2.20-2.0.2"
 junit = { module = "junit:junit", version = "4.13.2" }
 junit-vintage-engine = { module = "org.junit.vintage:junit-vintage-engine", version = "5.13.4" }
-kotlin-compile-testing = { module = "dev.zacsweers.kctfork:core", version = "0.8.0" }
+kotlin-compile-testing = { module = "dev.zacsweers.kctfork:core", version = "0.9.0" }
 kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
