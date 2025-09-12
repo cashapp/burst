@@ -55,7 +55,7 @@ package app.cash.burst
  * }
  * ```
  */
-interface TestInterceptor {
+fun interface TestInterceptor {
   fun intercept(testFunction: TestFunction)
 }
 

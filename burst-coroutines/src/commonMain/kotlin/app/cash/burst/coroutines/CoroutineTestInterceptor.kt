@@ -23,7 +23,7 @@ import kotlinx.coroutines.test.TestScope
  *
  * Test functions must make a single call to `kotlinx.coroutines.test.runTest` in their test body.
  */
-interface CoroutineTestInterceptor {
+fun interface CoroutineTestInterceptor {
   suspend fun intercept(
     testFunction: CoroutineTestFunction,
   )
