@@ -153,12 +153,10 @@ If your test has these functions, the interceptor intercepts them. Here’s such
 ```kotlin
 class DrinkSodaTest {
   @InterceptTest
-  val loggingInterceptor = object : TestInterceptor {
-    override fun intercept(testFunction: TestFunction) {
-      println("intercepting $testFunction")
-      testFunction()
-      println("intercepted $testFunction")
-    }
+  val loggingInterceptor = TestInterceptor { testFunction ->
+    println("intercepting $testFunction")
+    testFunction()
+    println("intercepted $testFunction")
   }
 
   @BeforeTest
@@ -196,11 +194,9 @@ If your tests use [kotlinx-coroutines-test], you must use `CoroutineTestIntercep
 ```kotlin
 class DrinkSodaTest {
   @InterceptTest
-  val loggingInterceptor = object : CoroutineTestInterceptor {
-    override suspend fun intercept(testFunction: CoroutineTestFunction) {
-      println("intercepting $testFunction")
-      testFunction()
-    }
+  val loggingInterceptor = CoroutineTestInterceptor { testFunction ->
+    println("intercepting $testFunction")
+    testFunction()
   }
 
   @Test

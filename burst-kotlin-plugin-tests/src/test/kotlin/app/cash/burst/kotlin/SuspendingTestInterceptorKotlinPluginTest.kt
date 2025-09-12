@@ -76,6 +76,51 @@ class SuspendingTestInterceptorKotlinPluginTest {
   }
 
   @Test
+  fun inlinedInterceptorDeclaration() {
+    val log = BurstTester(
+      packageName = "com.example",
+    ).compileAndRun(
+      SourceFile.kotlin(
+        "Main.kt",
+        """
+        package com.example
+
+        import app.cash.burst.InterceptTest
+        import app.cash.burst.coroutines.CoroutineTestInterceptor
+        import kotlin.coroutines.coroutineContext
+        import kotlin.test.Test
+        import kotlinx.coroutines.CoroutineName
+        import kotlinx.coroutines.test.runTest
+
+        class SampleTest {
+          @InterceptTest
+          val interceptor = CoroutineTestInterceptor { testFunction ->
+            log("intercepting ${'$'}testFunction in ${'$'}{coroutineContext[CoroutineName]?.name}")
+            testFunction()
+            log("intercepted")
+          }
+
+          @Test
+          fun happyPath() = runTest(CoroutineName("happyCoroutine")) {
+            log("running happyPath")
+          }
+        }
+
+        fun main(vararg args: String) {
+          SampleTest().happyPath()
+        }
+        """,
+      ),
+    )
+
+    assertThat(log).containsExactly(
+      "intercepting com.example.SampleTest.happyPath in happyCoroutine",
+      "running happyPath",
+      "intercepted",
+    )
+  }
+
+  @Test
   fun useTestScopeInInterceptor() {
     val log = BurstTester(
       packageName = "com.example",
