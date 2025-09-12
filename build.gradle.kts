@@ -17,6 +17,7 @@ buildscript {
     mavenCentral()
     google()
     gradlePluginPortal()
+    maven("https://central.sonatype.com/repository/maven-snapshots/")
   }
   dependencies {
     classpath(libs.binary.compatibility.validator.gradle.plugin)
@@ -55,6 +56,7 @@ allprojects {
   repositories {
     mavenCentral()
     google()
+    maven("https://central.sonatype.com/repository/maven-snapshots/")
   }
 }
 
