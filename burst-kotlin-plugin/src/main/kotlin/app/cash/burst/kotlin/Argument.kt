@@ -194,6 +194,7 @@ private fun IrExpression.suggestedName(): String? {
     }
 
     is IrClassReference -> classType.classFqName?.shortName()?.asString() ?: return null
+    is IrGetEnumValue -> symbol.owner.name.asString()
     else -> return null
   }
 
