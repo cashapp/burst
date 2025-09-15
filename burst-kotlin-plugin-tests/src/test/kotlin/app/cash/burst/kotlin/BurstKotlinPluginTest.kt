@@ -419,8 +419,6 @@ class BurstKotlinPluginTest {
         """
         import app.cash.burst.Burst
         import app.cash.burst.burstValues
-        import kotlin.math.PI
-        import kotlin.math.abs
         import kotlin.test.Test
 
         enum class BrewStyle {
