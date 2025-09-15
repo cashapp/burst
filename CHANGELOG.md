@@ -3,8 +3,9 @@
 ## [Unreleased]
 [Unreleased]: https://github.com/cashapp/burst/compare/2.9.0...HEAD
 
-Nothing yet!
+**Added**
 
+* Use enum names in generated test functions when defined in `burstValues`.
 
 ## [2.9.0] *(2025-09-04)*
 [2.9.0]: https://github.com/cashapp/burst/releases/tag/2.9.0
