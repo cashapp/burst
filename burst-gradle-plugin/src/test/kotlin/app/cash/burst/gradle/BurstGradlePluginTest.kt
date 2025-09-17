@@ -289,6 +289,30 @@ class BurstGradlePluginTest {
     }
   }
 
+  @Test
+  fun junit5DefaultClassArguments() {
+    val tester = GradleTester("junit5DefaultClassArguments")
+
+    tester.cleanAndBuild(":lib:test")
+
+    with(tester.readTestSuite("CoffeeTest")) {
+      assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
+        "kotlinTestTest_Milk()",
+        "kotlinTestTest_None()",
+        "kotlinTestTest_Oat()",
+        "orgJunitJupiterApiTest_Milk()",
+        "orgJunitJupiterApiTest_None()",
+        "orgJunitJupiterApiTest_Oat()",
+        "orgJunitTest_Milk",
+        "orgJunitTest_None",
+        "orgJunitTest_Oat",
+      )
+    }
+
+    tester.hasTestSuite("CoffeeTest_Decaf")
+    tester.hasTestSuite("CoffeeTest_Double")
+  }
+
   /** https://github.com/cashapp/burst/issues/90 */
   @Test
   fun subclass() {
