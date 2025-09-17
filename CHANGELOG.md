@@ -7,6 +7,10 @@
 
 * Use enum names in generated test functions when defined in `burstValues`.
 
+**Fixed**
+
+* Support AGP's built-in Kotlin.
+
 ## [2.9.0] *(2025-09-04)*
 [2.9.0]: https://github.com/cashapp/burst/releases/tag/2.9.0
 
