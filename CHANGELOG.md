@@ -9,6 +9,7 @@
 
 **Fixed**
 
+* Make the test class constructor with default arguments synthetic. Fixes JUnit5 compatibility.
 * Support AGP's built-in Kotlin.
 
 ## [2.9.0] *(2025-09-04)*
