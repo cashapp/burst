@@ -184,6 +184,12 @@ class BurstGradlePluginTest {
   }
 
   @Test
+  fun androidBuiltInKotlin() {
+    val tester = GradleTester("androidBuiltInKotlin")
+    tester.cleanAndBuild(":lib:test", ":lib:assembleAndroidTest")
+  }
+
+  @Test
   fun defaultArguments() {
     val tester = GradleTester("defaultArguments")
 
