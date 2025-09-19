@@ -80,9 +80,9 @@ class TestInterceptorGradlePluginTest {
       assertThat(systemOut).isEqualTo(
         """
         |beforeTest
-        |intercepting
+        |intercepting app.cash.burst.tests.BeforeTestInSuperclassTest.CircleTest.passingTest
         |running
-        |intercepted
+        |intercepted app.cash.burst.tests.BeforeTestInSuperclassTest.CircleTest.passingTest
         |
         """.trimMargin(),
       )
@@ -101,9 +101,9 @@ class TestInterceptorGradlePluginTest {
       assertThat(testCases.single().failureMessage).isNull()
       assertThat(systemOut).isEqualTo(
         """
-        |intercepting
+        |intercepting app.cash.burst.tests.AfterTestInSuperclassTest.CircleTest.passingTest
         |running
-        |intercepted
+        |intercepted app.cash.burst.tests.AfterTestInSuperclassTest.CircleTest.passingTest
         |afterTest
         |
         """.trimMargin(),
@@ -119,15 +119,15 @@ class TestInterceptorGradlePluginTest {
     with(tester.readTestSuite("app.cash.burst.tests.CircleTest")) {
       assertThat(systemOut).isEqualTo(
         """
-        |> intercepting shape
+        |> intercepting app.cash.burst.tests.CircleTest.testShape
         |> before test shape
-        |> intercepting circle
+        |> intercepting app.cash.burst.tests.CircleTest.testShape
         |> before test circle
         |  running testShape
         |< after test circle
-        |< intercepted circle
+        |< intercepted app.cash.burst.tests.CircleTest.testShape
         |< after test shape
-        |< intercepted shape
+        |< intercepted app.cash.burst.tests.CircleTest.testShape
         |
         """.trimMargin(),
       )
@@ -142,15 +142,15 @@ class TestInterceptorGradlePluginTest {
     with(tester.readTestSuite("app.cash.burst.tests.BottomTest")) {
       assertThat(systemOut).isEqualTo(
         """
-        |> intercepting top
+        |> intercepting app.cash.burst.tests.BottomTest.testBottom
         |  running bottom
-        |< intercepted top
-        |> intercepting top
+        |< intercepted app.cash.burst.tests.BottomTest.testBottom
+        |> intercepting app.cash.burst.tests.BottomTest.testMiddle
         |  running middle
-        |< intercepted top
-        |> intercepting top
+        |< intercepted app.cash.burst.tests.BottomTest.testMiddle
+        |> intercepting app.cash.burst.tests.BottomTest.testTop
         |  running top
-        |< intercepted top
+        |< intercepted app.cash.burst.tests.BottomTest.testTop
         |
         """.trimMargin(),
       )
@@ -222,7 +222,7 @@ class TestInterceptorGradlePluginTest {
     with(tester.readTestSuite("app.cash.burst.tests.InterceptorAndBurstConstructorTest_false")) {
       assertThat(systemOut).isEqualTo(
         """
-        |intercepting false test
+        |intercepting false app.cash.burst.tests.InterceptorAndBurstConstructorTest_false.test
         |running false
         |
         """.trimMargin(),
@@ -231,7 +231,7 @@ class TestInterceptorGradlePluginTest {
     with(tester.readTestSuite("app.cash.burst.tests.InterceptorAndBurstConstructorTest_true")) {
       assertThat(systemOut).isEqualTo(
         """
-        |intercepting true test
+        |intercepting true app.cash.burst.tests.InterceptorAndBurstConstructorTest_true.test
         |running true
         |
         """.trimMargin(),
@@ -247,9 +247,9 @@ class TestInterceptorGradlePluginTest {
     with(tester.readTestSuite("app.cash.burst.tests.InterceptorAndBurstFunctionTest")) {
       assertThat(systemOut).isEqualTo(
         """
-        |intercepting function test_true
+        |intercepting function app.cash.burst.tests.InterceptorAndBurstFunctionTest.test_true
         |running true
-        |intercepting function test_false
+        |intercepting function app.cash.burst.tests.InterceptorAndBurstFunctionTest.test_false
         |running false
         |
         """.trimMargin(),
@@ -265,9 +265,9 @@ class TestInterceptorGradlePluginTest {
     with(tester.readTestSuite("app.cash.burst.tests.InterceptorAndBurstSubclassTest")) {
       assertThat(systemOut).isEqualTo(
         """
-        |intercepting abstract test_true
+        |intercepting abstract app.cash.burst.tests.InterceptorAndBurstSubclassTest.test_true
         |running subclass true
-        |intercepting abstract test_false
+        |intercepting abstract app.cash.burst.tests.InterceptorAndBurstSubclassTest.test_false
         |running subclass false
         |
         """.trimMargin(),
