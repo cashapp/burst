@@ -1589,7 +1589,7 @@ class TestInterceptorKotlinPluginTest {
         import kotlin.test.BeforeTest
         import kotlin.test.Test
 
-        abstract class TopTest {
+        open class TopTest {
           @InterceptTest
           val interceptor = object : TestInterceptor {
             override fun intercept(testFunction: TestFunction) {
@@ -1619,22 +1619,24 @@ class TestInterceptorKotlinPluginTest {
         }
 
         fun main(vararg args: String) {
-          val test = BottomTest()
-          test.testTop()
-          test.testMiddle()
-          test.testBottom()
+          BottomTest().testTop()
+          BottomTest().testMiddle()
+          BottomTest().testBottom()
+          TopTest().testTop()
         }
         """,
       ),
     )
 
     assertThat(log).containsExactly(
-      "intercepting com.example.TopTest.testTop",
+      "intercepting com.example.BottomTest.testTop",
       "top",
-      "intercepting com.example.MiddleTest.testMiddle",
+      "intercepting com.example.BottomTest.testMiddle",
       "middle",
       "intercepting com.example.BottomTest.testBottom",
       "bottom",
+      "intercepting com.example.TopTest.testTop",
+      "top",
     )
   }
 

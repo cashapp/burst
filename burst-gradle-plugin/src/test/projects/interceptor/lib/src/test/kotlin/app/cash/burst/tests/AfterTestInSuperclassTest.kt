@@ -26,9 +26,9 @@ class AfterTestInSuperclassTest {
 
   class LoggingInterceptor : TestInterceptor {
     override fun intercept(testFunction: TestFunction) {
-      println("intercepting")
+      println("intercepting $testFunction")
       testFunction()
-      println("intercepted")
+      println("intercepted $testFunction")
     }
   }
 }

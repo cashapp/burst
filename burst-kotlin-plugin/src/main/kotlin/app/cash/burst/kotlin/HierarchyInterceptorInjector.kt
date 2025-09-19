@@ -69,6 +69,8 @@ internal class HierarchyInterceptorInjector(
       interceptorInjector.adoptAfterTest(function)
     }
 
+    interceptorInjector.defineTestFunctionPackageNameProperty()
+    interceptorInjector.defineTestFunctionClassNameProperty()
     val newInterceptFunction = interceptorInjector.defineIntercept()
 
     for (function in input.testFunctions) {

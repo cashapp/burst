@@ -5,8 +5,8 @@ import app.cash.burst.TestInterceptor
 
 class BasicInterceptor(val name: String) : TestInterceptor {
   override fun intercept(testFunction: TestFunction) {
-    println("> intercepting $name")
+    println("> intercepting $testFunction")
     testFunction()
-    println("< intercepted $name")
+    println("< intercepted $testFunction")
   }
 }
