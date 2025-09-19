@@ -23,6 +23,7 @@ import org.jetbrains.kotlin.ir.builders.declarations.addConstructor
 import org.jetbrains.kotlin.ir.builders.declarations.buildClass
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrConstructor
+import org.jetbrains.kotlin.ir.declarations.IrDeclarationOriginImpl
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrTypeSystemContextImpl
@@ -110,6 +111,9 @@ internal class ClassSpecializer(
         superConstructor = onlyConstructor,
         specialization = specializations[indexOfDefaultSpecialization],
       )
+
+      // Make the primary constructor synthetic so that runners like JUnit5 ignore it.
+      onlyConstructor.origin = IrDeclarationOriginImpl("SYNTHETIC_CONSTRUCTOR", isSynthetic = true)
     } else {
       // There's no default specialization. Make the class abstract so JUnit skips it.
       original.modality = Modality.ABSTRACT

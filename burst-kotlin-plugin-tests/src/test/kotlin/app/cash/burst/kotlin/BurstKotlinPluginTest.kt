@@ -411,6 +411,39 @@ class BurstKotlinPluginTest {
     )
   }
 
+  @Test
+  fun burstValuesWithEnumValues() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "CoffeeTest.kt",
+        """
+        import app.cash.burst.Burst
+        import app.cash.burst.burstValues
+        import kotlin.test.Test
+
+        enum class BrewStyle {
+          Aeropress, Espresso, Drip,
+        }
+
+        @Burst
+        class CoffeeTest {
+          @Test
+          fun test(
+            style: BrewStyle = burstValues(BrewStyle.Drip, BrewStyle.Aeropress),
+          ) {
+          }
+        }
+        """,
+      ),
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val baseClass = result.classLoader.loadClass("CoffeeTest")
+    assertThat(baseClass.testSuffixes).containsExactlyInAnyOrder(
+      "Aeropress",
+    )
+  }
+
   /** Confirm that inline function declarations are assigned parents. */
   @Test
   fun burstValuesWithInlineFunctions() {
