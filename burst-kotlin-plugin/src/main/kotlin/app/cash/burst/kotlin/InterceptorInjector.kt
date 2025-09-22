@@ -228,6 +228,7 @@ internal class InterceptorInjector(
       initDefaults(originalParent)
       this.name = name
       visibility = DescriptorVisibilities.PROTECTED
+      origin = BURST_ORIGIN
       returnType = pluginContext.irBuiltIns.stringType
     }.apply {
       if (overridden != null) {

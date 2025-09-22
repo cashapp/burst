@@ -10,6 +10,8 @@
 **Fixed**
 
 * Make the test class constructor with default arguments synthetic. Fixes JUnit5 compatibility.
+* Use the test instance’s class name and package for the test functions of non-final classes. Previously we were using the function’s enclosing class name.
+
 
 ## [2.9.0] *(2025-09-04)*
 [2.9.0]: https://github.com/cashapp/burst/releases/tag/2.9.0
