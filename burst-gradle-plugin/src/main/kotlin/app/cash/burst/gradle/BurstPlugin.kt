@@ -24,6 +24,7 @@ import org.gradle.kotlin.dsl.invoke
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinAndroidPluginWrapper
+import org.jetbrains.kotlin.gradle.plugin.KotlinBaseApiPlugin
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
 import org.jetbrains.kotlin.gradle.plugin.KotlinMultiplatformPluginWrapper
@@ -68,6 +69,14 @@ class BurstPlugin : KotlinCompilerPluginSupportPlugin {
 
     // kotlin("android")
     target.plugins.withType<KotlinAndroidPluginWrapper> {
+      target.dependencies {
+        add("testImplementation", "app.cash.burst:burst:$burstVersion")
+        add("androidTestImplementation", "app.cash.burst:burst:$burstVersion")
+      }
+    }
+
+    // AGP's built-in Kotlin
+    target.plugins.withType<KotlinBaseApiPlugin> {
       target.dependencies {
         add("testImplementation", "app.cash.burst:burst:$burstVersion")
         add("androidTestImplementation", "app.cash.burst:burst:$burstVersion")
