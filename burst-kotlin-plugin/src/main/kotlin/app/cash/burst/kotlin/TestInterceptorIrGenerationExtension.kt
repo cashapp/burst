@@ -23,6 +23,7 @@ import org.jetbrains.kotlin.ir.IrStatement
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
+import org.jetbrains.kotlin.ir.util.isClass
 
 @UnsafeDuringIrConstructionAPI // To use IrDeclarationContainer.declarations.
 class TestInterceptorIrGenerationExtension(
@@ -35,6 +36,8 @@ class TestInterceptorIrGenerationExtension(
     val transformer = object : IrElementTransformerVoidWithContext() {
       override fun visitClassNew(declaration: IrClass): IrStatement {
         val classDeclaration = super.visitClassNew(declaration) as IrClass
+        if (!classDeclaration.isClass) return classDeclaration
+
         val input = TestInterceptorsInputReader(burstApis, classDeclaration).read()
         try {
           TestInterceptorsValidator(burstApis).validate(input)
