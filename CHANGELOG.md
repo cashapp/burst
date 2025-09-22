@@ -8,6 +8,14 @@
 * Don't attempt to rewrite interfaces that directly extend `TestInterceptor`. This triggered a `ClassFormatError` when the interface was loaded.
 
 
+## [2.10.1] *(2025-09-22)*
+[2.10.1]: https://github.com/cashapp/burst/releases/tag/2.10.1
+
+**Fixed**
+
+* Don't attempt to rewrite interfaces that directly extend `TestInterceptor`. This triggered a `ClassFormatError` when the interface was loaded.
+
+
 ## [2.10.0] *(2025-09-22)*
 [2.10.0]: https://github.com/cashapp/burst/releases/tag/2.10.0
 
