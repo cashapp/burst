@@ -19,6 +19,7 @@ package app.cash.burst.kotlin
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.declarations.IrAnnotationContainer
+import org.jetbrains.kotlin.ir.declarations.IrDeclarationOriginImpl
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.expressions.IrCall
@@ -213,3 +214,6 @@ internal val IrAnnotationContainer.hasAtTestInterceptor: Boolean
 
 internal val IrAnnotationContainer.hasAtJvmInline: Boolean
   get() = hasAnnotation(jvmInlineAnnotationId)
+
+/** Use this origin to hide Burst-injected declarations from user code. */
+val BURST_ORIGIN = IrDeclarationOriginImpl(name = "BURST", isSynthetic = true)

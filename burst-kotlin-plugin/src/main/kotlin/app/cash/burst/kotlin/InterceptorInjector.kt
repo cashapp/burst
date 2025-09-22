@@ -36,6 +36,7 @@ import org.jetbrains.kotlin.ir.builders.irEqualsNull
 import org.jetbrains.kotlin.ir.builders.irGet
 import org.jetbrains.kotlin.ir.builders.irIfThen
 import org.jetbrains.kotlin.ir.builders.irNull
+import org.jetbrains.kotlin.ir.builders.irReturn
 import org.jetbrains.kotlin.ir.builders.irString
 import org.jetbrains.kotlin.ir.builders.irTemporary
 import org.jetbrains.kotlin.ir.declarations.IrClass
@@ -58,6 +59,7 @@ import org.jetbrains.kotlin.ir.util.addFakeOverrides
 import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.createThisReceiverParameter
 import org.jetbrains.kotlin.ir.util.defaultType
+import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.isSuspend
 import org.jetbrains.kotlin.ir.util.packageFqName
 import org.jetbrains.kotlin.ir.util.parentClassOrNull
@@ -90,8 +92,8 @@ import org.jetbrains.kotlin.util.capitalizeDecapitalize.capitalizeAsciiOnly
  * fun happyPath() {
  *   intercept(
  *     object : TestFunction(
- *       packageName = "com.example",
- *       className = "SampleTest",
+ *       packageName = burstTestFunctionPackageName(),
+ *       className = burstTestFunctionClassName(),
  *       functionName = "happyPath",
  *     ) {
  *       override fun invoke() {
@@ -122,6 +124,9 @@ import org.jetbrains.kotlin.util.capitalizeDecapitalize.capitalizeAsciiOnly
  *
  * If there are multiple interceptors, they are applied in order.
  *
+ * The `burstTestFunctionPackageName()` and `burstTestFunctionClassName()` functions are declared
+ * so the runtime test metadata can be used if this test is subclassed.
+ *
  * If there are functions annotated `@BeforeTest`, that annotation is removed and the function is
  * called directly in `intercept()`.
  *
@@ -150,6 +155,12 @@ internal class InterceptorInjector(
   /** The previously-annotated `@AfterTest` functions that we must call in the interceptor. */
   private var afterTestFunctionSymbols = mutableListOf<IrSimpleFunctionSymbol>()
 
+  /** The getter or the test class package name. */
+  private var testFunctionPackageNameGetterSymbol: IrSimpleFunctionSymbol? = null
+
+  /** The getter or the test class name. */
+  private var testFunctionClassNameGetterSymbol: IrSimpleFunctionSymbol? = null
+
   /** The `intercept()` function we defined. */
   private var interceptFunctionSymbol: IrSimpleFunctionSymbol? = null
 
@@ -169,6 +180,71 @@ internal class InterceptorInjector(
     }
 
     afterTestFunctionSymbols += function.symbol
+  }
+
+  /**
+   * Declare a function that returns the current class's package name. If this test is subclassed,
+   * this function will be overridden to return the subclass's package name.
+   *
+   * ```
+   * protected open fun burstTestFunctionPackageName(): String = "com.example"
+   * ```
+   */
+  fun defineTestFunctionPackageNameProperty() {
+    check(testFunctionPackageNameGetterSymbol == null) { "already defined?!" }
+
+    testFunctionPackageNameGetterSymbol = defineTestFunctionNameProperty(
+      Name.identifier("burstTestFunctionPackageName"),
+      packageName,
+    )
+  }
+
+  /**
+   * Declare a function that returns the current class's name. If this test is subclassed, this
+   * function will be overridden to return the subclass's name.
+   *
+   * ```
+   * protected open fun burstTestFunctionClassName(): String = "SampleTest"
+   * ```
+   */
+  fun defineTestFunctionClassNameProperty() {
+    check(testFunctionClassNameGetterSymbol == null) { "already defined?!" }
+
+    testFunctionClassNameGetterSymbol = defineTestFunctionNameProperty(
+      Name.identifier("burstTestFunctionClassName"),
+      className,
+    )
+  }
+
+  private fun defineTestFunctionNameProperty(name: Name, value: String): IrSimpleFunctionSymbol {
+    val overridden = originalParent.superClass?.functions?.singleOrNull { it.name == name }
+
+    // If there's a fake override, remove it.
+    originalParent.declarations.removeAll {
+      it is IrSimpleFunction && it.name == name && it.isFakeOverride
+    }
+
+    val function = originalParent.factory.buildFun {
+      initDefaults(originalParent)
+      this.name = name
+      visibility = DescriptorVisibilities.PROTECTED
+      origin = BURST_ORIGIN
+      returnType = pluginContext.irBuiltIns.stringType
+    }.apply {
+      if (overridden != null) {
+        this.overriddenSymbols += overridden.symbol
+      }
+      parameters += buildReceiverParameter {
+        type = originalParent.defaultType
+      }
+      irFunctionBody(context = pluginContext) {
+        +irReturn(irString(value))
+      }
+    }
+
+    originalParent.addDeclaration(function)
+    pluginContext.metadataDeclarationRegistrar.registerFunctionAsMetadataVisible(function)
+    return function.symbol
   }
 
   fun defineIntercept(): IrSimpleFunction {
@@ -466,12 +542,24 @@ internal class InterceptorInjector(
   ): IrCall {
     val interceptFunctionSymbol = interceptFunctionSymbol
       ?: error("call defineIntercept() first")
+    val testFunctionPackageNameGetterSymbol = testFunctionPackageNameGetterSymbol
+      ?: error("call defineTestFunctionClassNameProperty() first")
+    val testFunctionClassNameGetterSymbol = testFunctionClassNameGetterSymbol
+      ?: error("call defineTestFunctionClassNameProperty() first")
 
     val testFunctionClass = createTestFunctionClass(
       nameHint = "${original.name.asString().capitalizeAsciiOnly()}TestFunction",
       testScope = testScope,
-      packageName = irString(packageName),
-      className = irString(className),
+      packageName = irCall(testFunctionPackageNameGetterSymbol).apply {
+        dispatchReceiver = irGet(original.dispatchReceiverParameter!!).apply {
+          origin = IMPLICIT_ARGUMENT
+        }
+      },
+      className = irCall(testFunctionClassNameGetterSymbol).apply {
+        dispatchReceiver = irGet(original.dispatchReceiverParameter!!).apply {
+          origin = IMPLICIT_ARGUMENT
+        }
+      },
       functionName = irString(original.name.asString()),
       buildBody = buildBody,
     )

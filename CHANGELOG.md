@@ -5,12 +5,15 @@
 
 **Added**
 
-* Use enum names in generated test functions when defined in `burstValues`.
+* Make `TestInterceptor` and `CoroutineTestInterceptor` fun interfaces.
 
 **Fixed**
 
+* Use enum names in generated test functions when defined in `burstValues`.
 * Make the test class constructor with default arguments synthetic. Fixes JUnit5 compatibility.
 * Support AGP's built-in Kotlin.
+* Use the test instance’s class name and package for the test functions of non-final classes. Previously we were using the function’s enclosing class name.
+
 
 ## [2.9.0] *(2025-09-04)*
 [2.9.0]: https://github.com/cashapp/burst/releases/tag/2.9.0

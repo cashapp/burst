@@ -73,6 +73,48 @@ class TestInterceptorKotlinPluginTest {
     )
   }
 
+  @Test
+  fun inlinedInterceptorDeclaration() {
+    val log = BurstTester(
+      packageName = "com.example",
+    ).compileAndRun(
+      SourceFile.kotlin(
+        "Main.kt",
+        """
+        package com.example
+
+        import app.cash.burst.InterceptTest
+        import app.cash.burst.TestInterceptor
+        import kotlin.test.Test
+
+        class SampleTest {
+          @InterceptTest
+          val interceptor = TestInterceptor { testFunction ->
+            log("intercepting ${'$'}testFunction")
+            testFunction()
+            log("intercepted")
+          }
+
+          @Test
+          fun happyPath() {
+            log("running happyPath")
+          }
+        }
+
+        fun main(vararg args: String) {
+          SampleTest().happyPath()
+        }
+        """,
+      ),
+    )
+
+    assertThat(log).containsExactly(
+      "intercepting com.example.SampleTest.happyPath",
+      "running happyPath",
+      "intercepted",
+    )
+  }
+
   /**
    * Note that this is different from JUnit 4, which executes @Rules in reverse alphabetical order.
    */
@@ -1547,7 +1589,7 @@ class TestInterceptorKotlinPluginTest {
         import kotlin.test.BeforeTest
         import kotlin.test.Test
 
-        abstract class TopTest {
+        open class TopTest {
           @InterceptTest
           val interceptor = object : TestInterceptor {
             override fun intercept(testFunction: TestFunction) {
@@ -1577,22 +1619,24 @@ class TestInterceptorKotlinPluginTest {
         }
 
         fun main(vararg args: String) {
-          val test = BottomTest()
-          test.testTop()
-          test.testMiddle()
-          test.testBottom()
+          BottomTest().testTop()
+          BottomTest().testMiddle()
+          BottomTest().testBottom()
+          TopTest().testTop()
         }
         """,
       ),
     )
 
     assertThat(log).containsExactly(
-      "intercepting com.example.TopTest.testTop",
+      "intercepting com.example.BottomTest.testTop",
       "top",
-      "intercepting com.example.MiddleTest.testMiddle",
+      "intercepting com.example.BottomTest.testMiddle",
       "middle",
       "intercepting com.example.BottomTest.testBottom",
       "bottom",
+      "intercepting com.example.TopTest.testTop",
+      "top",
     )
   }
 
