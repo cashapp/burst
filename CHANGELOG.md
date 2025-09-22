@@ -3,6 +3,10 @@
 ## [Unreleased]
 [Unreleased]: https://github.com/cashapp/burst/compare/2.9.0...HEAD
 
+
+## [2.10.0] *(2025-09-22)*
+[2.10.0]: https://github.com/cashapp/burst/releases/tag/2.10.0
+
 **Added**
 
 * Make `TestInterceptor` and `CoroutineTestInterceptor` fun interfaces.
