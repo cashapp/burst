@@ -1688,4 +1688,65 @@ class TestInterceptorKotlinPluginTest {
       "running happyPath",
     )
   }
+
+  /**
+   * Confirm Burst ignores interfaces etc.
+   * https://github.com/cashapp/burst/issues/208
+   */
+  @Test
+  fun nonClassTypeExtendsTestInterceptor() {
+    val log = BurstTester(
+      packageName = "com.example",
+    ).compileAndRun(
+      SourceFile.kotlin(
+        "Main.kt",
+        """
+        package com.example
+
+        import app.cash.burst.InterceptTest
+        import app.cash.burst.TestFunction
+        import app.cash.burst.TestInterceptor
+        import kotlin.test.AfterTest
+        import kotlin.test.BeforeTest
+        import kotlin.test.Test
+
+        interface SampleInterface : TestInterceptor
+
+        enum class SampleEnum : TestInterceptor {
+          Rock,
+          Scissors,
+          Paper;
+
+          override fun intercept(testFunction: TestFunction) {
+          }
+        }
+
+        object SampleObject : TestInterceptor {
+          override fun intercept(testFunction: TestFunction) {
+          }
+          override fun toString() = "SampleObject"
+        }
+
+        fun main(vararg args: String) {
+          // Confirm everything class loads okay.
+          log(
+            object : SampleInterface {
+              override fun intercept(testFunction: TestFunction) {
+              }
+              override fun toString() = "SampleInterface"
+            }.toString()
+          )
+          log(SampleEnum.Rock.toString())
+          log(SampleObject.toString())
+        }
+        """,
+      ),
+    )
+
+    assertThat(log).containsExactly(
+      "SampleInterface",
+      "Rock",
+      "SampleObject",
+    )
+  }
 }
