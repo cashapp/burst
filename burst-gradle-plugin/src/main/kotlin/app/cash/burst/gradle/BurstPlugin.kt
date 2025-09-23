@@ -16,59 +16,47 @@
 package app.cash.burst.gradle
 
 import app.cash.burst.gradle.BuildConfig.burstVersion
+import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.provider.Provider
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
-import org.gradle.kotlin.dsl.invoke
-import org.gradle.kotlin.dsl.withType
-import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
-import org.jetbrains.kotlin.gradle.plugin.KotlinAndroidPluginWrapper
+import org.gradle.kotlin.dsl.hasPlugin
+import org.jetbrains.kotlin.gradle.dsl.KotlinBaseExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinBaseApiPlugin
-import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
-import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
-import org.jetbrains.kotlin.gradle.plugin.KotlinMultiplatformPluginWrapper
-import org.jetbrains.kotlin.gradle.plugin.KotlinPluginWrapper
-import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
-import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
+import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet.Companion.COMMON_TEST_SOURCE_SET_NAME
 
 @Suppress("unused") // Created reflectively by Gradle.
-class BurstPlugin : KotlinCompilerPluginSupportPlugin {
-  override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean = true
-
-  override fun getCompilerPluginId(): String = BuildConfig.KOTLIN_PLUGIN_ID
-
-  override fun getPluginArtifact(): SubpluginArtifact = SubpluginArtifact(
-    groupId = BuildConfig.KOTLIN_PLUGIN_GROUP,
-    artifactId = BuildConfig.KOTLIN_PLUGIN_NAME,
-    version = BuildConfig.KOTLIN_PLUGIN_VERSION,
-  )
-
+class BurstPlugin : Plugin<Project> {
   override fun apply(target: Project) {
-    super.apply(target)
+    var applied = false
+    target.afterEvaluate {
+      check(applied) { "No suitable Kotlin configuration was found" }
+    }
 
-    // kotlin("multiplatform")
-    target.plugins.withType<KotlinMultiplatformPluginWrapper> {
-      target.configure<KotlinMultiplatformExtension> {
-        sourceSets {
-          commonTest {
-            dependencies {
-              implementation("app.cash.burst:burst:$burstVersion")
-            }
-          }
+    target.pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
+      applied = true
+      target.pluginManager.apply(BurstKotlinPlugin::class.java)
+
+      target.configure<KotlinBaseExtension> {
+        sourceSets.getByName(COMMON_TEST_SOURCE_SET_NAME).dependencies {
+          implementation("app.cash.burst:burst:$burstVersion")
         }
       }
     }
 
-    // kotlin("jvm")
-    target.plugins.withType<KotlinPluginWrapper> {
+    target.pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
+      applied = true
+      target.pluginManager.apply(BurstKotlinPlugin::class.java)
+
       target.dependencies {
         add("testImplementation", "app.cash.burst:burst:$burstVersion")
       }
     }
 
-    // kotlin("android")
-    target.plugins.withType<KotlinAndroidPluginWrapper> {
+    target.pluginManager.withPlugin("org.jetbrains.kotlin.android") {
+      applied = true
+      target.pluginManager.apply(BurstKotlinPlugin::class.java)
+
       target.dependencies {
         add("testImplementation", "app.cash.burst:burst:$burstVersion")
         add("androidTestImplementation", "app.cash.burst:burst:$burstVersion")
@@ -76,19 +64,16 @@ class BurstPlugin : KotlinCompilerPluginSupportPlugin {
     }
 
     // AGP's built-in Kotlin
-    target.plugins.withType<KotlinBaseApiPlugin> {
-      target.dependencies {
-        add("testImplementation", "app.cash.burst:burst:$burstVersion")
-        add("androidTestImplementation", "app.cash.burst:burst:$burstVersion")
-      }
-    }
-  }
+    target.pluginManager.withPlugin("com.android.base") {
+      if (target.plugins.hasPlugin(KotlinBaseApiPlugin::class)) {
+        applied = true
+        target.pluginManager.apply(BurstKotlinPlugin::class.java)
 
-  override fun applyToCompilation(
-    kotlinCompilation: KotlinCompilation<*>,
-  ): Provider<List<SubpluginOption>> {
-    return kotlinCompilation.target.project.provider {
-      listOf() // No options.
+        target.dependencies {
+          add("testImplementation", "app.cash.burst:burst:$burstVersion")
+          add("androidTestImplementation", "app.cash.burst:burst:$burstVersion")
+        }
+      }
     }
   }
 }

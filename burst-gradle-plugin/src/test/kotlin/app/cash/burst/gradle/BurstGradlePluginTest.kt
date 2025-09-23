@@ -28,6 +28,13 @@ import org.junit.Test
 
 class BurstGradlePluginTest {
   @Test
+  fun noKotlinFails() {
+    val tester = GradleTester("noKotlin")
+    val result = tester.cleanAndBuildAndFail("build")
+    assertThat(result.output).contains("No suitable Kotlin configuration was found")
+  }
+
+  @Test
   fun multiplatformJvm() {
     multiplatform(
       testTaskName = "jvmTest",

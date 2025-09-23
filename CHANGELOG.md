@@ -7,6 +7,12 @@
 
 * Use object names in generated test functions when defined in `burstValues`.
 
+**Changed**
+
+* Gradle plugin now has a `compileOnly` dependency on the Kotlin Gradle plugin which should provide
+  more flexibility in your builds. Adding the Burst Gradle plugin to a project without a suitable
+  Kotlin setup will result in an error.
+
 
 ## [2.10.1] *(2025-09-22)*
 [2.10.1]: https://github.com/cashapp/burst/releases/tag/2.10.1
