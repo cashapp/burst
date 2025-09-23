@@ -444,6 +444,41 @@ class BurstKotlinPluginTest {
     )
   }
 
+  @Test
+  fun burstValuesWithObjectValues() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "CoffeeTest.kt",
+        """
+        import app.cash.burst.Burst
+        import app.cash.burst.burstValues
+        import kotlin.test.Test
+
+        sealed interface BrewStyle
+        object Aeropress : BrewStyle
+        object Espresso : BrewStyle
+        object Drip : BrewStyle
+
+        @Burst
+        class CoffeeTest {
+          @Test
+          fun test(
+            style: BrewStyle = burstValues(Drip, Espresso, Aeropress),
+          ) {
+          }
+        }
+        """,
+      ),
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val baseClass = result.classLoader.loadClass("CoffeeTest")
+    assertThat(baseClass.testSuffixes).containsExactlyInAnyOrder(
+      "Aeropress",
+      "Espresso",
+    )
+  }
+
   /** Confirm that inline function declarations are assigned parents. */
   @Test
   fun burstValuesWithInlineFunctions() {

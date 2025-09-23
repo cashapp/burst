@@ -5,7 +5,7 @@
 
 **Fixed**
 
-* Don't attempt to rewrite interfaces that directly extend `TestInterceptor`. This triggered a `ClassFormatError` when the interface was loaded.
+* Use object names in generated test functions when defined in `burstValues`.
 
 
 ## [2.10.1] *(2025-09-22)*
