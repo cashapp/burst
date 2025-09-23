@@ -18,7 +18,7 @@ package app.cash.burst.gradle
 import assertk.assertThat
 import assertk.assertions.isIn
 import java.io.File
-import org.gradle.testkit.runner.BuildTask
+import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 
@@ -46,9 +46,8 @@ class GradleTester(
     }
   }
 
-  fun cleanAndBuildAndFail(taskName: String): BuildTask {
-    val result = createRunner("clean", taskName).buildAndFail()
-    return result.task(taskName)!!
+  fun cleanAndBuildAndFail(taskName: String): BuildResult {
+    return createRunner("clean", taskName).buildAndFail()
   }
 
   fun readTestSuite(

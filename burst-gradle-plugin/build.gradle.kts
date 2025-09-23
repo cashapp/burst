@@ -12,10 +12,7 @@ plugins {
 }
 
 dependencies {
-  implementation(kotlin("gradle-plugin-api"))
-  implementation(projects.burst)
-  implementation(projects.burstKotlinPlugin)
-  implementation(libs.kotlin.gradlePlugin)
+  compileOnly(libs.kotlin.gradlePlugin)
   testImplementation(kotlin("compiler-embeddable"))
   testImplementation(libs.assertk)
   testImplementation(libs.junit)
