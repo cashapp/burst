@@ -24,6 +24,7 @@ import org.jetbrains.kotlin.ir.expressions.IrClassReference
 import org.jetbrains.kotlin.ir.expressions.IrConst
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrGetEnumValue
+import org.jetbrains.kotlin.ir.expressions.IrGetObjectValue
 import org.jetbrains.kotlin.ir.expressions.IrVararg
 import org.jetbrains.kotlin.ir.expressions.impl.IrConstImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrGetEnumValueImpl
@@ -194,6 +195,7 @@ private fun IrExpression.suggestedName(): String? {
     }
 
     is IrClassReference -> classType.classFqName?.shortName()?.asString() ?: return null
+    is IrGetObjectValue -> symbol.owner.name.asString()
     is IrGetEnumValue -> symbol.owner.name.asString()
     else -> return null
   }
