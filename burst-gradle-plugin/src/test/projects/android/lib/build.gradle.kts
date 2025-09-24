@@ -1,6 +1,5 @@
 plugins {
   id("com.android.library")
-  kotlin("android")
   id("app.cash.burst")
 }
 
@@ -14,6 +13,6 @@ android {
 }
 
 dependencies {
-  testImplementation(libs.kotlin.test)
-  androidTestImplementation(libs.kotlin.test)
+  testImplementation(libs.kotlin.test.junit)
+  androidTestImplementation(libs.kotlin.test.junit)
 }

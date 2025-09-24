@@ -3,8 +3,8 @@ kotlin = "2.2.20"
 kotlinx-coroutines = "1.10.2"
 
 [libraries]
-android-gradlePlugin = "com.android.tools.build:gradle:8.13.0"
-android-gradlePlugin9 = "com.android.tools.build:gradle:9.0.0-alpha06"
+android-gradlePlugin = "com.android.tools.build:gradle:9.0.0-alpha06"
+android-gradlePlugin8 = "com.android.tools.build:gradle:8.13.0"
 assertk = "com.willowtreeapps.assertk:assertk:0.28.1"
 auto-service-annotations = { module = "com.google.auto.service:auto-service-annotations", version = "1.1.1" }
 auto-service-compiler = { module = "dev.zacsweers.autoservice:auto-service-ksp", version = "1.2.0" }

@@ -191,8 +191,8 @@ class BurstGradlePluginTest {
   }
 
   @Test
-  fun androidBuiltInKotlin() {
-    val tester = GradleTester("androidBuiltInKotlin")
+  fun androidAgp8() {
+    val tester = GradleTester("androidAgp8")
     tester.cleanAndBuild(":lib:test", ":lib:assembleAndroidTest")
   }
 
