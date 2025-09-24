@@ -11,7 +11,7 @@ buildscript {
   }
   dependencies {
     classpath("app.cash.burst:burst-gradle-plugin:${project.property("burstVersion")}")
-    classpath(libs.android.gradlePlugin9)
+    classpath(libs.android.gradlePlugin8)
     classpath(libs.kotlin.gradlePlugin)
   }
 }
@@ -26,13 +26,13 @@ allprojects {
   }
 
   tasks.withType(JavaCompile::class.java).configureEach {
-    sourceCompatibility = "11"
-    targetCompatibility = "11"
+    sourceCompatibility = "1.8"
+    targetCompatibility = "1.8"
   }
 
   tasks.withType(KotlinJvmCompile::class.java).configureEach {
     compilerOptions {
-      jvmTarget.set(JvmTarget.JVM_11)
+      jvmTarget.set(JvmTarget.JVM_1_8)
     }
   }
 }
