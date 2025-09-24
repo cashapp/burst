@@ -1,7 +1,13 @@
 # Change Log
 
 ## [Unreleased]
-[Unreleased]: https://github.com/cashapp/burst/compare/2.9.0...HEAD
+[Unreleased]: https://github.com/cashapp/burst/compare/2.10.2...HEAD
+
+Nothing yet!
+
+
+## [2.10.2] *(2025-09-22)*
+[2.10.2]: https://github.com/cashapp/burst/releases/tag/2.10.2
 
 **Fixed**
 
