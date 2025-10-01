@@ -26,13 +26,13 @@ allprojects {
   }
 
   tasks.withType(JavaCompile::class.java).configureEach {
-    sourceCompatibility = "1.8"
-    targetCompatibility = "1.8"
+    sourceCompatibility = "11"
+    targetCompatibility = "11"
   }
 
   tasks.withType(KotlinJvmCompile::class.java).configureEach {
     compilerOptions {
-      jvmTarget.set(JvmTarget.JVM_1_8)
+      jvmTarget.set(JvmTarget.JVM_11)
     }
   }
 }
