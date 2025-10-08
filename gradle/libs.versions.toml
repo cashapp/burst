@@ -23,6 +23,6 @@ kotlinx-metadata-klib = { module = "org.jetbrains.kotlinx:kotlinx-metadata-klib"
 mavenPublish-gradle-plugin = { module = "com.vanniktech:gradle-maven-publish-plugin", version = "0.34.0" }
 
 [plugins]
-buildconfig = { id = "com.github.gmazzo.buildconfig", version = "5.6.8" }
+buildconfig = { id = "com.github.gmazzo.buildconfig", version = "5.7.0" }
 spotless = { id = "com.diffplug.spotless", version = "6.25.0" }
 burst-kotlin = { id = "app.cash.burst.kotlin" }
