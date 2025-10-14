@@ -655,7 +655,7 @@ internal class InterceptorInjector(
 
     testFunctionClass.addFakeOverrides(
       IrTypeSystemContextImpl(pluginContext.irBuiltIns),
-      listOf(invokeFunction),
+      mapOf(testFunctionClass to listOf(invokeFunction)),
     )
 
     return testFunctionClass

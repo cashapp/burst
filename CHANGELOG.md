@@ -3,7 +3,9 @@
 ## [Unreleased]
 [Unreleased]: https://github.com/cashapp/burst/compare/2.10.2...HEAD
 
-Nothing yet!
+**Added**
+
+* Support Kotlin 2.3.0-Beta1
 
 
 ## [2.10.2] *(2025-09-22)*

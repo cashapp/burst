@@ -30,8 +30,8 @@ import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 )
 @AutoService(CompilerPluginRegistrar::class)
 class BurstCompilerPluginRegistrar : CompilerPluginRegistrar() {
-  override val supportsK2: Boolean
-    get() = true
+  override val pluginId: String get() = BuildConfig.KOTLIN_PLUGIN_ID
+  override val supportsK2: Boolean get() = true
 
   override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
     val messageCollector = configuration.get(
