@@ -1,0 +1,7 @@
+$dokka.format:html-v1
+$dokka.linkExtension:html
+
+module:burst
+app.cash.burst
+module:burst-coroutines
+app.cash.burst.coroutines
