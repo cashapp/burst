@@ -1,16 +1,13 @@
+
 import com.diffplug.gradle.spotless.SpotlessExtension
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
-import java.net.URI
-import java.net.URL
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
-import org.jetbrains.dokka.DokkaConfiguration.Visibility
-import org.jetbrains.dokka.gradle.DokkaMultiModuleTask
-import org.jetbrains.dokka.gradle.DokkaTaskPartial
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
+import java.net.URI
 
 buildscript {
   repositories {
@@ -22,7 +19,6 @@ buildscript {
     classpath(libs.binary.compatibility.validator.gradle.plugin)
     classpath(libs.mavenPublish.gradle.plugin)
     classpath(libs.kotlin.gradlePlugin)
-    classpath(libs.dokka.gradle.plugin)
     classpath(libs.google.ksp)
   }
 }
@@ -30,9 +26,30 @@ buildscript {
 plugins {
   alias(libs.plugins.buildconfig)
   alias(libs.plugins.spotless)
+  alias(libs.plugins.dokka)
 }
 
-apply(plugin = "org.jetbrains.dokka")
+dependencies {
+  dokka(projects.burst)
+  dokka(projects.burstCoroutines)
+}
+
+dokka {
+  moduleName = "Burst"
+}
+subprojects {
+  pluginManager.withPlugin("org.jetbrains.dokka") {
+    dokka {
+      dokkaSourceSets.configureEach {
+        sourceLink {
+          localDirectory = rootProject.projectDir
+          remoteUrl = URI("https://github.com/cashapp/burst/tree/main/")
+          remoteLineSuffix.set("#L")
+        }
+      }
+    }
+  }
+}
 
 apply(plugin = "com.vanniktech.maven.publish.base")
 
@@ -69,32 +86,7 @@ subprojects {
   }
 }
 
-tasks.named("dokkaHtmlMultiModule", DokkaMultiModuleTask::class.java).configure {
-  moduleName.set("Burst")
-}
-
 allprojects {
-  tasks.withType<DokkaTaskPartial>().configureEach {
-    dokkaSourceSets.configureEach {
-      documentedVisibilities.set(setOf(
-        Visibility.PUBLIC,
-        Visibility.PROTECTED
-      ))
-      reportUndocumented.set(false)
-      jdkVersion.set(8)
-
-      perPackageOption {
-        matchingRegex.set("app\\.cash\\.burst\\.internal\\..*")
-        suppress.set(true)
-      }
-      sourceLink {
-        localDirectory.set(rootProject.projectDir)
-        remoteUrl.set(URL("https://github.com/cashapp/burst/tree/main/"))
-        remoteLineSuffix.set("#L")
-      }
-    }
-  }
-
   // Don't attempt to sign anything if we don't have an in-memory key. Otherwise, the 'build' task
   // triggers 'signJsPublication' even when we aren't publishing (and so don't have signing keys).
   tasks.withType<Sign>().configureEach {
