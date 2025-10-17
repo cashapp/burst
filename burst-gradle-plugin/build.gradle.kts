@@ -7,7 +7,6 @@ plugins {
   `kotlin-dsl`
   kotlin("jvm")
   id("com.github.gmazzo.buildconfig")
-  id("org.jetbrains.dokka")
   id("com.vanniktech.maven.publish.base")
 }
 

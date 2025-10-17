@@ -20,7 +20,7 @@ jobs:
           distribution: 'zulu'
           java-version-file: .github/workflows/.java-version
 
-      - run: ./gradlew publish :burst:dokkaHtml
+      - run: ./gradlew publish
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.SONATYPE_CENTRAL_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.SONATYPE_CENTRAL_PASSWORD }}
@@ -38,11 +38,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - run: ./gradlew dokkaGenerate
+
       - name: Deploy docs to website
         uses: JamesIves/github-pages-deploy-action@releases/v3
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: site
-          FOLDER: burst/build/dokka/html
+          FOLDER: build/dokka/html
           TARGET_FOLDER: docs/2.x/
           CLEAN: true
