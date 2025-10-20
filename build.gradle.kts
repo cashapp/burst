@@ -59,6 +59,8 @@ configure<SpotlessExtension> {
       .editorConfigOverride(
         mapOf(
           "ktlint_standard_filename" to "disabled",
+          // Making something an expression body should be a choice around readability.
+          "ktlint_standard_function-expression-body" to "disabled",
         )
       )
   }

@@ -28,8 +28,7 @@ import org.jetbrains.kotlin.util.DummyLogger
 /**
  * Decode a `.klib` file using APIs from the embeddable compiler.
  */
-fun readKlib(klib: File): KotlinLibrary =
-  ToolingSingleFileKlibResolveStrategy.resolve(KonanFile(klib.toPath()), DummyLogger)
+fun readKlib(klib: File): KotlinLibrary = ToolingSingleFileKlibResolveStrategy.resolve(KonanFile(klib.toPath()), DummyLogger)
 
 /**
  * Decode the metadata from a library.
@@ -48,10 +47,8 @@ private fun KotlinLibrary.asMetadataLibraryProvider(): MetadataLibraryProvider {
     override val moduleHeaderData: ByteArray
       get() = original.moduleHeaderData
 
-    override fun packageMetadata(fqName: String, partName: String) =
-      original.packageMetadata(fqName, partName)
+    override fun packageMetadata(fqName: String, partName: String) = original.packageMetadata(fqName, partName)
 
-    override fun packageMetadataParts(fqName: String): Set<String> =
-      original.packageMetadataParts(fqName)
+    override fun packageMetadataParts(fqName: String): Set<String> = original.packageMetadataParts(fqName)
   }
 }

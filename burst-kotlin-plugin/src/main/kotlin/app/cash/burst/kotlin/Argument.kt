@@ -62,8 +62,7 @@ private class EnumValueArgument(
 ) : Argument {
   override val name = value.name.identifier
 
-  override fun expression() =
-    IrGetEnumValueImpl(original.startOffset, original.endOffset, type, value.symbol)
+  override fun expression() = IrGetEnumValueImpl(original.startOffset, original.endOffset, type, value.symbol)
 
   override fun <R, D> accept(visitor: IrVisitor<R, D>, data: D): R {
     return original.accept(visitor, data)
@@ -78,8 +77,7 @@ private class BooleanArgument(
 ) : Argument {
   override val name = value.toString()
 
-  override fun expression() =
-    IrConstImpl.boolean(original.startOffset, original.endOffset, booleanType, value)
+  override fun expression() = IrConstImpl.boolean(original.startOffset, original.endOffset, booleanType, value)
 
   override fun <R, D> accept(visitor: IrVisitor<R, D>, data: D): R {
     return original.accept(visitor, data)
