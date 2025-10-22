@@ -15,7 +15,6 @@
  */
 package app.cash.burst.kotlin
 
-import com.google.auto.service.AutoService
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
@@ -28,7 +27,6 @@ import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
   ExperimentalCompilerApi::class,
   UnsafeDuringIrConstructionAPI::class,
 )
-@AutoService(CompilerPluginRegistrar::class)
 class BurstCompilerPluginRegistrar : CompilerPluginRegistrar() {
   override val pluginId: String get() = BuildConfig.KOTLIN_PLUGIN_ID
   override val supportsK2: Boolean get() = true

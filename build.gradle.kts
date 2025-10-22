@@ -18,7 +18,6 @@ buildscript {
     classpath(libs.binary.compatibility.validator.gradle.plugin)
     classpath(libs.mavenPublish.gradle.plugin)
     classpath(libs.kotlin.gradlePlugin)
-    classpath(libs.google.ksp)
   }
 }
 

@@ -3,16 +3,6 @@
   extends: [
     'config:recommended',
   ],
-  packageRules: [
-    // KSP is tightly coupled to Kotlin version.
-    {
-      groupName: 'Kotlin and KSP',
-      matchPackageNames: [
-        'com.google.devtools.ksp{/,}**',
-        'org.jetbrains.kotlin:kotlin{/,}**',
-      ],
-    },
-  ],
   ignorePresets: [
     // Ensure we get the latest version and are not pinned to old versions.
     'workarounds:javaLTSVersions',
