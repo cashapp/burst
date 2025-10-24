@@ -54,7 +54,7 @@ apply(plugin = "com.vanniktech.maven.publish.base")
 configure<SpotlessExtension> {
   kotlin {
     target("**/*.kt")
-    ktlint()
+    ktlint(libs.ktlint.get().version)
       .editorConfigOverride(
         mapOf(
           "ktlint_standard_filename" to "disabled",
