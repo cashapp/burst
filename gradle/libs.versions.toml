@@ -3,7 +3,7 @@ kotlin = "2.3.0-Beta2"
 kotlinx-coroutines = "1.10.2"
 
 [libraries]
-android-gradlePlugin = "com.android.tools.build:gradle:9.0.0-alpha14"
+android-gradlePlugin = "com.android.tools.build:gradle:9.0.0-beta01"
 android-gradlePlugin8 = "com.android.tools.build:gradle:8.13.1"
 assertk = "com.willowtreeapps.assertk:assertk:0.28.1"
 binary-compatibility-validator-gradle-plugin = { module = "org.jetbrains.kotlinx.binary-compatibility-validator:org.jetbrains.kotlinx.binary-compatibility-validator.gradle.plugin", version = "0.18.1" }
