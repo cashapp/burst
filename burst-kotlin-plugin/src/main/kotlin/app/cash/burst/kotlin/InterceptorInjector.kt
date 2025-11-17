@@ -481,6 +481,7 @@ internal class InterceptorInjector(
           testBodyLambda = runTestCall.arguments[runTestCall.arguments.size - 1]!!,
         )
       }
+
       else -> {
         original.irFunctionBody(
           context = pluginContext,

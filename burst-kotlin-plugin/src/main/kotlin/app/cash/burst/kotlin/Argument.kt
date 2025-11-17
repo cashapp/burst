@@ -187,14 +187,18 @@ private fun burstValuesArguments(
 private fun IrExpression.suggestedName(): String? {
   val raw = when (this) {
     is IrConst -> value.toString()
+
     is IrCall -> {
       val target = (symbol.owner.correspondingPropertySymbol?.owner ?: symbol.owner)
       target.name.asString()
     }
 
     is IrClassReference -> classType.classFqName?.shortName()?.asString() ?: return null
+
     is IrGetObjectValue -> symbol.owner.name.asString()
+
     is IrGetEnumValue -> symbol.owner.name.asString()
+
     else -> return null
   }
 
