@@ -20,7 +20,7 @@ ktlint = "com.pinterest.ktlint:ktlint-cli:1.8.0"
 mavenPublish-gradle-plugin = { module = "com.vanniktech:gradle-maven-publish-plugin", version = "0.35.0" }
 
 [plugins]
-buildconfig = { id = "com.github.gmazzo.buildconfig", version = "6.0.5" }
+buildconfig = { id = "com.github.gmazzo.buildconfig", version = "6.0.6" }
 spotless = { id = "com.diffplug.spotless", version = "8.1.0" }
 dokka = { id = "org.jetbrains.dokka", version = "2.1.0" }
 burst-kotlin = { id = "app.cash.burst.kotlin" }
