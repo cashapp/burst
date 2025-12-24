@@ -46,15 +46,17 @@ internal data class TestInterceptorsInput(
 ) {
   /** True if there's a `TestInterceptor` property in this or a superclass. */
   val usesTestInterceptor: Boolean
-    get() = interceptFunction?.isSuspend == false ||
-      testInterceptors.isNotEmpty() ||
-      superClassInput?.usesTestInterceptor == true
+    get() =
+      interceptFunction?.isSuspend == false ||
+        testInterceptors.isNotEmpty() ||
+        superClassInput?.usesTestInterceptor == true
 
   /** True if there's a `CoroutineTestInterceptor` property in this or a superclass. */
   val usesCoroutineTestInterceptor: Boolean
-    get() = interceptFunction?.isSuspend == true ||
-      coroutineTestInterceptors.isNotEmpty() ||
-      superClassInput?.usesCoroutineTestInterceptor == true
+    get() =
+      interceptFunction?.isSuspend == true ||
+        coroutineTestInterceptors.isNotEmpty() ||
+        superClassInput?.usesCoroutineTestInterceptor == true
 }
 
 internal class TestInterceptorsInputReader(
@@ -64,9 +66,8 @@ internal class TestInterceptorsInputReader(
   private val testFunctionReader = TestFunctionReader(burstApis)
 
   internal fun read(): TestInterceptorsInput {
-    val superClassPlan = classDeclaration.superClass?.let {
-      TestInterceptorsInputReader(burstApis, it).read()
-    }
+    val superClassPlan =
+      classDeclaration.superClass?.let { TestInterceptorsInputReader(burstApis, it).read() }
     var interceptFunction: IrSimpleFunction? = null
     val testInterceptors = mutableListOf<IrProperty>()
     val coroutineTestInterceptors = mutableListOf<IrProperty>()
@@ -85,7 +86,7 @@ internal class TestInterceptorsInputReader(
             testInterceptors += declaration
           } else if (
             burstApis.coroutinesTestInterceptorApis != null &&
-            burstApis.coroutinesTestInterceptorApis.isTestInterceptor(declaration)
+              burstApis.coroutinesTestInterceptorApis.isTestInterceptor(declaration)
           ) {
             // @InterceptTest val interceptor: CoroutineTestInterceptor
             coroutineTestInterceptors += declaration
@@ -103,7 +104,7 @@ internal class TestInterceptorsInputReader(
         // override suspend fun intercept(testFunction: CoroutineTestFunction)
         if (
           burstApis.coroutinesTestInterceptorApis != null &&
-          declaration.isIntercept(burstApis.coroutinesTestInterceptorApis.intercept.owner)
+            declaration.isIntercept(burstApis.coroutinesTestInterceptorApis.intercept.owner)
         ) {
           interceptFunction = declaration
         }

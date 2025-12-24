@@ -9,9 +9,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
 
 @Burst
-class CoffeeTest(
-  private val espresso: Espresso,
-) {
+class CoffeeTest(private val espresso: Espresso) {
   @BeforeTest
   fun setUp() {
     println("set up $espresso")
@@ -23,15 +21,24 @@ class CoffeeTest(
   }
 
   @Test
-  fun coroutinesTest(dairy: Dairy) = runTest(CoroutineName("coffeeCoroutine")) {
-    val deferred = async {
-      println("running $espresso $dairy in ${coroutineContext[CoroutineName]?.name}")
+  fun coroutinesTest(dairy: Dairy) =
+    runTest(CoroutineName("coffeeCoroutine")) {
+      val deferred = async {
+        println("running $espresso $dairy in ${coroutineContext[CoroutineName]?.name}")
+      }
+      delay(1000.milliseconds)
+      deferred.await()
     }
-    delay(1000.milliseconds)
-    deferred.await()
-  }
 }
 
-enum class Espresso { Decaf, Regular, Double }
+enum class Espresso {
+  Decaf,
+  Regular,
+  Double,
+}
 
-enum class Dairy { None, Milk, Oat }
+enum class Dairy {
+  None,
+  Milk,
+  Oat,
+}

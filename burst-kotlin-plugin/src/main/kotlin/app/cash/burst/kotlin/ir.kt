@@ -85,10 +85,11 @@ class BurstCompilationException(
 
 /** Finds the line and column of [irElement] within this file. */
 fun IrFile.locationOf(irElement: IrElement?): CompilerMessageSourceLocation {
-  val sourceRangeInfo = fileEntry.getSourceRangeInfo(
-    beginOffset = irElement?.startOffset ?: SYNTHETIC_OFFSET,
-    endOffset = irElement?.endOffset ?: SYNTHETIC_OFFSET,
-  )
+  val sourceRangeInfo =
+    fileEntry.getSourceRangeInfo(
+      beginOffset = irElement?.startOffset ?: SYNTHETIC_OFFSET,
+      endOffset = irElement?.endOffset ?: SYNTHETIC_OFFSET,
+    )
   return CompilerMessageLocationWithRange.create(
     path = sourceRangeInfo.filePath,
     lineStart = sourceRangeInfo.startLineNumber + 1,
@@ -146,18 +147,20 @@ fun IrConstructor.irConstructorBody(
   context: IrGeneratorContext,
   blockBody: DeclarationIrBuilder.(MutableList<IrStatement>) -> Unit,
 ) {
-  val constructorIrBuilder = DeclarationIrBuilder(
-    generatorContext = context,
-    symbol = IrSimpleFunctionSymbolImpl(),
-    startOffset = startOffset,
-    endOffset = endOffset,
-  )
-  body = context.irFactory.createBlockBody(
-    startOffset = constructorIrBuilder.startOffset,
-    endOffset = constructorIrBuilder.endOffset,
-  ) {
-    constructorIrBuilder.blockBody(statements)
-  }
+  val constructorIrBuilder =
+    DeclarationIrBuilder(
+      generatorContext = context,
+      symbol = IrSimpleFunctionSymbolImpl(),
+      startOffset = startOffset,
+      endOffset = endOffset,
+    )
+  body =
+    context.irFactory.createBlockBody(
+      startOffset = constructorIrBuilder.startOffset,
+      endOffset = constructorIrBuilder.endOffset,
+    ) {
+      constructorIrBuilder.blockBody(statements)
+    }
 }
 
 fun DeclarationIrBuilder.irDelegatingConstructorCall(
@@ -166,13 +169,14 @@ fun DeclarationIrBuilder.irDelegatingConstructorCall(
   typeArgumentsCount: Int = 0,
   block: IrDelegatingConstructorCall.() -> Unit = {},
 ): IrDelegatingConstructorCall {
-  val result = IrDelegatingConstructorCallImpl(
-    startOffset = startOffset,
-    endOffset = endOffset,
-    type = context.irBuiltIns.unitType,
-    symbol = symbol,
-    typeArgumentsCount = typeArgumentsCount,
-  )
+  val result =
+    IrDelegatingConstructorCallImpl(
+      startOffset = startOffset,
+      endOffset = endOffset,
+      type = context.irBuiltIns.unitType,
+      symbol = symbol,
+      typeArgumentsCount = typeArgumentsCount,
+    )
   result.block()
   return result
 }
@@ -193,15 +197,14 @@ fun IrSimpleFunction.irFunctionBody(
   context: IrGeneratorContext,
   blockBody: IrBlockBodyBuilder.() -> Unit,
 ) {
-  val bodyBuilder = IrBlockBodyBuilder(
-    startOffset = startOffset,
-    endOffset = endOffset,
-    context = context,
-    scope = Scope(symbol),
-  )
-  body = bodyBuilder.blockBody {
-    blockBody()
-  }
+  val bodyBuilder =
+    IrBlockBodyBuilder(
+      startOffset = startOffset,
+      endOffset = endOffset,
+      context = context,
+      scope = Scope(symbol),
+    )
+  body = bodyBuilder.blockBody { blockBody() }
 }
 
 /** Builds a lambda like `suspend TestScope.() -> Unit`. */
@@ -211,24 +214,23 @@ internal fun irTestBodyLambda(
   original: IrElement,
   blockBody: IrBlockBodyBuilder.(testScope: IrValueParameter) -> Unit,
 ): IrFunctionExpression {
-  val function = context.irFactory.buildFun {
-    this.name = Name.special("<anonymous>")
-    this.returnType = context.irBuiltIns.unitType
-    this.origin = IrDeclarationOrigin.Companion.LOCAL_FUNCTION_FOR_LAMBDA
-    this.visibility = DescriptorVisibilities.LOCAL
-    this.isSuspend = true
-  }.apply {
-    parameters += buildReceiverParameter {
-      initDefaults(original)
-      this.kind = IrParameterKind.ExtensionReceiver
-      this.type = burstApis.testScope!!
-    }
-    irFunctionBody(
-      context = context,
-    ) {
-      blockBody(parameters[0])
-    }
-  }
+  val function =
+    context.irFactory
+      .buildFun {
+        this.name = Name.special("<anonymous>")
+        this.returnType = context.irBuiltIns.unitType
+        this.origin = IrDeclarationOrigin.Companion.LOCAL_FUNCTION_FOR_LAMBDA
+        this.visibility = DescriptorVisibilities.LOCAL
+        this.isSuspend = true
+      }
+      .apply {
+        parameters += buildReceiverParameter {
+          initDefaults(original)
+          this.kind = IrParameterKind.ExtensionReceiver
+          this.type = burstApis.testScope!!
+        }
+        irFunctionBody(context = context) { blockBody(parameters[0]) }
+      }
   return IrFunctionExpressionImpl(
     startOffset = original.startOffset,
     endOffset = original.endOffset,
@@ -243,32 +245,36 @@ internal fun IrBlockBuilder.irAccumulateFailure(
   failure: IrVariable,
   tryBody: IrExpression,
 ): IrExpression {
-  val e = buildVariable(
-    parent = parent,
-    startOffset = UNDEFINED_OFFSET,
-    endOffset = UNDEFINED_OFFSET,
-    origin = IrDeclarationOrigin.CATCH_PARAMETER,
-    name = Name.identifier("e"),
-    type = context.irBuiltIns.throwableType,
-  )
+  val e =
+    buildVariable(
+      parent = parent,
+      startOffset = UNDEFINED_OFFSET,
+      endOffset = UNDEFINED_OFFSET,
+      origin = IrDeclarationOrigin.CATCH_PARAMETER,
+      name = Name.identifier("e"),
+      type = context.irBuiltIns.throwableType,
+    )
 
   return irTry(
     type = context.irBuiltIns.anyNType,
     tryResult = tryBody,
-    catches = listOf(
-      irCatch(
-        catchParameter = e,
-        result = irIfNull(
-          type = context.irBuiltIns.anyNType,
-          subject = irGet(failure),
-          thenPart = irSet(failure, irGet(e)),
-          elsePart = irCall(burstApis.throwableAddSuppressed).apply {
-            arguments[0] = irGet(failure)
-            arguments[1] = irGet(e)
-          },
-        ),
+    catches =
+      listOf(
+        irCatch(
+          catchParameter = e,
+          result =
+            irIfNull(
+              type = context.irBuiltIns.anyNType,
+              subject = irGet(failure),
+              thenPart = irSet(failure, irGet(e)),
+              elsePart =
+                irCall(burstApis.throwableAddSuppressed).apply {
+                  arguments[0] = irGet(failure)
+                  arguments[1] = irGet(e)
+                },
+            ),
+        )
       ),
-    ),
     finallyExpression = null,
   )
 }
@@ -281,12 +287,10 @@ internal fun IrDeclarationContainer.addDeclaration(declaration: IrDeclaration) {
 
 @UnsafeDuringIrConstructionAPI
 internal fun IrFunction.valueParameters(): List<IrValueParameter> {
-  return parameters
-    .filter { it.kind == IrParameterKind.Regular }
+  return parameters.filter { it.kind == IrParameterKind.Regular }
 }
 
 @UnsafeDuringIrConstructionAPI
 internal fun IrCall.valueArguments(): List<IrExpression?> {
-  return symbol.owner.valueParameters()
-    .map { arguments[it.indexInParameters] }
+  return symbol.owner.valueParameters().map { arguments[it.indexInParameters] }
 }

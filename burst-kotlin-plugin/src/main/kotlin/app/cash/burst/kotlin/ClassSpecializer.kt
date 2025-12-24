@@ -35,7 +35,6 @@ import org.jetbrains.kotlin.name.Name
 
 /**
  * Given a test class with a single constructor that has parameters:
- *
  * ```
  * @Burst
  * class CoffeeTest(
@@ -49,7 +48,6 @@ import org.jetbrains.kotlin.name.Name
  * This opens the class, makes that constructor protected, and removes the default arguments.
  *
  * If there's a default specialization, it adds a no-args constructor that calls it:
- *
  * ```
  * @Burst
  * open class CoffeeTest protected constructor(
@@ -83,17 +81,19 @@ internal class ClassSpecializer(
   private val irTypeSystemContext = IrTypeSystemContextImpl(pluginContext.irBuiltIns)
 
   fun generateSpecializations() {
-    val onlyConstructor = original.constructors.singleOrNull()
-      ?: return // We only know how to handle a single constructor.
+    val onlyConstructor =
+      original.constructors.singleOrNull()
+        ?: return // We only know how to handle a single constructor.
 
     val valueParameters = onlyConstructor.valueParameters()
     if (valueParameters.isEmpty()) return // Nothing to do.
 
     val specializations = specializations(pluginContext, burstApis, valueParameters)
-    val indexOfDefaultSpecialization = when {
-      onlyConstructor.defaultSpecializationIsBroken() -> -1
-      else -> specializations.indexOfFirst { it.isDefault }
-    }
+    val indexOfDefaultSpecialization =
+      when {
+        onlyConstructor.defaultSpecializationIsBroken() -> -1
+        else -> specializations.indexOfFirst { it.isDefault }
+      }
 
     // Make sure the constructor we're using is accessible. Drop the default arguments to prevent
     // JUnit from using it.
@@ -123,45 +123,38 @@ internal class ClassSpecializer(
       // Don't generate code for the default specialization; we only want to run it once.
       if (index == indexOfDefaultSpecialization) continue
 
-      createSubclass(
-        superConstructor = onlyConstructor,
-        specialization = specialization,
-      )
+      createSubclass(superConstructor = onlyConstructor, specialization = specialization)
     }
   }
 
-  private fun createSubclass(
-    superConstructor: IrConstructor,
-    specialization: Specialization,
-  ) {
-    val created = original.factory.buildClass {
-      initDefaults(original)
-      visibility = PUBLIC
-      name = Name.identifier("${original.name.identifier}_${specialization.name}")
-    }.apply {
-      superTypes = listOf(original.defaultType)
-      createThisReceiverParameter()
-    }
-
-    created.addConstructor {
-      initDefaults(original)
-    }.apply {
-      irConstructorBody(pluginContext) { statements ->
-        statements += irDelegatingConstructorCall(
-          context = pluginContext,
-          symbol = superConstructor.symbol,
-        ) {
-          arguments.clear()
-          for (argument in specialization.arguments) {
-            arguments += argument.expression()
-          }
+  private fun createSubclass(superConstructor: IrConstructor, specialization: Specialization) {
+    val created =
+      original.factory
+        .buildClass {
+          initDefaults(original)
+          visibility = PUBLIC
+          name = Name.identifier("${original.name.identifier}_${specialization.name}")
         }
-        statements += irInstanceInitializerCall(
-          context = pluginContext,
-          classSymbol = created.symbol,
-        )
+        .apply {
+          superTypes = listOf(original.defaultType)
+          createThisReceiverParameter()
+        }
+
+    created
+      .addConstructor { initDefaults(original) }
+      .apply {
+        irConstructorBody(pluginContext) { statements ->
+          statements +=
+            irDelegatingConstructorCall(context = pluginContext, symbol = superConstructor.symbol) {
+              arguments.clear()
+              for (argument in specialization.arguments) {
+                arguments += argument.expression()
+              }
+            }
+          statements +=
+            irInstanceInitializerCall(context = pluginContext, classSymbol = created.symbol)
+        }
       }
-    }
 
     originalParent.addDeclaration(created)
     created.addFakeOverrides(irTypeSystemContext)
@@ -171,22 +164,26 @@ internal class ClassSpecializer(
     superConstructor: IrConstructor,
     specialization: Specialization,
   ) {
-    val constructor = original.addConstructor {
-      initDefaults(original)
-      isPrimary = false
-    }.apply {
-      irConstructorBody(pluginContext) { statements ->
-        statements += irDelegatingConstructorCall(
-          context = pluginContext,
-          symbol = superConstructor.symbol,
-        ) {
-          arguments.clear()
-          for (argument in specialization.arguments) {
-            arguments += argument.expression()
+    val constructor =
+      original
+        .addConstructor {
+          initDefaults(original)
+          isPrimary = false
+        }
+        .apply {
+          irConstructorBody(pluginContext) { statements ->
+            statements +=
+              irDelegatingConstructorCall(
+                context = pluginContext,
+                symbol = superConstructor.symbol,
+              ) {
+                arguments.clear()
+                for (argument in specialization.arguments) {
+                  arguments += argument.expression()
+                }
+              }
           }
         }
-      }
-    }
     pluginContext.metadataDeclarationRegistrar.registerConstructorAsMetadataVisible(constructor)
   }
 

@@ -70,14 +70,12 @@ import org.jetbrains.kotlin.util.capitalizeDecapitalize.capitalizeAsciiOnly
 
 /**
  * This starts with an interceptor property like this:
- *
  * ```kotlin
  * @InterceptTest
  * val interceptor: TestInterceptor
  * ```
  *
  * And a test function like this:
- *
  * ```kotlin
  * @Test
  * fun happyPath() {
@@ -86,7 +84,6 @@ import org.jetbrains.kotlin.util.capitalizeDecapitalize.capitalizeAsciiOnly
  * ```
  *
  * It rewrites the test function to call an `intercept` function:
- *
  * ```kotlin
  * @Test
  * fun happyPath() {
@@ -105,7 +102,6 @@ import org.jetbrains.kotlin.util.capitalizeDecapitalize.capitalizeAsciiOnly
  * ```
  *
  * And it declares an `intercept` function on the test class:
- *
  * ```kotlin
  * override fun intercept(testFunction: TestFunction) {
  *   interceptor.intercept(
@@ -124,8 +120,8 @@ import org.jetbrains.kotlin.util.capitalizeDecapitalize.capitalizeAsciiOnly
  *
  * If there are multiple interceptors, they are applied in order.
  *
- * The `burstTestFunctionPackageName()` and `burstTestFunctionClassName()` functions are declared
- * so the runtime test metadata can be used if this test is subclassed.
+ * The `burstTestFunctionPackageName()` and `burstTestFunctionClassName()` functions are declared so
+ * the runtime test metadata can be used if this test is subclassed.
  *
  * If there are functions annotated `@BeforeTest`, that annotation is removed and the function is
  * called directly in `intercept()`.
@@ -144,10 +140,11 @@ internal class InterceptorInjector(
   private val existingIntercept: IrSimpleFunction?,
 ) {
   private val packageName = originalParent.packageFqName?.asString() ?: ""
-  private val className = generateSequence(originalParent) { it.parentClassOrNull }
-    .toList()
-    .reversed()
-    .joinToString(".") { it.name.asString() }
+  private val className =
+    generateSequence(originalParent) { it.parentClassOrNull }
+      .toList()
+      .reversed()
+      .joinToString(".") { it.name.asString() }
 
   /** The previously-annotated `@BeforeTest` functions that we must call in the interceptor. */
   private var beforeTestFunctionSymbols = mutableListOf<IrSimpleFunctionSymbol>()
@@ -166,18 +163,16 @@ internal class InterceptorInjector(
 
   /** Remove the `@BeforeTest` annotation on [function]. */
   fun adoptBeforeTest(function: IrSimpleFunction) {
-    function.annotations = function.annotations.filter {
-      it.type.classOrNull !in burstApis.beforeTestSymbols
-    }
+    function.annotations =
+      function.annotations.filter { it.type.classOrNull !in burstApis.beforeTestSymbols }
 
     beforeTestFunctionSymbols += function.symbol
   }
 
   /** Remove the `@AfterTest` annotation on [function]. */
   fun adoptAfterTest(function: IrSimpleFunction) {
-    function.annotations = function.annotations.filter {
-      it.type.classOrNull !in burstApis.afterTestSymbols
-    }
+    function.annotations =
+      function.annotations.filter { it.type.classOrNull !in burstApis.afterTestSymbols }
 
     afterTestFunctionSymbols += function.symbol
   }
@@ -193,10 +188,8 @@ internal class InterceptorInjector(
   fun defineTestFunctionPackageNameProperty() {
     check(testFunctionPackageNameGetterSymbol == null) { "already defined?!" }
 
-    testFunctionPackageNameGetterSymbol = defineTestFunctionNameProperty(
-      Name.identifier("burstTestFunctionPackageName"),
-      packageName,
-    )
+    testFunctionPackageNameGetterSymbol =
+      defineTestFunctionNameProperty(Name.identifier("burstTestFunctionPackageName"), packageName)
   }
 
   /**
@@ -210,10 +203,8 @@ internal class InterceptorInjector(
   fun defineTestFunctionClassNameProperty() {
     check(testFunctionClassNameGetterSymbol == null) { "already defined?!" }
 
-    testFunctionClassNameGetterSymbol = defineTestFunctionNameProperty(
-      Name.identifier("burstTestFunctionClassName"),
-      className,
-    )
+    testFunctionClassNameGetterSymbol =
+      defineTestFunctionNameProperty(Name.identifier("burstTestFunctionClassName"), className)
   }
 
   private fun defineTestFunctionNameProperty(name: Name, value: String): IrSimpleFunctionSymbol {
@@ -224,23 +215,22 @@ internal class InterceptorInjector(
       it is IrSimpleFunction && it.name == name && it.isFakeOverride
     }
 
-    val function = originalParent.factory.buildFun {
-      initDefaults(originalParent)
-      this.name = name
-      visibility = DescriptorVisibilities.PROTECTED
-      origin = BURST_ORIGIN
-      returnType = pluginContext.irBuiltIns.stringType
-    }.apply {
-      if (overridden != null) {
-        this.overriddenSymbols += overridden.symbol
-      }
-      parameters += buildReceiverParameter {
-        type = originalParent.defaultType
-      }
-      irFunctionBody(context = pluginContext) {
-        +irReturn(irString(value))
-      }
-    }
+    val function =
+      originalParent.factory
+        .buildFun {
+          initDefaults(originalParent)
+          this.name = name
+          visibility = DescriptorVisibilities.PROTECTED
+          origin = BURST_ORIGIN
+          returnType = pluginContext.irBuiltIns.stringType
+        }
+        .apply {
+          if (overridden != null) {
+            this.overriddenSymbols += overridden.symbol
+          }
+          parameters += buildReceiverParameter { type = originalParent.defaultType }
+          irFunctionBody(context = pluginContext) { +irReturn(irString(value)) }
+        }
 
     originalParent.addDeclaration(function)
     pluginContext.metadataDeclarationRegistrar.registerFunctionAsMetadataVisible(function)
@@ -258,68 +248,76 @@ internal class InterceptorInjector(
     // TODO: don't add 'implements TestInterceptor' if it already does.
     originalParent.superTypes += testInterceptorApis.interceptorType
 
-    val function = originalParent.factory.buildFun {
-      initDefaults(originalParent)
-      name = Name.identifier("intercept")
-      returnType = pluginContext.irBuiltIns.unitType
-      isSuspend = testInterceptorApis.intercept.isSuspend
-    }.apply {
-      modality = Modality.OPEN
-      overriddenSymbols += testInterceptorApis.intercept
-      parameters += buildReceiverParameter {
-        type = originalParent.defaultType
-      }
-      addValueParameter {
-        initDefaults(originalParent)
-        name = Name.identifier("testFunction")
-        type = testInterceptorApis.functionType
-      }
-    }
+    val function =
+      originalParent.factory
+        .buildFun {
+          initDefaults(originalParent)
+          name = Name.identifier("intercept")
+          returnType = pluginContext.irBuiltIns.unitType
+          isSuspend = testInterceptorApis.intercept.isSuspend
+        }
+        .apply {
+          modality = Modality.OPEN
+          overriddenSymbols += testInterceptorApis.intercept
+          parameters += buildReceiverParameter { type = originalParent.defaultType }
+          addValueParameter {
+            initDefaults(originalParent)
+            name = Name.identifier("testFunction")
+            type = testInterceptorApis.functionType
+          }
+        }
 
-    function.irFunctionBody(
-      context = pluginContext,
-    ) {
-      val testScopeLocal = testInterceptorApis.testScope?.let {
+    function.irFunctionBody(context = pluginContext) {
+      val testScopeLocal =
+        testInterceptorApis.testScope?.let {
+          irTemporary(
+            value =
+              irCall(testInterceptorApis.testScope.owner.getter!!).apply {
+                origin = IrStatementOrigin.Companion.GET_PROPERTY
+                dispatchReceiver = irGet(function.parameters[1])
+              },
+            nameHint = "testScope",
+          )
+        }
+
+      val packageNameLocal =
         irTemporary(
-          value = irCall(testInterceptorApis.testScope.owner.getter!!).apply {
-            origin = IrStatementOrigin.Companion.GET_PROPERTY
-            dispatchReceiver = irGet(function.parameters[1])
-          },
-          nameHint = "testScope",
+          value =
+            irCall(testInterceptorApis.packageName.owner.getter!!).apply {
+              origin = IrStatementOrigin.Companion.GET_PROPERTY
+              dispatchReceiver = irGet(function.parameters[1])
+            },
+          nameHint = "packageName",
         )
-      }
 
-      val packageNameLocal = irTemporary(
-        value = irCall(testInterceptorApis.packageName.owner.getter!!).apply {
-          origin = IrStatementOrigin.Companion.GET_PROPERTY
-          dispatchReceiver = irGet(function.parameters[1])
-        },
-        nameHint = "packageName",
-      )
+      val classNameLocal =
+        irTemporary(
+          value =
+            irCall(testInterceptorApis.className.owner.getter!!).apply {
+              origin = IrStatementOrigin.Companion.GET_PROPERTY
+              dispatchReceiver = irGet(function.parameters[1])
+            },
+          nameHint = "className",
+        )
 
-      val classNameLocal = irTemporary(
-        value = irCall(testInterceptorApis.className.owner.getter!!).apply {
-          origin = IrStatementOrigin.Companion.GET_PROPERTY
-          dispatchReceiver = irGet(function.parameters[1])
-        },
-        nameHint = "className",
-      )
-
-      val functionNameLocal = irTemporary(
-        value = irCall(testInterceptorApis.functionName.owner.getter!!).apply {
-          origin = IrStatementOrigin.Companion.GET_PROPERTY
-          dispatchReceiver = irGet(function.parameters[1])
-        },
-        nameHint = "functionName",
-      )
+      val functionNameLocal =
+        irTemporary(
+          value =
+            irCall(testInterceptorApis.functionName.owner.getter!!).apply {
+              origin = IrStatementOrigin.Companion.GET_PROPERTY
+              dispatchReceiver = irGet(function.parameters[1])
+            },
+          nameHint = "functionName",
+        )
 
       var proceed: IrExpression = irBlock {
-        val failure = irTemporary(
-          value = irNull(),
-          irType = pluginContext.irBuiltIns.throwableType.makeNullable(),
-          nameHint = "failure",
-          isMutable = true,
-        )
+        val failure =
+          irTemporary(
+            value = irNull(),
+            irType = pluginContext.irBuiltIns.throwableType.makeNullable(),
+            nameHint = "failure",
+            isMutable = true,
+          )
 
         +irAccumulateFailure(
           burstApis,
@@ -327,20 +325,16 @@ internal class InterceptorInjector(
           irBlock {
             // Call each function annotated `@BeforeTest` in reverse alphabetical order.
             for (functionSymbol in beforeTestFunctionSymbols) {
-              +irCall(
-                callee = functionSymbol,
-              ).apply {
-                dispatchReceiver = irGet(function.dispatchReceiverParameter!!).apply {
-                  origin = IMPLICIT_ARGUMENT
-                }
+              +irCall(callee = functionSymbol).apply {
+                dispatchReceiver =
+                  irGet(function.dispatchReceiverParameter!!).apply { origin = IMPLICIT_ARGUMENT }
               }
             }
 
             // Execute the test body.
             +irCall(testInterceptorApis.invoke).apply {
-              dispatchReceiver = irGet(function.parameters[1]).apply {
-                origin = VARIABLE_AS_FUNCTION
-              }
+              dispatchReceiver =
+                irGet(function.parameters[1]).apply { origin = VARIABLE_AS_FUNCTION }
             }
           },
         )
@@ -350,12 +344,9 @@ internal class InterceptorInjector(
           +irAccumulateFailure(
             burstApis,
             failure,
-            irCall(
-              callee = functionSymbol,
-            ).apply {
-              dispatchReceiver = irGet(function.dispatchReceiverParameter!!).apply {
-                origin = IMPLICIT_ARGUMENT
-              }
+            irCall(callee = functionSymbol).apply {
+              dispatchReceiver =
+                irGet(function.dispatchReceiverParameter!!).apply { origin = IMPLICIT_ARGUMENT }
             },
           )
         }
@@ -369,37 +360,41 @@ internal class InterceptorInjector(
       }
 
       for (interceptor in interceptorProperties.reversed()) {
-        val testFunctionClass = createTestFunctionClass(
-          nameHint = "${interceptor.name.asString().capitalizeAsciiOnly()}TestFunction",
-          testScope = testScopeLocal,
-          packageName = packageNameLocal,
-          className = classNameLocal,
-          functionName = functionNameLocal,
-          proceed = proceed,
-        )
+        val testFunctionClass =
+          createTestFunctionClass(
+            nameHint = "${interceptor.name.asString().capitalizeAsciiOnly()}TestFunction",
+            testScope = testScopeLocal,
+            packageName = packageNameLocal,
+            className = classNameLocal,
+            functionName = functionNameLocal,
+            proceed = proceed,
+          )
         +testFunctionClass
-        proceed = callInterceptorIntercept(
-          receiverLocal = function.dispatchReceiverParameter!!,
-          interceptorProperty = interceptor,
-          testInstance = irCall(callee = testFunctionClass.constructors.single()),
-        )
+        proceed =
+          callInterceptorIntercept(
+            receiverLocal = function.dispatchReceiverParameter!!,
+            interceptorProperty = interceptor,
+            testInstance = irCall(callee = testFunctionClass.constructors.single()),
+          )
       }
 
       if (superclassIntercept != null) {
-        val testFunctionClass = createTestFunctionClass(
-          nameHint = "CallSuperTestFunction",
-          testScope = testScopeLocal,
-          packageName = packageNameLocal,
-          className = classNameLocal,
-          functionName = functionNameLocal,
-          proceed = proceed,
-        )
+        val testFunctionClass =
+          createTestFunctionClass(
+            nameHint = "CallSuperTestFunction",
+            testScope = testScopeLocal,
+            packageName = packageNameLocal,
+            className = classNameLocal,
+            functionName = functionNameLocal,
+            proceed = proceed,
+          )
         +testFunctionClass
-        proceed = callSuperIntercept(
-          superclassIntercept,
-          interceptFunction = function,
-          testInstance = irCall(callee = testFunctionClass.constructors.single()),
-        )
+        proceed =
+          callSuperIntercept(
+            superclassIntercept,
+            interceptFunction = function,
+            testInstance = irCall(callee = testFunctionClass.constructors.single()),
+          )
       }
 
       +proceed
@@ -425,17 +420,13 @@ internal class InterceptorInjector(
     interceptorProperty: IrProperty,
     testInstance: IrExpression,
   ): IrExpression {
-    val interceptorInstance = irCall(interceptorProperty.getter!!)
-      .apply {
+    val interceptorInstance =
+      irCall(interceptorProperty.getter!!).apply {
         origin = IrStatementOrigin.Companion.GET_PROPERTY
-        dispatchReceiver = irGet(receiverLocal).apply {
-          origin = IMPLICIT_ARGUMENT
-        }
+        dispatchReceiver = irGet(receiverLocal).apply { origin = IMPLICIT_ARGUMENT }
       }
 
-    return irCall(
-      callee = testInterceptorApis.intercept,
-    ).apply {
+    return irCall(callee = testInterceptorApis.intercept).apply {
       dispatchReceiver = interceptorInstance
       arguments[1] = testInstance
     }
@@ -448,14 +439,16 @@ internal class InterceptorInjector(
     testInstance: IrExpression,
   ): IrCall {
     return irCall(
-      callee = superclassIntercept,
-      superQualifierSymbol = originalParent.superClass!!.symbol,
-    ).apply {
-      dispatchReceiver = irGet(interceptFunction.dispatchReceiverParameter!!).apply {
-        origin = VARIABLE_AS_FUNCTION
+        callee = superclassIntercept,
+        superQualifierSymbol = originalParent.superClass!!.symbol,
+      )
+      .apply {
+        dispatchReceiver =
+          irGet(interceptFunction.dispatchReceiverParameter!!).apply {
+            origin = VARIABLE_AS_FUNCTION
+          }
+        arguments[1] = testInstance
       }
-      arguments[1] = testInstance
-    }
   }
 
   /**
@@ -476,20 +469,16 @@ internal class InterceptorInjector(
     when (input) {
       is TestFunction.Suspending -> {
         val runTestCall = input.runTestCall
-        runTestCall.arguments[runTestCall.arguments.size - 1] = interceptTestBodyExpression(
-          testFunction = original,
-          testBodyLambda = runTestCall.arguments[runTestCall.arguments.size - 1]!!,
-        )
+        runTestCall.arguments[runTestCall.arguments.size - 1] =
+          interceptTestBodyExpression(
+            testFunction = original,
+            testBodyLambda = runTestCall.arguments[runTestCall.arguments.size - 1]!!,
+          )
       }
 
       else -> {
-        original.irFunctionBody(
-          context = pluginContext,
-        ) {
-          +callInterceptWithTestBody(
-            original = original,
-            testScope = null,
-          ) {
+        original.irFunctionBody(context = pluginContext) {
+          +callInterceptWithTestBody(original = original, testScope = null) {
             body = original.moveBodyTo(this, mapOf())
           }
         }
@@ -514,19 +503,15 @@ internal class InterceptorInjector(
       burstApis = burstApis,
       original = originalParent,
     ) { testScope ->
-      +callInterceptWithTestBody(
-        original = testFunction,
-        testScope = irGet(testScope),
-      ) {
-        irFunctionBody(
-          context = context,
-        ) {
+      +callInterceptWithTestBody(original = testFunction, testScope = irGet(testScope)) {
+        irFunctionBody(context = context) {
           +irCall(
-            callee = pluginContext.irBuiltIns.suspendFunctionN(1).symbol.functionByName("invoke"),
-          ).apply {
-            arguments[0] = testBodyLambda
-            arguments[1] = irGet(testScope)
-          }
+              callee = pluginContext.irBuiltIns.suspendFunctionN(1).symbol.functionByName("invoke")
+            )
+            .apply {
+              arguments[0] = testBodyLambda
+              arguments[1] = irGet(testScope)
+            }
         }
       }
     }
@@ -541,38 +526,36 @@ internal class InterceptorInjector(
     testScope: IrExpression?,
     buildBody: IrSimpleFunction.() -> Unit,
   ): IrCall {
-    val interceptFunctionSymbol = interceptFunctionSymbol
-      ?: error("call defineIntercept() first")
-    val testFunctionPackageNameGetterSymbol = testFunctionPackageNameGetterSymbol
-      ?: error("call defineTestFunctionClassNameProperty() first")
-    val testFunctionClassNameGetterSymbol = testFunctionClassNameGetterSymbol
-      ?: error("call defineTestFunctionClassNameProperty() first")
+    val interceptFunctionSymbol = interceptFunctionSymbol ?: error("call defineIntercept() first")
+    val testFunctionPackageNameGetterSymbol =
+      testFunctionPackageNameGetterSymbol
+        ?: error("call defineTestFunctionClassNameProperty() first")
+    val testFunctionClassNameGetterSymbol =
+      testFunctionClassNameGetterSymbol ?: error("call defineTestFunctionClassNameProperty() first")
 
-    val testFunctionClass = createTestFunctionClass(
-      nameHint = "${original.name.asString().capitalizeAsciiOnly()}TestFunction",
-      testScope = testScope,
-      packageName = irCall(testFunctionPackageNameGetterSymbol).apply {
-        dispatchReceiver = irGet(original.dispatchReceiverParameter!!).apply {
-          origin = IMPLICIT_ARGUMENT
-        }
-      },
-      className = irCall(testFunctionClassNameGetterSymbol).apply {
-        dispatchReceiver = irGet(original.dispatchReceiverParameter!!).apply {
-          origin = IMPLICIT_ARGUMENT
-        }
-      },
-      functionName = irString(original.name.asString()),
-      buildBody = buildBody,
-    )
+    val testFunctionClass =
+      createTestFunctionClass(
+        nameHint = "${original.name.asString().capitalizeAsciiOnly()}TestFunction",
+        testScope = testScope,
+        packageName =
+          irCall(testFunctionPackageNameGetterSymbol).apply {
+            dispatchReceiver =
+              irGet(original.dispatchReceiverParameter!!).apply { origin = IMPLICIT_ARGUMENT }
+          },
+        className =
+          irCall(testFunctionClassNameGetterSymbol).apply {
+            dispatchReceiver =
+              irGet(original.dispatchReceiverParameter!!).apply { origin = IMPLICIT_ARGUMENT }
+          },
+        functionName = irString(original.name.asString()),
+        buildBody = buildBody,
+      )
     +testFunctionClass
     val testFunctionInstance = irCall(testFunctionClass.constructors.single())
 
-    return irCall(
-      callee = interceptFunctionSymbol,
-    ).apply {
-      dispatchReceiver = irGet(original.dispatchReceiverParameter!!).apply {
-        origin = IMPLICIT_ARGUMENT
-      }
+    return irCall(callee = interceptFunctionSymbol).apply {
+      dispatchReceiver =
+        irGet(original.dispatchReceiverParameter!!).apply { origin = IMPLICIT_ARGUMENT }
       arguments[1] = testFunctionInstance
     }
   }
@@ -592,11 +575,7 @@ internal class InterceptorInjector(
       className = irGet(className),
       functionName = irGet(functionName),
     ) {
-      irFunctionBody(
-        context = context,
-      ) {
-        +proceed
-      }
+      irFunctionBody(context = context) { +proceed }
     }
   }
 
@@ -609,50 +588,58 @@ internal class InterceptorInjector(
     functionName: IrExpression,
     buildBody: IrSimpleFunction.() -> Unit,
   ): IrClass {
-    val testFunctionClass = pluginContext.irFactory.buildClass {
-      initDefaults(originalParent)
-      name = Name.identifier(nameHint)
-      visibility = DescriptorVisibilities.LOCAL
-    }.apply {
-      parent = originalParent
-      superTypes = listOf(testInterceptorApis.function.defaultType)
-      createThisReceiverParameter()
-    }
-
-    testFunctionClass.addConstructor {
-      initDefaults(originalParent)
-    }.apply {
-      irConstructorBody(pluginContext) { statements ->
-        statements += irDelegatingConstructorCall(
-          context = pluginContext,
-          symbol = testInterceptorApis.function.constructors.single(),
-        ) {
-          arguments.clear()
-          if (testScope != null) arguments += testScope
-          arguments += packageName
-          arguments += className
-          arguments += functionName
+    val testFunctionClass =
+      pluginContext.irFactory
+        .buildClass {
+          initDefaults(originalParent)
+          name = Name.identifier(nameHint)
+          visibility = DescriptorVisibilities.LOCAL
         }
-        statements += irInstanceInitializerCall(
-          context = pluginContext,
-          classSymbol = testFunctionClass.symbol,
-        )
-      }
-    }
+        .apply {
+          parent = originalParent
+          superTypes = listOf(testInterceptorApis.function.defaultType)
+          createThisReceiverParameter()
+        }
 
-    val invokeFunction = testFunctionClass.addFunction {
-      initDefaults(originalParent)
-      name = testInterceptorApis.invoke.owner.name
-      returnType = pluginContext.irBuiltIns.unitType
-      isSuspend = testInterceptorApis.invoke.isSuspend
-    }.apply {
-      parameters += buildReceiverParameter {
-        initDefaults(originalParent)
-        type = testFunctionClass.defaultType
+    testFunctionClass
+      .addConstructor { initDefaults(originalParent) }
+      .apply {
+        irConstructorBody(pluginContext) { statements ->
+          statements +=
+            irDelegatingConstructorCall(
+              context = pluginContext,
+              symbol = testInterceptorApis.function.constructors.single(),
+            ) {
+              arguments.clear()
+              if (testScope != null) arguments += testScope
+              arguments += packageName
+              arguments += className
+              arguments += functionName
+            }
+          statements +=
+            irInstanceInitializerCall(
+              context = pluginContext,
+              classSymbol = testFunctionClass.symbol,
+            )
+        }
       }
-      overriddenSymbols = listOf(testInterceptorApis.invoke)
-      buildBody()
-    }
+
+    val invokeFunction =
+      testFunctionClass
+        .addFunction {
+          initDefaults(originalParent)
+          name = testInterceptorApis.invoke.owner.name
+          returnType = pluginContext.irBuiltIns.unitType
+          isSuspend = testInterceptorApis.invoke.isSuspend
+        }
+        .apply {
+          parameters += buildReceiverParameter {
+            initDefaults(originalParent)
+            type = testFunctionClass.defaultType
+          }
+          overriddenSymbols = listOf(testInterceptorApis.invoke)
+          buildBody()
+        }
 
     testFunctionClass.addFakeOverrides(
       IrTypeSystemContextImpl(pluginContext.irBuiltIns),

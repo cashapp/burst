@@ -20,12 +20,11 @@ import com.tschuchort.compiletesting.SourceFile
 import kotlin.test.assertEquals
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 
-class BurstTester(
-  val packageName: String,
-) {
-  private val testHarness = SourceFile.Companion.kotlin(
-    "TestHarness.kt",
-    """
+class BurstTester(val packageName: String) {
+  private val testHarness =
+    SourceFile.Companion.kotlin(
+      "TestHarness.kt",
+      """
     |${if (packageName != "") "package $packageName" else ""}
     |
     |val log = mutableListOf<String>()
@@ -33,24 +32,21 @@ class BurstTester(
     |fun log(message: String) {
     |  log += message
     |}
-    """.trimMargin(),
-  )
+    """
+        .trimMargin(),
+    )
 
   @ExperimentalCompilerApi
-  fun compileAndRun(
-    vararg sourceFiles: SourceFile,
-  ): List<String> {
-    val result = compile(
-      sourceFiles.toList() + testHarness,
-      BurstCompilerPluginRegistrar(),
-    )
+  fun compileAndRun(vararg sourceFiles: SourceFile): List<String> {
+    val result = compile(sourceFiles.toList() + testHarness, BurstCompilerPluginRegistrar())
 
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
-    val packagePrefix = when (packageName) {
-      "" -> ""
-      else -> "$packageName."
-    }
+    val packagePrefix =
+      when (packageName) {
+        "" -> ""
+        else -> "$packageName."
+      }
     val main = result.classLoader.loadClass("${packagePrefix}MainKt")
 
     val testInstance = main.getMethod("main", String::class.java.arrayType())

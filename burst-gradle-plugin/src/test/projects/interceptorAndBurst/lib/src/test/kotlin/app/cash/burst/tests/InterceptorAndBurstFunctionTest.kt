@@ -6,8 +6,7 @@ import kotlin.test.Test
 
 @Burst
 class InterceptorAndBurstFunctionTest {
-  @InterceptTest
-  val interceptor = BasicInterceptor("function")
+  @InterceptTest val interceptor = BasicInterceptor("function")
 
   @Test
   fun test(condition: Boolean) {

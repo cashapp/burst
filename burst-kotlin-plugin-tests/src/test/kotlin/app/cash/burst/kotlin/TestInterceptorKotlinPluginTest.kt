@@ -28,12 +28,12 @@ import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 class TestInterceptorKotlinPluginTest {
   @Test
   fun interceptor() {
-    val log = BurstTester(
-      packageName = "com.example",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "com.example")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         package com.example
 
         import app.cash.burst.InterceptTest
@@ -63,24 +63,25 @@ class TestInterceptorKotlinPluginTest {
           SampleTest().happyPath()
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "intercepting com.example.SampleTest.happyPath",
-      "running happyPath",
-      "intercepted",
-    )
+    assertThat(log)
+      .containsExactly(
+        "intercepting com.example.SampleTest.happyPath",
+        "running happyPath",
+        "intercepted",
+      )
   }
 
   @Test
   fun inlinedInterceptorDeclaration() {
-    val log = BurstTester(
-      packageName = "com.example",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "com.example")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         package com.example
 
         import app.cash.burst.InterceptTest
@@ -105,14 +106,15 @@ class TestInterceptorKotlinPluginTest {
           SampleTest().happyPath()
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "intercepting com.example.SampleTest.happyPath",
-      "running happyPath",
-      "intercepted",
-    )
+    assertThat(log)
+      .containsExactly(
+        "intercepting com.example.SampleTest.happyPath",
+        "running happyPath",
+        "intercepted",
+      )
   }
 
   /**
@@ -120,12 +122,12 @@ class TestInterceptorKotlinPluginTest {
    */
   @Test
   fun multipleInterceptorsExecutedInSequence() {
-    val log = BurstTester(
-      packageName = "app.cash.burst.tests",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "app.cash.burst.tests")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         package app.cash.burst.tests
 
         import app.cash.burst.InterceptTest
@@ -161,28 +163,29 @@ class TestInterceptorKotlinPluginTest {
           MultipleInterceptorsTest().passingTest()
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "intercepting red app.cash.burst.tests.MultipleInterceptorsTest.passingTest",
-      "intercepting blue app.cash.burst.tests.MultipleInterceptorsTest.passingTest",
-      "intercepting green app.cash.burst.tests.MultipleInterceptorsTest.passingTest",
-      "running",
-      "intercepted green",
-      "intercepted blue",
-      "intercepted red",
-    )
+    assertThat(log)
+      .containsExactly(
+        "intercepting red app.cash.burst.tests.MultipleInterceptorsTest.passingTest",
+        "intercepting blue app.cash.burst.tests.MultipleInterceptorsTest.passingTest",
+        "intercepting green app.cash.burst.tests.MultipleInterceptorsTest.passingTest",
+        "running",
+        "intercepted green",
+        "intercepted blue",
+        "intercepted red",
+      )
   }
 
   @Test
   fun beforeTestIsCalledByInterceptor() {
-    val log = BurstTester(
-      packageName = "com.example",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "com.example")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         package com.example
 
         import app.cash.burst.InterceptTest
@@ -217,25 +220,21 @@ class TestInterceptorKotlinPluginTest {
           SampleTest().happyPath()
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "intercepting test",
-      "before test",
-      "running test",
-      "intercepted test",
-    )
+    assertThat(log)
+      .containsExactly("intercepting test", "before test", "running test", "intercepted test")
   }
 
   @Test
   fun afterTestIsCalledByInterceptor() {
-    val log = BurstTester(
-      packageName = "com.example",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "com.example")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         package com.example
 
         import app.cash.burst.InterceptTest
@@ -270,30 +269,25 @@ class TestInterceptorKotlinPluginTest {
           SampleTest().happyPath()
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "intercepting test",
-      "running test",
-      "after test",
-      "intercepted test",
-    )
+    assertThat(log)
+      .containsExactly("intercepting test", "running test", "after test", "intercepted test")
   }
 
   /**
-   * Note that this is different from JUnit 4, which has this behavior:
-   *   multiple set up functions run in reverse alphabetical order
-   *   multiple tear down functions run in alphabetical order
+   * Note that this is different from JUnit 4, which has this behavior: multiple set up functions
+   * run in reverse alphabetical order multiple tear down functions run in alphabetical order
    */
   @Test
   fun multipleBeforesAndAfters() {
-    val log = BurstTester(
-      packageName = "app.cash.burst.tests",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "app.cash.burst.tests")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         package app.cash.burst.tests
 
         import app.cash.burst.InterceptTest
@@ -356,30 +350,31 @@ class TestInterceptorKotlinPluginTest {
           MultipleBeforesAndAftersTest().passingTest()
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "intercepting",
-      "beforeTest red",
-      "beforeTest blue",
-      "beforeTest green",
-      "running",
-      "afterTest red",
-      "afterTest blue",
-      "afterTest green",
-      "intercepted",
-    )
+    assertThat(log)
+      .containsExactly(
+        "intercepting",
+        "beforeTest red",
+        "beforeTest blue",
+        "beforeTest green",
+        "running",
+        "afterTest red",
+        "afterTest blue",
+        "afterTest green",
+        "intercepted",
+      )
   }
 
   @Test
   fun multipleAftersAfterFailure() {
-    val log = BurstTester(
-      packageName = "app.cash.burst.tests",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "app.cash.burst.tests")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         package app.cash.burst.tests
 
         import app.cash.burst.InterceptTest
@@ -432,29 +427,28 @@ class TestInterceptorKotlinPluginTest {
           }
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "afterTest red",
-      "afterTest blue",
-      "afterTest green",
-      "re-throwing exception: boom!",
-      "caught: boom!",
-    )
+    assertThat(log)
+      .containsExactly(
+        "afterTest red",
+        "afterTest blue",
+        "afterTest green",
+        "re-throwing exception: boom!",
+        "caught: boom!",
+      )
   }
 
-  /**
-   * If any @AfterTest throws, the other @AfterTest functions still execute.
-   */
+  /** If any @AfterTest throws, the other @AfterTest functions still execute. */
   @Test
   fun afterTestThrows() {
-    val log = BurstTester(
-      packageName = "app.cash.burst.tests",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "app.cash.burst.tests")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         package app.cash.burst.tests
 
         import app.cash.burst.InterceptTest
@@ -507,29 +501,28 @@ class TestInterceptorKotlinPluginTest {
           }
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "running",
-      "afterTest red",
-      "afterTest green",
-      "re-throwing exception: boom!",
-      "caught: boom!",
-    )
+    assertThat(log)
+      .containsExactly(
+        "running",
+        "afterTest red",
+        "afterTest green",
+        "re-throwing exception: boom!",
+        "caught: boom!",
+      )
   }
 
-  /**
-   * If any @BeforeTest throws, no more @BeforeTests run and neither does the test itself.
-   */
+  /** If any @BeforeTest throws, no more @BeforeTests run and neither does the test itself. */
   @Test
   fun beforeTestThrows() {
-    val log = BurstTester(
-      packageName = "app.cash.burst.tests",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "app.cash.burst.tests")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         package app.cash.burst.tests
 
         import app.cash.burst.InterceptTest
@@ -588,25 +581,26 @@ class TestInterceptorKotlinPluginTest {
           }
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "beforeTest red",
-      "afterTest",
-      "re-throwing exception: boom!",
-      "caught: boom!",
-    )
+    assertThat(log)
+      .containsExactly(
+        "beforeTest red",
+        "afterTest",
+        "re-throwing exception: boom!",
+        "caught: boom!",
+      )
   }
 
   @Test
   fun afterTestIsCalledWhenTestThrows() {
-    val log = BurstTester(
-      packageName = "com.example",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "com.example")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         package com.example
 
         import app.cash.burst.InterceptTest
@@ -649,28 +643,22 @@ class TestInterceptorKotlinPluginTest {
           }
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "intercepting test",
-      "after test",
-      "intercepted test",
-      "test failed: boom!",
-    )
+    assertThat(log)
+      .containsExactly("intercepting test", "after test", "intercepted test", "test failed: boom!")
   }
 
-  /**
-   * In JUnit 4, superclass rules run before subclass rules.
-   */
+  /** In JUnit 4, superclass rules run before subclass rules. */
   @Test
   fun interceptInSuperclass() {
-    val log = BurstTester(
-      packageName = "app.cash.burst.tests",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "app.cash.burst.tests")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         package app.cash.burst.tests
 
         import app.cash.burst.InterceptTest
@@ -705,16 +693,17 @@ class TestInterceptorKotlinPluginTest {
           CircleTest().passingTest()
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "intercepting shape app.cash.burst.tests.CircleTest.passingTest",
-      "intercepting circle app.cash.burst.tests.CircleTest.passingTest",
-      "running",
-      "intercepted circle",
-      "intercepted shape",
-    )
+    assertThat(log)
+      .containsExactly(
+        "intercepting shape app.cash.burst.tests.CircleTest.passingTest",
+        "intercepting circle app.cash.burst.tests.CircleTest.passingTest",
+        "running",
+        "intercepted circle",
+        "intercepted shape",
+      )
   }
 
   /**
@@ -723,12 +712,12 @@ class TestInterceptorKotlinPluginTest {
    */
   @Test
   fun interceptInSuperclassDeclaredAfterTestClass() {
-    val log = BurstTester(
-      packageName = "app.cash.burst.tests",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "app.cash.burst.tests")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         package app.cash.burst.tests
 
         import app.cash.burst.InterceptTest
@@ -763,27 +752,28 @@ class TestInterceptorKotlinPluginTest {
           CircleTest().passingTest()
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "intercepting shape app.cash.burst.tests.CircleTest.passingTest",
-      "intercepting circle app.cash.burst.tests.CircleTest.passingTest",
-      "running",
-      "intercepted circle",
-      "intercepted shape",
-    )
+    assertThat(log)
+      .containsExactly(
+        "intercepting shape app.cash.burst.tests.CircleTest.passingTest",
+        "intercepting circle app.cash.burst.tests.CircleTest.passingTest",
+        "running",
+        "intercepted circle",
+        "intercepted shape",
+      )
   }
 
   /** Like [interceptInSuperclass], but the test class doesn't have its own interceptor. */
   @Test
   fun interceptInSuperclassButNotTestClass() {
-    val log = BurstTester(
-      packageName = "app.cash.burst.tests",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "app.cash.burst.tests")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         package app.cash.burst.tests
 
         import app.cash.burst.InterceptTest
@@ -815,24 +805,25 @@ class TestInterceptorKotlinPluginTest {
           CircleTest().passingTest()
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "intercepting shape app.cash.burst.tests.CircleTest.passingTest",
-      "running",
-      "intercepted shape",
-    )
+    assertThat(log)
+      .containsExactly(
+        "intercepting shape app.cash.burst.tests.CircleTest.passingTest",
+        "running",
+        "intercepted shape",
+      )
   }
 
   @Test
   fun symbolNames() {
-    val log = BurstTester(
-      packageName = "app.cash.burst.tests",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "app.cash.burst.tests")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         package app.cash.burst.tests
 
         import app.cash.burst.InterceptTest
@@ -887,25 +878,26 @@ class TestInterceptorKotlinPluginTest {
           SymbolNamesTest.Enclosing.TwiceNested().test()
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "intercepting app.cash.burst.tests SymbolNamesTest test",
-      "intercepting app.cash.burst.tests SymbolNamesTest test function with spaces",
-      "intercepting app.cash.burst.tests SymbolNamesTest.Nested test",
-      "intercepting app.cash.burst.tests SymbolNamesTest.Enclosing.TwiceNested test",
-    )
+    assertThat(log)
+      .containsExactly(
+        "intercepting app.cash.burst.tests SymbolNamesTest test",
+        "intercepting app.cash.burst.tests SymbolNamesTest test function with spaces",
+        "intercepting app.cash.burst.tests SymbolNamesTest.Nested test",
+        "intercepting app.cash.burst.tests SymbolNamesTest.Enclosing.TwiceNested test",
+      )
   }
 
   @Test
   fun emptyPackageName() {
-    val log = BurstTester(
-      packageName = "",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         import app.cash.burst.InterceptTest
         import app.cash.burst.TestFunction
         import app.cash.burst.TestInterceptor
@@ -931,25 +923,21 @@ class TestInterceptorKotlinPluginTest {
           EmptyPackageNameTest().test()
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "intercepting '' 'EmptyPackageNameTest' 'test'",
-    )
+    assertThat(log).containsExactly("intercepting '' 'EmptyPackageNameTest' 'test'")
   }
 
-  /**
-   * This is different from JUnit rules, which must be public.
-   */
+  /** This is different from JUnit rules, which must be public. */
   @Test
   fun privateInterceptor() {
-    val log = BurstTester(
-      packageName = "app.cash.burst.tests",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "app.cash.burst.tests")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         package app.cash.burst.tests
 
         import app.cash.burst.InterceptTest
@@ -979,24 +967,20 @@ class TestInterceptorKotlinPluginTest {
           PrivateInterceptorTest().test()
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "intercepting",
-      "running",
-      "intercepted",
-    )
+    assertThat(log).containsExactly("intercepting", "running", "intercepted")
   }
 
   @Test
   fun repeatedTest() {
-    val log = BurstTester(
-      packageName = "app.cash.burst.tests",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "app.cash.burst.tests")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         package app.cash.burst.tests
 
         import app.cash.burst.InterceptTest
@@ -1039,33 +1023,34 @@ class TestInterceptorKotlinPluginTest {
           RepeatedTest().test()
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "run 0",
-      "before test",
-      "running",
-      "after test",
-      "run 1",
-      "before test",
-      "running",
-      "after test",
-      "run 2",
-      "before test",
-      "running",
-      "after test",
-    )
+    assertThat(log)
+      .containsExactly(
+        "run 0",
+        "before test",
+        "running",
+        "after test",
+        "run 1",
+        "before test",
+        "running",
+        "after test",
+        "run 2",
+        "before test",
+        "running",
+        "after test",
+      )
   }
 
   @Test
   fun retryingTest() {
-    val log = BurstTester(
-      packageName = "app.cash.burst.tests",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "app.cash.burst.tests")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         package app.cash.burst.tests
 
         import app.cash.burst.InterceptTest
@@ -1116,33 +1101,34 @@ class TestInterceptorKotlinPluginTest {
           RetryingTest().test()
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "attempt 0",
-      "before test",
-      "after test",
-      "failed: not enough attempts",
-      "attempt 1",
-      "before test",
-      "after test",
-      "failed: not enough attempts",
-      "attempt 2",
-      "before test",
-      "after test",
-      "success",
-    )
+    assertThat(log)
+      .containsExactly(
+        "attempt 0",
+        "before test",
+        "after test",
+        "failed: not enough attempts",
+        "attempt 1",
+        "before test",
+        "after test",
+        "failed: not enough attempts",
+        "attempt 2",
+        "before test",
+        "after test",
+        "success",
+      )
   }
 
   @Test
   fun reuseInterceptor() {
-    val log = BurstTester(
-      packageName = "app.cash.burst.tests",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "app.cash.burst.tests")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         package app.cash.burst.tests
 
         import app.cash.burst.InterceptTest
@@ -1178,28 +1164,29 @@ class TestInterceptorKotlinPluginTest {
           ReuseInterceptorTest().passingTest()
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "intercepting",
-      "intercepting",
-      "intercepting",
-      "running",
-      "intercepted",
-      "intercepted",
-      "intercepted",
-    )
+    assertThat(log)
+      .containsExactly(
+        "intercepting",
+        "intercepting",
+        "intercepting",
+        "running",
+        "intercepted",
+        "intercepted",
+        "intercepted",
+      )
   }
 
   @Test
   fun interceptorThrows() {
-    val log = BurstTester(
-      packageName = "app.cash.burst.tests",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "app.cash.burst.tests")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         package app.cash.burst.tests
 
         import app.cash.burst.InterceptTest
@@ -1243,25 +1230,20 @@ class TestInterceptorKotlinPluginTest {
           }
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "before test",
-      "running",
-      "after test",
-      "caught: boom!",
-    )
+    assertThat(log).containsExactly("before test", "running", "after test", "caught: boom!")
   }
 
   @Test
   fun interceptorGetter() {
-    val log = BurstTester(
-      packageName = "app.cash.burst.tests",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "app.cash.burst.tests")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         package app.cash.burst.tests
 
         import app.cash.burst.InterceptTest
@@ -1321,33 +1303,34 @@ class TestInterceptorKotlinPluginTest {
           InterceptorGetterTest().test()
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "getting interceptor red",
-      "intercepting red",
-      "getting interceptor blue",
-      "intercepting blue",
-      "getting interceptor green",
-      "intercepting green",
-      "before test",
-      "running",
-      "after test",
-      "intercepted green",
-      "intercepted blue",
-      "intercepted red",
-    )
+    assertThat(log)
+      .containsExactly(
+        "getting interceptor red",
+        "intercepting red",
+        "getting interceptor blue",
+        "intercepting blue",
+        "getting interceptor green",
+        "intercepting green",
+        "before test",
+        "running",
+        "after test",
+        "intercepted green",
+        "intercepted blue",
+        "intercepted red",
+      )
   }
 
   @Test
   fun interceptorGetterThrows() {
-    val log = BurstTester(
-      packageName = "app.cash.burst.tests",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "app.cash.burst.tests")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         package app.cash.burst.tests
 
         import app.cash.burst.InterceptTest
@@ -1390,22 +1373,19 @@ class TestInterceptorKotlinPluginTest {
           }
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "intercepting working",
-      "intercepted working",
-      "caught: boom!",
-    )
+    assertThat(log).containsExactly("intercepting working", "intercepted working", "caught: boom!")
   }
 
   @Test
   fun interceptorMustBeTheRightType() {
-    val result = compile(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val result =
+      compile(
+        SourceFile.kotlin(
+          "Main.kt",
+          """
         package com.example
 
         import app.cash.burst.InterceptTest
@@ -1420,20 +1400,22 @@ class TestInterceptorKotlinPluginTest {
           }
         }
         """,
-      ),
-    )
+        )
+      )
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
-    assertThat(result.messages).contains(
-      "Main.kt:8:3 @InterceptTest properties must extend either TestInterceptor or CoroutineTestInterceptor",
-    )
+    assertThat(result.messages)
+      .contains(
+        "Main.kt:8:3 @InterceptTest properties must extend either TestInterceptor or CoroutineTestInterceptor"
+      )
   }
 
   @Test
   fun interceptedTestMustBeFinal() {
-    val result = compile(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val result =
+      compile(
+        SourceFile.kotlin(
+          "Main.kt",
+          """
         package com.example
 
         import app.cash.burst.InterceptTest
@@ -1455,22 +1437,21 @@ class TestInterceptorKotlinPluginTest {
           }
         }
         """,
-      ),
-    )
+        )
+      )
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
-    assertThat(result.messages).contains(
-      "Main.kt:17:8 @InterceptTest cannot target test functions that are non-final",
-    )
+    assertThat(result.messages)
+      .contains("Main.kt:17:8 @InterceptTest cannot target test functions that are non-final")
   }
 
   @Test
   fun interceptedTestMayOverrideSuperclassTest() {
-    val log = BurstTester(
-      packageName = "com.example",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "com.example")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         package com.example
 
         import app.cash.burst.InterceptTest
@@ -1507,14 +1488,11 @@ class TestInterceptorKotlinPluginTest {
           SampleTest().happyPath()
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "intercepting",
-      "running happyPath",
-      "running BaseTest.happyPath",
-    )
+    assertThat(log)
+      .containsExactly("intercepting", "running happyPath", "running BaseTest.happyPath")
   }
 
   /**
@@ -1523,12 +1501,12 @@ class TestInterceptorKotlinPluginTest {
    */
   @Test
   fun earlyReturn() {
-    val log = BurstTester(
-      packageName = "com.example",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "com.example")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         package com.example
 
         import app.cash.burst.InterceptTest
@@ -1562,24 +1540,20 @@ class TestInterceptorKotlinPluginTest {
           SampleTest().happyPath()
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "intercepting",
-      "early return",
-      "intercepted",
-    )
+    assertThat(log).containsExactly("intercepting", "early return", "intercepted")
   }
 
   @Test
   fun abstractClassInTheMiddle() {
-    val log = BurstTester(
-      packageName = "com.example",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "com.example")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         package com.example
 
         import app.cash.burst.InterceptTest
@@ -1625,19 +1599,20 @@ class TestInterceptorKotlinPluginTest {
           TopTest().testTop()
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "intercepting com.example.BottomTest.testTop",
-      "top",
-      "intercepting com.example.BottomTest.testMiddle",
-      "middle",
-      "intercepting com.example.BottomTest.testBottom",
-      "bottom",
-      "intercepting com.example.TopTest.testTop",
-      "top",
-    )
+    assertThat(log)
+      .containsExactly(
+        "intercepting com.example.BottomTest.testTop",
+        "top",
+        "intercepting com.example.BottomTest.testMiddle",
+        "middle",
+        "intercepting com.example.BottomTest.testBottom",
+        "bottom",
+        "intercepting com.example.TopTest.testTop",
+        "top",
+      )
   }
 
   /**
@@ -1647,12 +1622,12 @@ class TestInterceptorKotlinPluginTest {
    */
   @Test
   fun superclassExtendsTestInterceptor() {
-    val log = BurstTester(
-      packageName = "com.example",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "com.example")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         package com.example
 
         import app.cash.burst.InterceptTest
@@ -1680,27 +1655,22 @@ class TestInterceptorKotlinPluginTest {
           SampleTest().happyPath()
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "intercepting com.example.SampleTest.happyPath",
-      "running happyPath",
-    )
+    assertThat(log)
+      .containsExactly("intercepting com.example.SampleTest.happyPath", "running happyPath")
   }
 
-  /**
-   * Confirm Burst ignores interfaces etc.
-   * https://github.com/cashapp/burst/issues/208
-   */
+  /** Confirm Burst ignores interfaces etc. https://github.com/cashapp/burst/issues/208 */
   @Test
   fun nonClassTypeExtendsTestInterceptor() {
-    val log = BurstTester(
-      packageName = "com.example",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "com.example")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         package com.example
 
         import app.cash.burst.InterceptTest
@@ -1740,13 +1710,9 @@ class TestInterceptorKotlinPluginTest {
           log(SampleObject.toString())
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "SampleInterface",
-      "Rock",
-      "SampleObject",
-    )
+    assertThat(log).containsExactly("SampleInterface", "Rock", "SampleObject")
   }
 }

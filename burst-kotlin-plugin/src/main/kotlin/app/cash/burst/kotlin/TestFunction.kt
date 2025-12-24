@@ -42,15 +42,11 @@ sealed interface TestFunction {
 
   /** Drop `@Test` from this function's annotations. */
   fun dropAtTest() {
-    function.annotations = function.annotations.filter {
-      it.type.classOrNull != testAnnotation
-    }
+    function.annotations = function.annotations.filter { it.type.classOrNull != testAnnotation }
   }
 }
 
-internal class TestFunctionReader(
-  val burstApis: BurstApis,
-) {
+internal class TestFunctionReader(val burstApis: BurstApis) {
   /** Returns non-null if [function] is annotated `@Test`. */
   fun readOrNull(function: IrSimpleFunction): TestFunction? {
     val testAnnotation = burstApis.findTestAnnotation(function) ?: return null
@@ -67,10 +63,7 @@ internal class TestFunctionReader(
 
     function.body?.transform(
       object : IrTransformer<Unit>() {
-        override fun visitCall(
-          expression: IrCall,
-          data: Unit,
-        ): IrElement {
+        override fun visitCall(expression: IrCall, data: Unit): IrElement {
           if (result == null && burstApis.isRunTest(expression)) {
             result = expression
           }

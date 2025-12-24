@@ -22,27 +22,25 @@ import kotlin.test.Test
 class TestFunctionTest {
   @Test
   fun testToString() {
-    val testFunction = object : TestFunction(
-      packageName = "app.cash.burst.test",
-      className = "SampleTest",
-      functionName = "happyPath",
-    ) {
-      override fun invoke() {
+    val testFunction =
+      object :
+        TestFunction(
+          packageName = "app.cash.burst.test",
+          className = "SampleTest",
+          functionName = "happyPath",
+        ) {
+        override fun invoke() {}
       }
-    }
     assertThat(testFunction.toString()).isEqualTo("app.cash.burst.test.SampleTest.happyPath")
   }
 
   @Test
   fun testToStringWithEmptyPackageName() {
-    val testFunction = object : TestFunction(
-      packageName = "",
-      className = "SampleTest",
-      functionName = "happyPath",
-    ) {
-      override fun invoke() {
+    val testFunction =
+      object :
+        TestFunction(packageName = "", className = "SampleTest", functionName = "happyPath") {
+        override fun invoke() {}
       }
-    }
     assertThat(testFunction.toString()).isEqualTo("SampleTest.happyPath")
   }
 }

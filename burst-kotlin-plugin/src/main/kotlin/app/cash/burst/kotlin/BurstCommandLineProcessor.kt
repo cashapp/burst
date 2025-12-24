@@ -21,7 +21,8 @@ import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 
 @OptIn(ExperimentalCompilerApi::class)
 class BurstCommandLineProcessor : CommandLineProcessor {
-  override val pluginId: String get() = BuildConfig.KOTLIN_PLUGIN_ID
+  override val pluginId: String
+    get() = BuildConfig.KOTLIN_PLUGIN_ID
 
   override val pluginOptions: List<CliOption> = listOf()
 }

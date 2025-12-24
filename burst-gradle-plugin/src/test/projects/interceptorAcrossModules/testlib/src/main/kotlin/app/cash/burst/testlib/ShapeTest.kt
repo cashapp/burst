@@ -6,8 +6,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 open class ShapeTest {
-  @InterceptTest
-  val shapeInterceptor = BasicInterceptor("shape")
+  @InterceptTest val shapeInterceptor = BasicInterceptor("shape")
 
   @BeforeTest
   fun beforeTest() {

@@ -4,8 +4,7 @@ import app.cash.burst.InterceptTest
 import kotlin.test.Test
 
 abstract class TopTest {
-  @InterceptTest
-  private val interceptor = BasicInterceptor("top")
+  @InterceptTest private val interceptor = BasicInterceptor("top")
 
   @Test
   fun testTop() {

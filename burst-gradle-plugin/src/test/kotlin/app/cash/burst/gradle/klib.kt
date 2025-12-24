@@ -25,18 +25,13 @@ import org.jetbrains.kotlin.library.KotlinLibrary
 import org.jetbrains.kotlin.library.ToolingSingleFileKlibResolveStrategy
 import org.jetbrains.kotlin.util.DummyLogger
 
-/**
- * Decode a `.klib` file using APIs from the embeddable compiler.
- */
-fun readKlib(klib: File): KotlinLibrary = ToolingSingleFileKlibResolveStrategy.resolve(KonanFile(klib.toPath()), DummyLogger)
+/** Decode a `.klib` file using APIs from the embeddable compiler. */
+fun readKlib(klib: File): KotlinLibrary =
+  ToolingSingleFileKlibResolveStrategy.resolve(KonanFile(klib.toPath()), DummyLogger)
 
-/**
- * Decode the metadata from a library.
- */
-fun KotlinLibrary.moduleMetadata() = KlibModuleMetadata.read(
-  asMetadataLibraryProvider(),
-  KlibModuleFragmentReadStrategy.DEFAULT,
-)
+/** Decode the metadata from a library. */
+fun KotlinLibrary.moduleMetadata() =
+  KlibModuleMetadata.read(asMetadataLibraryProvider(), KlibModuleFragmentReadStrategy.DEFAULT)
 
 val KlibModuleMetadata.classes: Sequence<KmClass>
   get() = fragments.asSequence().flatMap { it.classes }
@@ -47,8 +42,10 @@ private fun KotlinLibrary.asMetadataLibraryProvider(): MetadataLibraryProvider {
     override val moduleHeaderData: ByteArray
       get() = original.moduleHeaderData
 
-    override fun packageMetadata(fqName: String, partName: String) = original.packageMetadata(fqName, partName)
+    override fun packageMetadata(fqName: String, partName: String) =
+      original.packageMetadata(fqName, partName)
 
-    override fun packageMetadataParts(fqName: String): Set<String> = original.packageMetadataParts(fqName)
+    override fun packageMetadataParts(fqName: String): Set<String> =
+      original.packageMetadataParts(fqName)
   }
 }

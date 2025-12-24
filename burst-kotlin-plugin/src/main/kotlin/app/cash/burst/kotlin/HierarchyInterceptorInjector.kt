@@ -37,11 +37,12 @@ internal class HierarchyInterceptorInjector(
    */
   fun apply(input: TestInterceptorsInput): TestInterceptorsInput {
     val coroutinesApis = burstApis.coroutinesTestInterceptorApis
-    val testInterceptorApis = when {
-      coroutinesApis != null && input.usesCoroutineTestInterceptor -> coroutinesApis
-      input.usesTestInterceptor -> burstApis.testInterceptorApis
-      else -> return input // This class doesn't use test interceptors.
-    }
+    val testInterceptorApis =
+      when {
+        coroutinesApis != null && input.usesCoroutineTestInterceptor -> coroutinesApis
+        input.usesTestInterceptor -> burstApis.testInterceptorApis
+        else -> return input // This class doesn't use test interceptors.
+      }
 
     // If this class directly declares an intercept() function, do nothing. Otherwise, our injected
     // symbol would collide with that one.
@@ -52,15 +53,16 @@ internal class HierarchyInterceptorInjector(
     val superClassPlan = input.superClassInput
     val superClassInput = superClassPlan?.let { apply(it) }
 
-    val interceptorInjector = InterceptorInjector(
-      pluginContext = pluginContext,
-      burstApis = burstApis,
-      testInterceptorApis = testInterceptorApis,
-      originalParent = input.subject,
-      interceptorProperties = input.testInterceptors + input.coroutineTestInterceptors,
-      superclassIntercept = superClassInput?.interceptFunction,
-      existingIntercept = existing,
-    )
+    val interceptorInjector =
+      InterceptorInjector(
+        pluginContext = pluginContext,
+        burstApis = burstApis,
+        testInterceptorApis = testInterceptorApis,
+        originalParent = input.subject,
+        interceptorProperties = input.testInterceptors + input.coroutineTestInterceptors,
+        superclassIntercept = superClassInput?.interceptFunction,
+        existingIntercept = existing,
+      )
 
     for (function in input.beforeTestFunctions) {
       interceptorInjector.adoptBeforeTest(function)

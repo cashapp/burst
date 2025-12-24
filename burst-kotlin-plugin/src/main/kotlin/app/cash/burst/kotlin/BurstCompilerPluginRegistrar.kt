@@ -23,24 +23,22 @@ import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 
-@OptIn(
-  ExperimentalCompilerApi::class,
-  UnsafeDuringIrConstructionAPI::class,
-)
+@OptIn(ExperimentalCompilerApi::class, UnsafeDuringIrConstructionAPI::class)
 class BurstCompilerPluginRegistrar : CompilerPluginRegistrar() {
-  override val pluginId: String get() = BuildConfig.KOTLIN_PLUGIN_ID
-  override val supportsK2: Boolean get() = true
+  override val pluginId: String
+    get() = BuildConfig.KOTLIN_PLUGIN_ID
+
+  override val supportsK2: Boolean
+    get() = true
 
   override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
-    val messageCollector = configuration.get(
-      CommonConfigurationKeys.MESSAGE_COLLECTOR_KEY,
-      MessageCollector.NONE,
+    val messageCollector =
+      configuration.get(CommonConfigurationKeys.MESSAGE_COLLECTOR_KEY, MessageCollector.NONE)
+    IrGenerationExtension.registerExtension(
+      extension = BurstIrGenerationExtension(messageCollector)
     )
     IrGenerationExtension.registerExtension(
-      extension = BurstIrGenerationExtension(messageCollector),
-    )
-    IrGenerationExtension.registerExtension(
-      extension = TestInterceptorIrGenerationExtension(messageCollector),
+      extension = TestInterceptorIrGenerationExtension(messageCollector)
     )
   }
 }

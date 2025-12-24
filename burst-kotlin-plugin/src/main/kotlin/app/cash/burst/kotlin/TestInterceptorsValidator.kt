@@ -19,9 +19,7 @@ import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.util.kotlinFqName
 
-internal class TestInterceptorsValidator(
-  val burstApis: BurstApis,
-) {
+internal class TestInterceptorsValidator(val burstApis: BurstApis) {
   fun validate(input: TestInterceptorsInput) {
     val usesCoroutineTestInterceptor = input.usesCoroutineTestInterceptor
     val usesTestInterceptor = input.usesTestInterceptor
@@ -56,8 +54,8 @@ internal class TestInterceptorsValidator(
     for (function in input.testFunctions) {
       if (
         (usesTestInterceptor || usesCoroutineTestInterceptor) &&
-        function.function.modality != Modality.FINAL &&
-        input.subject.modality != Modality.FINAL
+          function.function.modality != Modality.FINAL &&
+          input.subject.modality != Modality.FINAL
       ) {
         throw BurstCompilationException(
           "@InterceptTest cannot target test functions that are non-final",

@@ -3,8 +3,7 @@ package app.cash.burst.tests
 import app.cash.burst.InterceptTest
 
 class KotlinTestTest {
-  @InterceptTest
-  val interceptor = BasicInterceptor()
+  @InterceptTest val interceptor = BasicInterceptor()
 
   @kotlin.test.BeforeTest
   fun beforeTest() {

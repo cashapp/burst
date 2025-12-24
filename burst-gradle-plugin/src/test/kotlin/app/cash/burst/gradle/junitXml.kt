@@ -60,21 +60,9 @@ internal fun Element.toTestCase(): TestCase {
     }
   }
 
-  return TestCase(
-    name = getAttribute("name"),
-    skipped = skipped,
-    failureMessage = failureMessage,
-  )
+  return TestCase(name = getAttribute("name"), skipped = skipped, failureMessage = failureMessage)
 }
 
-class TestSuite(
-  val name: String,
-  val testCases: List<TestCase>,
-  val systemOut: String,
-)
+class TestSuite(val name: String, val testCases: List<TestCase>, val systemOut: String)
 
-class TestCase(
-  val name: String,
-  val skipped: Boolean,
-  val failureMessage: String?,
-)
+class TestCase(val name: String, val skipped: Boolean, val failureMessage: String?)

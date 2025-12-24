@@ -17,8 +17,8 @@
 package app.cash.burst.kotlin
 
 /**
- * Given an iterable lists like `[[A, B, C], [1, 2, 3]]`, return the cartesian product like
- * `[[A, 1], [A, 2], [A, 3], [B, 1], [B, 2], [B, 3], [C, 1], [C, 2], [C, 3]]`.
+ * Given an iterable lists like `[[A, B, C], [1, 2, 3]]`, return the cartesian product like `[[A,
+ * 1], [A, 2], [A, 3], [B, 1], [B, 2], [B, 3], [C, 1], [C, 2], [C, 3]]`.
  */
 fun <T> Iterable<List<T>>.cartesianProduct(): List<List<T>> {
   return fold(listOf(listOf())) { partials, list ->

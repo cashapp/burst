@@ -62,7 +62,8 @@ private class EnumValueArgument(
 ) : Argument {
   override val name = value.name.identifier
 
-  override fun expression() = IrGetEnumValueImpl(original.startOffset, original.endOffset, type, value.symbol)
+  override fun expression() =
+    IrGetEnumValueImpl(original.startOffset, original.endOffset, type, value.symbol)
 
   override fun <R, D> accept(visitor: IrVisitor<R, D>, data: D): R {
     return original.accept(visitor, data)
@@ -77,7 +78,8 @@ private class BooleanArgument(
 ) : Argument {
   override val name = value.toString()
 
-  override fun expression() = IrConstImpl.boolean(original.startOffset, original.endOffset, booleanType, value)
+  override fun expression() =
+    IrConstImpl.boolean(original.startOffset, original.endOffset, booleanType, value)
 
   override fun <R, D> accept(visitor: IrVisitor<R, D>, data: D): R {
     return original.accept(visitor, data)
@@ -156,7 +158,7 @@ private fun burstValuesArguments(
         parameter = parameter,
         value = valueArguments[0] ?: unexpectedParameter(parameter),
         index = size,
-      ),
+      )
     )
 
     val varargs = valueArguments[1] as? IrVararg ?: return@buildList
@@ -166,7 +168,7 @@ private fun burstValuesArguments(
           parameter = parameter,
           value = element as? IrExpression ?: unexpectedParameter(parameter),
           index = size,
-        ),
+        )
       )
     }
   }
@@ -185,22 +187,23 @@ private fun burstValuesArguments(
  */
 @UnsafeDuringIrConstructionAPI
 private fun IrExpression.suggestedName(): String? {
-  val raw = when (this) {
-    is IrConst -> value.toString()
+  val raw =
+    when (this) {
+      is IrConst -> value.toString()
 
-    is IrCall -> {
-      val target = (symbol.owner.correspondingPropertySymbol?.owner ?: symbol.owner)
-      target.name.asString()
+      is IrCall -> {
+        val target = (symbol.owner.correspondingPropertySymbol?.owner ?: symbol.owner)
+        target.name.asString()
+      }
+
+      is IrClassReference -> classType.classFqName?.shortName()?.asString() ?: return null
+
+      is IrGetObjectValue -> symbol.owner.name.asString()
+
+      is IrGetEnumValue -> symbol.owner.name.asString()
+
+      else -> return null
     }
-
-    is IrClassReference -> classType.classFqName?.shortName()?.asString() ?: return null
-
-    is IrGetObjectValue -> symbol.owner.name.asString()
-
-    is IrGetEnumValue -> symbol.owner.name.asString()
-
-    else -> return null
-  }
 
   // Calling sanitizeAsJavaIdentifier is necessary but not sufficient. We assume further phases of
   // the compiler will make the returned name safe for the ultimate compilation target.
@@ -214,14 +217,15 @@ private fun enumValueArguments(
 ): List<Argument> {
   val enumEntries = referenceClass.declarations.filterIsInstance<IrEnumEntry>()
   val hasDefaultValue = parameter.defaultValue != null
-  val defaultEnumSymbolName = parameter.defaultValue?.let { defaultValue ->
-    val expression = defaultValue.expression
-    when {
-      expression is IrGetEnumValue -> expression.symbol.owner.name
-      expression is IrConst && expression.value == null -> null
-      else -> unexpectedDefaultValue(parameter)
+  val defaultEnumSymbolName =
+    parameter.defaultValue?.let { defaultValue ->
+      val expression = defaultValue.expression
+      when {
+        expression is IrGetEnumValue -> expression.symbol.owner.name
+        expression is IrConst && expression.value == null -> null
+        else -> unexpectedDefaultValue(parameter)
+      }
     }
-  }
 
   return buildList {
     for (enumEntry in enumEntries) {
@@ -231,7 +235,7 @@ private fun enumValueArguments(
           type = parameter.type,
           isDefault = hasDefaultValue && enumEntry.symbol.owner.name == defaultEnumSymbolName,
           value = enumEntry,
-        ),
+        )
       )
     }
     if (parameter.type.isNullable()) {
@@ -240,23 +244,22 @@ private fun enumValueArguments(
           original = parameter,
           type = parameter.type,
           isDefault = hasDefaultValue && defaultEnumSymbolName == null,
-        ),
+        )
       )
     }
   }
 }
 
-private fun IrPluginContext.booleanArguments(
-  parameter: IrValueParameter,
-): List<Argument> {
+private fun IrPluginContext.booleanArguments(parameter: IrValueParameter): List<Argument> {
   val hasDefaultValue = parameter.defaultValue != null
-  val defaultValue = parameter.defaultValue?.let { defaultValue ->
-    val expression = defaultValue.expression
-    when {
-      expression is IrConst -> expression.value
-      else -> unexpectedDefaultValue(parameter)
+  val defaultValue =
+    parameter.defaultValue?.let { defaultValue ->
+      val expression = defaultValue.expression
+      when {
+        expression is IrConst -> expression.value
+        else -> unexpectedDefaultValue(parameter)
+      }
     }
-  }
 
   return buildList {
     for (b in listOf(false, true)) {
@@ -266,7 +269,7 @@ private fun IrPluginContext.booleanArguments(
           booleanType = irBuiltIns.booleanType,
           isDefault = hasDefaultValue && defaultValue == b,
           value = b,
-        ),
+        )
       )
     }
     if (parameter.type.isNullable()) {
@@ -275,7 +278,7 @@ private fun IrPluginContext.booleanArguments(
           original = parameter,
           type = parameter.type,
           isDefault = hasDefaultValue && defaultValue == null,
-        ),
+        )
       )
     }
   }

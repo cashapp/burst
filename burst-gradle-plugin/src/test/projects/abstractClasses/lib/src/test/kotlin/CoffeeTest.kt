@@ -2,9 +2,7 @@ import app.cash.burst.Burst
 import kotlin.test.Test
 
 @Burst
-abstract class BaseCoffeeTest(
-  private val name: String,
-) {
+abstract class BaseCoffeeTest(private val name: String) {
   @Test
   fun test(dairy: Dairy) {
     println("running $name $dairy")
@@ -13,4 +11,8 @@ abstract class BaseCoffeeTest(
 
 class CoffeeTest : BaseCoffeeTest("decaf")
 
-enum class Dairy { None, Milk, Oat }
+enum class Dairy {
+  None,
+  Milk,
+  Oat,
+}

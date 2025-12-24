@@ -37,7 +37,8 @@ import org.jetbrains.kotlin.ir.util.isSubtypeOfClass
 import org.jetbrains.kotlin.name.ClassId
 
 /** Looks up APIs used by the code rewriters. */
-internal class BurstApis private constructor(
+internal class BurstApis
+private constructor(
   pluginContext: IrPluginContext,
   private val testClassSymbols: List<IrClassSymbol>,
   val beforeTestSymbols: List<IrClassSymbol>,
@@ -47,16 +48,18 @@ internal class BurstApis private constructor(
 ) {
   val burstValues: IrFunctionSymbol = pluginContext.referenceFunctions(burstValuesId).single()
 
-  val testInterceptorApis: TestInterceptorApis = pluginContext.testInterceptorApis(
-    testFunctionClassId = burstFqPackage.classId("TestFunction"),
-    testInterceptorClassId = burstFqPackage.classId("TestInterceptor"),
-  )!!
+  val testInterceptorApis: TestInterceptorApis =
+    pluginContext.testInterceptorApis(
+      testFunctionClassId = burstFqPackage.classId("TestFunction"),
+      testInterceptorClassId = burstFqPackage.classId("TestInterceptor"),
+    )!!
 
   /** Null if `app.cash.burst.coroutines` isn't in this build. */
-  val coroutinesTestInterceptorApis: TestInterceptorApis? = pluginContext.testInterceptorApis(
-    testFunctionClassId = burstCoroutinesFqPackage.classId("CoroutineTestFunction"),
-    testInterceptorClassId = burstCoroutinesFqPackage.classId("CoroutineTestInterceptor"),
-  )
+  val coroutinesTestInterceptorApis: TestInterceptorApis? =
+    pluginContext.testInterceptorApis(
+      testFunctionClassId = burstCoroutinesFqPackage.classId("CoroutineTestFunction"),
+      testInterceptorClassId = burstCoroutinesFqPackage.classId("CoroutineTestInterceptor"),
+    )
 
   val throwableAddSuppressed: IrSimpleFunctionSymbol =
     pluginContext.referenceFunctions(throwableAddSuppressedId).single()
@@ -93,34 +96,38 @@ internal class BurstApis private constructor(
         return null
       }
 
-      val testClassSymbols = listOfNotNull(
-        pluginContext.referenceClass(junit5TestClassId),
-        pluginContext.referenceClass(junitTestClassId),
-        pluginContext.referenceClass(kotlinTestClassId),
-      )
+      val testClassSymbols =
+        listOfNotNull(
+          pluginContext.referenceClass(junit5TestClassId),
+          pluginContext.referenceClass(junitTestClassId),
+          pluginContext.referenceClass(kotlinTestClassId),
+        )
 
       // No @Test annotations? No Burst.
       if (testClassSymbols.isEmpty()) {
         return null
       }
 
-      val beforeTestSymbols = listOfNotNull(
-        pluginContext.referenceClass(junit5BeforeEachClassId),
-        pluginContext.referenceClass(junitBeforeTestClassId),
-        pluginContext.referenceClass(kotlinBeforeTestClassId),
-      )
+      val beforeTestSymbols =
+        listOfNotNull(
+          pluginContext.referenceClass(junit5BeforeEachClassId),
+          pluginContext.referenceClass(junitBeforeTestClassId),
+          pluginContext.referenceClass(kotlinBeforeTestClassId),
+        )
 
-      val afterTestSymbols = listOfNotNull(
-        pluginContext.referenceClass(junit5AfterEachClassId),
-        pluginContext.referenceClass(junitAfterTestClassId),
-        pluginContext.referenceClass(kotlinAfterTestClassId),
-      )
+      val afterTestSymbols =
+        listOfNotNull(
+          pluginContext.referenceClass(junit5AfterEachClassId),
+          pluginContext.referenceClass(junitAfterTestClassId),
+          pluginContext.referenceClass(kotlinAfterTestClassId),
+        )
 
-      val runTestSymbol = pluginContext.referenceFunctions(runTestId).singleOrNull {
-        it.owner.parameters.size == 3 &&
-          it.owner.parameters[0].type.classFqName == coroutineContextId.asSingleFqName() &&
-          it.owner.parameters[1].type.classFqName == durationId.asSingleFqName()
-      }
+      val runTestSymbol =
+        pluginContext.referenceFunctions(runTestId).singleOrNull {
+          it.owner.parameters.size == 3 &&
+            it.owner.parameters[0].type.classFqName == coroutineContextId.asSingleFqName() &&
+            it.owner.parameters[1].type.classFqName == durationId.asSingleFqName()
+        }
 
       return BurstApis(
         pluginContext = pluginContext,

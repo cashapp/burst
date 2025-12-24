@@ -39,26 +39,27 @@ internal fun specializations(
   burstApis: BurstApis,
   parameters: List<IrValueParameter>,
 ): List<Specialization> {
-  val parameterArguments = parameters.map { parameter ->
-    pluginContext.allPossibleArguments(parameter, burstApis)
-      .also { arguments ->
+  val parameterArguments =
+    parameters.map { parameter ->
+      pluginContext.allPossibleArguments(parameter, burstApis).also { arguments ->
         for (argument in arguments) {
           argument.accept(ArgumentValidator(parameters, parameter), Unit)
         }
       }
-  }
+    }
 
-  val specializations = parameterArguments.cartesianProduct().map { arguments ->
-    Specialization(
-      arguments = arguments,
-      name = arguments.joinToString(separator = "_", transform = Argument::name),
-    )
-  }
+  val specializations =
+    parameterArguments.cartesianProduct().map { arguments ->
+      Specialization(
+        arguments = arguments,
+        name = arguments.joinToString(separator = "_", transform = Argument::name),
+      )
+    }
 
   // If all elements already have distinct, short-enough names, we're done.
   if (
     specializations.distinctBy { it.name }.size == specializations.size &&
-    specializations.all { it.name.length < NAME_MAX_LENGTH }
+      specializations.all { it.name.length < NAME_MAX_LENGTH }
   ) {
     return specializations
   }
@@ -89,10 +90,7 @@ internal class ArgumentValidator(
 }
 
 private fun unexpectedParameterReference(element: IrElement): Nothing {
-  throw BurstCompilationException(
-    "@Burst parameter may not reference other parameters",
-    element,
-  )
+  throw BurstCompilationException("@Burst parameter may not reference other parameters", element)
 }
 
 /** Strictly speaking Java symbol names may up to 64 KiB, but this is an ergonomic limit. */
