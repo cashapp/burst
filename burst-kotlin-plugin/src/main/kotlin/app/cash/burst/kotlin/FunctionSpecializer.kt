@@ -36,7 +36,6 @@ import org.jetbrains.kotlin.name.Name
 
 /**
  * Given a test function that has parameters:
- *
  * ```
  * @Test
  * fun test(espresso: Espresso = Espresso.Regular, dairy: Dairy = Dairy.Milk) {
@@ -62,17 +61,14 @@ import org.jetbrains.kotlin.name.Name
  *
  * Coroutines
  * ----------
- *
  * If the original test uses `runTest()` for coroutines, we copy it into a new function with these
  * transformations:
- *
- *  1. A `TestScope` parameter is added.
- *  2. A `suspend` modifier is added.
- *  3. The `runTest()` call is removed.
- *  4. The `testBody` lambda is executed inline.
+ * 1. A `TestScope` parameter is added.
+ * 2. A `suspend` modifier is added.
+ * 3. The `runTest()` call is removed.
+ * 4. The `testBody` lambda is executed inline.
  *
  * For example, this test:
- *
  * ```
  * @Test
  * fun test(espresso: Espresso, dairy: Dairy) = runTest {
@@ -81,7 +77,6 @@ import org.jetbrains.kotlin.name.Name
  * ```
  *
  * Is transformed into this:
- *
  * ```
  * suspend fun test(espresso: Espresso, dairy: Dairy, testScope: TestScope) {
  *   val testBody: suspend TestScope.() -> Unit = {
@@ -115,8 +110,9 @@ internal class FunctionSpecializer(
     val valueParameters = function.valueParameters()
     if (valueParameters.isEmpty()) return // Nothing to do.
 
-    val originalDispatchReceiver = function.dispatchReceiverParameter
-      ?: throw BurstCompilationException("Unexpected dispatch receiver", function)
+    val originalDispatchReceiver =
+      function.dispatchReceiverParameter
+        ?: throw BurstCompilationException("Unexpected dispatch receiver", function)
 
     original.dropAtTest()
 
@@ -126,28 +122,27 @@ internal class FunctionSpecializer(
       return
     }
 
-    val delegate = when (original) {
-      is TestFunction.Suspending -> {
-        createSuspendingOverload(original)
-          .also {
-            originalParent.addDeclaration(it)
-          }
-      }
+    val delegate =
+      when (original) {
+        is TestFunction.Suspending -> {
+          createSuspendingOverload(original).also { originalParent.addDeclaration(it) }
+        }
 
-      is TestFunction.NonSuspending -> original.function
-    }
+        is TestFunction.NonSuspending -> original.function
+      }
 
     val specializations = specializations(pluginContext, burstApis, valueParameters)
     val indexOfDefaultSpecialization = specializations.indexOfFirst { it.isDefault }
 
-    val functions = specializations.mapIndexed { index, specialization ->
-      createFunction(
-        originalDispatchReceiver = originalDispatchReceiver,
-        specialization = specialization,
-        isDefaultSpecialization = index == indexOfDefaultSpecialization,
-        delegate = delegate,
-      )
-    }
+    val functions =
+      specializations.mapIndexed { index, specialization ->
+        createFunction(
+          originalDispatchReceiver = originalDispatchReceiver,
+          specialization = specialization,
+          isDefaultSpecialization = index == indexOfDefaultSpecialization,
+          delegate = delegate,
+        )
+      }
 
     // Add new declarations.
     for (function in functions) {
@@ -171,16 +166,13 @@ internal class FunctionSpecializer(
       type = burstApis.testScope!!
     }
 
-    result.irFunctionBody(
-      context = pluginContext,
-    ) {
-      +irCall(
-        callee = pluginContext.irBuiltIns.suspendFunctionN(1).symbol.functionByName("invoke"),
-      ).apply {
-        arguments[0] = runTestCall.arguments[2]
-        arguments[1] = irGet(result.parameters.last())
-        type = pluginContext.irBuiltIns.unitType
-      }
+    result.irFunctionBody(context = pluginContext) {
+      +irCall(callee = pluginContext.irBuiltIns.suspendFunctionN(1).symbol.functionByName("invoke"))
+        .apply {
+          arguments[0] = runTestCall.arguments[2]
+          arguments[1] = irGet(result.parameters.last())
+          type = pluginContext.irBuiltIns.unitType
+        }
     }
     result.returnType = pluginContext.irBuiltIns.unitType
 
@@ -194,80 +186,76 @@ internal class FunctionSpecializer(
     isDefaultSpecialization: Boolean,
     delegate: IrSimpleFunction,
   ): IrSimpleFunction {
-    val result = pluginContext.irFactory.buildFun {
-      initDefaults(delegate)
-      modality = Modality.FINAL
-      name = when {
-        isDefaultSpecialization -> delegate.name
-        else -> Name.identifier("${delegate.name.identifier}_${specialization.name}")
-      }
-      returnType = when {
-        original is TestFunction.Suspending -> burstApis.runTestSymbol!!.owner.returnType
-        else -> delegate.returnType
-      }
-    }.apply {
-      parameters += buildReceiverParameter {
-        initDefaults(originalDispatchReceiver)
-        type = originalDispatchReceiver.type
-      }
-    }
+    val result =
+      pluginContext.irFactory
+        .buildFun {
+          initDefaults(delegate)
+          modality = Modality.FINAL
+          name =
+            when {
+              isDefaultSpecialization -> delegate.name
+              else -> Name.identifier("${delegate.name.identifier}_${specialization.name}")
+            }
+          returnType =
+            when {
+              original is TestFunction.Suspending -> burstApis.runTestSymbol!!.owner.returnType
+              else -> delegate.returnType
+            }
+        }
+        .apply {
+          parameters += buildReceiverParameter {
+            initDefaults(originalDispatchReceiver)
+            type = originalDispatchReceiver.type
+          }
+        }
 
     result.annotations += original.testAnnotation.asAnnotation()
 
-    result.irFunctionBody(
-      context = pluginContext,
-    ) {
-      val receiverLocal = irTemporary(
-        value = irGet(result.dispatchReceiverParameter!!),
-        nameHint = "receiver",
-        isMutable = false,
-      ).apply {
-        origin = IrDeclarationOrigin.DEFINED
-      }
-
-      val argumentLocals = specialization.arguments.map { argument ->
+    result.irFunctionBody(context = pluginContext) {
+      val receiverLocal =
         irTemporary(
-          value = argument.expression(),
-          nameHint = argument.name,
-          isMutable = false,
-        ).apply {
-          origin = IrDeclarationOrigin.DEFINED
-        }
-      }
+            value = irGet(result.dispatchReceiverParameter!!),
+            nameHint = "receiver",
+            isMutable = false,
+          )
+          .apply { origin = IrDeclarationOrigin.DEFINED }
 
-      val callDelegate = irCall(
-        callee = delegate.symbol,
-      ).apply {
-        arguments.clear()
-        arguments += irGet(receiverLocal)
-        for (argumentLocal in argumentLocals) {
-          arguments += irGet(argumentLocal)
+      val argumentLocals =
+        specialization.arguments.map { argument ->
+          irTemporary(value = argument.expression(), nameHint = argument.name, isMutable = false)
+            .apply { origin = IrDeclarationOrigin.DEFINED }
         }
-      }
+
+      val callDelegate =
+        irCall(callee = delegate.symbol).apply {
+          arguments.clear()
+          arguments += irGet(receiverLocal)
+          for (argumentLocal in argumentLocals) {
+            arguments += irGet(argumentLocal)
+          }
+        }
 
       when (original) {
         // Call runTest() with the original's runTest() arguments. The test body calls the delegate.
         is TestFunction.Suspending -> {
           +irReturn(
-            irCall(
-              callee = burstApis.runTestSymbol!!,
-            ).apply {
-              arguments.clear()
-              // TODO: patch these arguments with the specialized arguments.
-              arguments += original.runTestCall.arguments[0]?.deepCopyWithSymbols(result)
-              arguments += original.runTestCall.arguments[1]?.deepCopyWithSymbols(result)
-              arguments += irTestBodyLambda(
-                context = pluginContext,
-                burstApis = burstApis,
-                original = originalParent,
-              ) { testScope ->
-                callDelegate.arguments += irGet(testScope)
-                +callDelegate
+              irCall(callee = burstApis.runTestSymbol!!).apply {
+                arguments.clear()
+                // TODO: patch these arguments with the specialized arguments.
+                arguments += original.runTestCall.arguments[0]?.deepCopyWithSymbols(result)
+                arguments += original.runTestCall.arguments[1]?.deepCopyWithSymbols(result)
+                arguments +=
+                  irTestBodyLambda(
+                    context = pluginContext,
+                    burstApis = burstApis,
+                    original = originalParent,
+                  ) { testScope ->
+                    callDelegate.arguments += irGet(testScope)
+                    +callDelegate
+                  }
               }
-            },
-          ).apply {
-            type = burstApis.runTestSymbol.owner.returnType
-          }
+            )
+            .apply { type = burstApis.runTestSymbol.owner.returnType }
         }
 
         is TestFunction.NonSuspending -> {

@@ -36,10 +36,12 @@ import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 class BurstKotlinPluginTest {
   @Test
   fun functionParameters() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "CoffeeTest.kt",
-        """
+    val result =
+      compile(
+        sourceFile =
+          SourceFile.kotlin(
+            "CoffeeTest.kt",
+            """
         import app.cash.burst.Burst
         import kotlin.test.Test
 
@@ -56,8 +58,8 @@ class BurstKotlinPluginTest {
         enum class Espresso { Decaf, Regular, Double }
         enum class Dairy { None, Milk, Oat }
         """,
-      ),
-    )
+          )
+      )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
     val testClass = result.classLoader.loadClass("CoffeeTest")
@@ -80,17 +82,17 @@ class BurstKotlinPluginTest {
     log.clear()
 
     // Burst doesn't add a no-parameter function because there's no default specialization.
-    assertFailsWith<NoSuchMethodException> {
-      testClass.getMethod("test")
-    }
+    assertFailsWith<NoSuchMethodException> { testClass.getMethod("test") }
   }
 
   @Test
   fun unexpectedClassArgumentType() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "CoffeeTest.kt",
-        """
+    val result =
+      compile(
+        sourceFile =
+          SourceFile.kotlin(
+            "CoffeeTest.kt",
+            """
         import app.cash.burst.Burst
         import kotlin.test.Test
 
@@ -101,21 +103,24 @@ class BurstKotlinPluginTest {
           }
         }
         """,
-      ),
-    )
+          )
+      )
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
-    assertThat(result.messages).contains(
-      "CoffeeTest.kt:5:18 " +
-        "@Burst parameter must be a boolean, an enum, or have a burstValues() default value",
-    )
+    assertThat(result.messages)
+      .contains(
+        "CoffeeTest.kt:5:18 " +
+          "@Burst parameter must be a boolean, an enum, or have a burstValues() default value"
+      )
   }
 
   @Test
   fun unexpectedFunctionArgumentType() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "CoffeeTest.kt",
-        """
+    val result =
+      compile(
+        sourceFile =
+          SourceFile.kotlin(
+            "CoffeeTest.kt",
+            """
         import app.cash.burst.Burst
         import kotlin.test.Test
 
@@ -126,21 +131,24 @@ class BurstKotlinPluginTest {
           }
         }
         """,
-      ),
-    )
+          )
+      )
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
-    assertThat(result.messages).contains(
-      "CoffeeTest.kt:7:12 " +
-        "@Burst parameter must be a boolean, an enum, or have a burstValues() default value",
-    )
+    assertThat(result.messages)
+      .contains(
+        "CoffeeTest.kt:7:12 " +
+          "@Burst parameter must be a boolean, an enum, or have a burstValues() default value"
+      )
   }
 
   @Test
   fun unexpectedDefaultArgumentValue() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "CoffeeTest.kt",
-        """
+    val result =
+      compile(
+        sourceFile =
+          SourceFile.kotlin(
+            "CoffeeTest.kt",
+            """
         import app.cash.burst.Burst
         import kotlin.test.Test
 
@@ -155,21 +163,24 @@ class BurstKotlinPluginTest {
 
         enum class Espresso { Decaf, Regular, Double }
         """,
-      ),
-    )
+          )
+      )
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
-    assertThat(result.messages).contains(
-      "CoffeeTest.kt:9:12 " +
-        "@Burst parameter default must be burstValues(), a constant, null, or absent",
-    )
+    assertThat(result.messages)
+      .contains(
+        "CoffeeTest.kt:9:12 " +
+          "@Burst parameter default must be burstValues(), a constant, null, or absent"
+      )
   }
 
   @Test
   fun constructorParameters() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "CoffeeTest.kt",
-        """
+    val result =
+      compile(
+        sourceFile =
+          SourceFile.kotlin(
+            "CoffeeTest.kt",
+            """
         import app.cash.burst.Burst
         import kotlin.test.BeforeTest
         import kotlin.test.Test
@@ -195,8 +206,8 @@ class BurstKotlinPluginTest {
         enum class Espresso { Decaf, Regular, Double }
         enum class Dairy { None, Milk, Oat }
         """,
-      ),
-    )
+          )
+      )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
     val baseClass = result.classLoader.loadClass("CoffeeTest")
@@ -205,31 +216,27 @@ class BurstKotlinPluginTest {
     assertThat(Modifier.isFinal(baseClass.modifiers)).isFalse()
 
     // Burst doesn't add a no-arg constructor because there's no default specialization.
-    assertFailsWith<NoSuchMethodException> {
-      baseClass.getConstructor()
-    }
+    assertFailsWith<NoSuchMethodException> { baseClass.getConstructor() }
 
     // It generates a subclass for each specialization.
     val sampleClass = result.classLoader.loadClass("CoffeeTest_Regular_Milk")
     val sampleConstructor = sampleClass.getConstructor()
     val sampleInstance = sampleConstructor.newInstance()
-    val sampleLog = sampleClass.getMethod("getLog")
-      .invoke(sampleInstance) as MutableList<*>
+    val sampleLog = sampleClass.getMethod("getLog").invoke(sampleInstance) as MutableList<*>
     sampleClass.getMethod("setUp").invoke(sampleInstance)
     sampleClass.getMethod("test").invoke(sampleInstance)
-    assertThat(sampleLog).containsExactly(
-      "set up Regular Milk",
-      "running Regular Milk",
-    )
+    assertThat(sampleLog).containsExactly("set up Regular Milk", "running Regular Milk")
     sampleLog.clear()
   }
 
   @Test
   fun defaultArgumentsHonored() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "CoffeeTest.kt",
-        """
+    val result =
+      compile(
+        sourceFile =
+          SourceFile.kotlin(
+            "CoffeeTest.kt",
+            """
         import app.cash.burst.Burst
         import kotlin.test.BeforeTest
         import kotlin.test.Test
@@ -254,8 +261,8 @@ class BurstKotlinPluginTest {
         enum class Espresso { Decaf, Regular, Double }
         enum class Dairy { None, Milk, Oat }
         """,
-      ),
-    )
+          )
+      )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
     val baseClass = result.classLoader.loadClass("CoffeeTest")
@@ -274,17 +281,13 @@ class BurstKotlinPluginTest {
     baseLog.clear()
 
     // The default specialization's subclass is not generated.
-    assertFailsWith<ClassNotFoundException> {
-      result.classLoader.loadClass("CoffeeTest_Regular")
-    }
+    assertFailsWith<ClassNotFoundException> { result.classLoader.loadClass("CoffeeTest_Regular") }
 
     // Other subclasses are available.
     result.classLoader.loadClass("CoffeeTest_Double")
 
     // The default test function is also not generated.
-    assertFailsWith<NoSuchMethodException> {
-      baseClass.getMethod("test_Milk")
-    }
+    assertFailsWith<NoSuchMethodException> { baseClass.getMethod("test_Milk") }
 
     // Other test functions are available.
     baseClass.getMethod("test_Oat")
@@ -292,10 +295,12 @@ class BurstKotlinPluginTest {
 
   @Test
   fun burstValues() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "CoffeeTest.kt",
-        """
+    val result =
+      compile(
+        sourceFile =
+          SourceFile.kotlin(
+            "CoffeeTest.kt",
+            """
         import app.cash.burst.Burst
         import app.cash.burst.burstValues
         import kotlin.test.Test
@@ -310,8 +315,8 @@ class BurstKotlinPluginTest {
           }
         }
         """,
-      ),
-    )
+          )
+      )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
     val baseClass = result.classLoader.loadClass("CoffeeTest")
@@ -324,9 +329,7 @@ class BurstKotlinPluginTest {
     baseLog.clear()
 
     // The default test function is not generated.
-    assertFailsWith<NoSuchMethodException> {
-      baseClass.getMethod("test_12")
-    }
+    assertFailsWith<NoSuchMethodException> { baseClass.getMethod("test_12") }
 
     // Other test functions are available, named by the literal values.
     baseClass.getMethod("test_16").invoke(baseInstance)
@@ -336,10 +339,12 @@ class BurstKotlinPluginTest {
 
   @Test
   fun burstValuesJustOne() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "CoffeeTest.kt",
-        """
+    val result =
+      compile(
+        sourceFile =
+          SourceFile.kotlin(
+            "CoffeeTest.kt",
+            """
         import app.cash.burst.Burst
         import app.cash.burst.burstValues
         import kotlin.test.Test
@@ -351,8 +356,8 @@ class BurstKotlinPluginTest {
           }
         }
         """,
-      ),
-    )
+          )
+      )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
     val baseClass = result.classLoader.loadClass("CoffeeTest")
@@ -361,10 +366,12 @@ class BurstKotlinPluginTest {
 
   @Test
   fun burstValuesHasReasonableSymbolName() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "CoffeeTest.kt",
-        """
+    val result =
+      compile(
+        sourceFile =
+          SourceFile.kotlin(
+            "CoffeeTest.kt",
+            """
         import app.cash.burst.Burst
         import app.cash.burst.burstValues
         import kotlin.math.PI
@@ -391,32 +398,35 @@ class BurstKotlinPluginTest {
           }
         }
         """,
-      ),
-    )
+          )
+      )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
     val baseClass = result.classLoader.loadClass("CoffeeTest")
-    assertThat(baseClass.testSuffixes).containsExactlyInAnyOrder(
-      "toInt",
-      "hello",
-      "uppercase",
-      "CoffeeTest",
-      // Would have preferred 'MAX_VALUE', but this is constant is inlined!
-      "3_4028235E38",
-      // Would have preferred 'PI', but this is constant is inlined!
-      "3_141592653589793",
-      "CASE_INSENSITIVE_ORDER",
-      "abs",
-      "null",
-    )
+    assertThat(baseClass.testSuffixes)
+      .containsExactlyInAnyOrder(
+        "toInt",
+        "hello",
+        "uppercase",
+        "CoffeeTest",
+        // Would have preferred 'MAX_VALUE', but this is constant is inlined!
+        "3_4028235E38",
+        // Would have preferred 'PI', but this is constant is inlined!
+        "3_141592653589793",
+        "CASE_INSENSITIVE_ORDER",
+        "abs",
+        "null",
+      )
   }
 
   @Test
   fun burstValuesWithEnumValues() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "CoffeeTest.kt",
-        """
+    val result =
+      compile(
+        sourceFile =
+          SourceFile.kotlin(
+            "CoffeeTest.kt",
+            """
         import app.cash.burst.Burst
         import app.cash.burst.burstValues
         import kotlin.test.Test
@@ -434,22 +444,22 @@ class BurstKotlinPluginTest {
           }
         }
         """,
-      ),
-    )
+          )
+      )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
     val baseClass = result.classLoader.loadClass("CoffeeTest")
-    assertThat(baseClass.testSuffixes).containsExactlyInAnyOrder(
-      "Aeropress",
-    )
+    assertThat(baseClass.testSuffixes).containsExactlyInAnyOrder("Aeropress")
   }
 
   @Test
   fun burstValuesWithObjectValues() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "CoffeeTest.kt",
-        """
+    val result =
+      compile(
+        sourceFile =
+          SourceFile.kotlin(
+            "CoffeeTest.kt",
+            """
         import app.cash.burst.Burst
         import app.cash.burst.burstValues
         import kotlin.test.Test
@@ -468,24 +478,23 @@ class BurstKotlinPluginTest {
           }
         }
         """,
-      ),
-    )
+          )
+      )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
     val baseClass = result.classLoader.loadClass("CoffeeTest")
-    assertThat(baseClass.testSuffixes).containsExactlyInAnyOrder(
-      "Aeropress",
-      "Espresso",
-    )
+    assertThat(baseClass.testSuffixes).containsExactlyInAnyOrder("Aeropress", "Espresso")
   }
 
   /** Confirm that inline function declarations are assigned parents. */
   @Test
   fun burstValuesWithInlineFunctions() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "CoffeeTest.kt",
-        """
+    val result =
+      compile(
+        sourceFile =
+          SourceFile.kotlin(
+            "CoffeeTest.kt",
+            """
         import app.cash.burst.Burst
         import app.cash.burst.burstValues
         import kotlin.test.Test
@@ -509,8 +518,8 @@ class BurstKotlinPluginTest {
           }
         }
         """,
-      ),
-    )
+          )
+      )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
     val baseClass = result.classLoader.loadClass("CoffeeTest")
@@ -521,21 +530,18 @@ class BurstKotlinPluginTest {
     baseClass.getMethod("test_0_1").invoke(baseInstance)
     baseClass.getMethod("test_1_0").invoke(baseInstance)
     baseClass.getMethod("test_1_1").invoke(baseInstance)
-    assertThat(baseLog).containsExactly(
-      "Hello Burst",
-      "Hello World",
-      "Yo Burst",
-      "Yo World",
-    )
+    assertThat(baseLog).containsExactly("Hello Burst", "Hello World", "Yo Burst", "Yo World")
   }
 
   /** Confirm that inline class declarations are assigned parents. */
   @Test
   fun burstValuesWithInlineClassDeclarations() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "CoffeeTest.kt",
-        """
+    val result =
+      compile(
+        sourceFile =
+          SourceFile.kotlin(
+            "CoffeeTest.kt",
+            """
         import app.cash.burst.Burst
         import app.cash.burst.burstValues
         import kotlin.test.Test
@@ -563,8 +569,8 @@ class BurstKotlinPluginTest {
           fun create(): String
         }
         """,
-      ),
-    )
+          )
+      )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
     val baseClass = result.classLoader.loadClass("CoffeeTest")
@@ -575,20 +581,17 @@ class BurstKotlinPluginTest {
     baseClass.getMethod("test_0_1").invoke(baseInstance)
     baseClass.getMethod("test_1_0").invoke(baseInstance)
     baseClass.getMethod("test_1_1").invoke(baseInstance)
-    assertThat(baseLog).containsExactly(
-      "Hello Burst",
-      "Hello World",
-      "Yo Burst",
-      "Yo World",
-    )
+    assertThat(baseLog).containsExactly("Hello Burst", "Hello World", "Yo Burst", "Yo World")
   }
 
   @Test
   fun burstValuesWithNameCollisions() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "CoffeeTest.kt",
-        """
+    val result =
+      compile(
+        sourceFile =
+          SourceFile.kotlin(
+            "CoffeeTest.kt",
+            """
         import app.cash.burst.Burst
         import app.cash.burst.burstValues
         import kotlin.test.Test
@@ -611,28 +614,31 @@ class BurstKotlinPluginTest {
           }
         }
         """,
-      ),
-    )
+          )
+      )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
     val baseClass = result.classLoader.loadClass("CoffeeTest")
-    assertThat(baseClass.testSuffixes).containsExactlyInAnyOrder(
-      "1_1",
-      "2_1",
-      "3_1",
-      "4_CASE_INSENSITIVE_ORDER",
-      "5_CASE_INSENSITIVE_ORDER",
-      "6_true",
-      "7_true",
-    )
+    assertThat(baseClass.testSuffixes)
+      .containsExactlyInAnyOrder(
+        "1_1",
+        "2_1",
+        "3_1",
+        "4_CASE_INSENSITIVE_ORDER",
+        "5_CASE_INSENSITIVE_ORDER",
+        "6_true",
+        "7_true",
+      )
   }
 
   @Test
   fun burstValuesWithOverlyLongNames() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "CoffeeTest.kt",
-        """
+    val result =
+      compile(
+        sourceFile =
+          SourceFile.kotlin(
+            "CoffeeTest.kt",
+            """
         import app.cash.burst.Burst
         import app.cash.burst.burstValues
         import kotlin.test.Test
@@ -655,8 +661,8 @@ class BurstKotlinPluginTest {
           }
         }
         """,
-      ),
-    )
+          )
+      )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
     val baseClass = result.classLoader.loadClass("CoffeeTest")
@@ -666,10 +672,12 @@ class BurstKotlinPluginTest {
 
   @Test
   fun burstValuesReferencesEarlierParameter() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "CoffeeTest.kt",
-        """
+    val result =
+      compile(
+        sourceFile =
+          SourceFile.kotlin(
+            "CoffeeTest.kt",
+            """
         import app.cash.burst.Burst
         import app.cash.burst.burstValues
         import kotlin.test.Test
@@ -684,20 +692,21 @@ class BurstKotlinPluginTest {
           }
         }
         """,
-      ),
-    )
+          )
+      )
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
-    assertThat(result.messages).contains(
-      "CoffeeTest.kt:10:5 @Burst parameter may not reference other parameters",
-    )
+    assertThat(result.messages)
+      .contains("CoffeeTest.kt:10:5 @Burst parameter may not reference other parameters")
   }
 
   @Test
   fun booleanParameters() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "CoffeeTest.kt",
-        """
+    val result =
+      compile(
+        sourceFile =
+          SourceFile.kotlin(
+            "CoffeeTest.kt",
+            """
         import app.cash.burst.Burst
         import app.cash.burst.burstValues
         import kotlin.test.Test
@@ -712,8 +721,8 @@ class BurstKotlinPluginTest {
           }
         }
         """,
-      ),
-    )
+          )
+      )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
     val baseClass = result.classLoader.loadClass("CoffeeTest")
@@ -731,10 +740,12 @@ class BurstKotlinPluginTest {
 
   @Test
   fun booleanDefaultValues() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "CoffeeTest.kt",
-        """
+    val result =
+      compile(
+        sourceFile =
+          SourceFile.kotlin(
+            "CoffeeTest.kt",
+            """
         import app.cash.burst.Burst
         import kotlin.test.Test
 
@@ -753,8 +764,8 @@ class BurstKotlinPluginTest {
           }
         }
         """,
-      ),
-    )
+          )
+      )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
     val baseClass = result.classLoader.loadClass("CoffeeTest")
@@ -765,20 +776,23 @@ class BurstKotlinPluginTest {
     baseClass.getMethod("testDefaultTrue_false").invoke(baseInstance)
     baseClass.getMethod("testDefaultFalse").invoke(baseInstance)
     baseClass.getMethod("testDefaultFalse_true").invoke(baseInstance)
-    assertThat(baseLog).containsExactly(
-      "running testDefaultTrue iced=true",
-      "running testDefaultTrue iced=false",
-      "running testDefaultFalse iced=false",
-      "running testDefaultFalse iced=true",
-    )
+    assertThat(baseLog)
+      .containsExactly(
+        "running testDefaultTrue iced=true",
+        "running testDefaultTrue iced=false",
+        "running testDefaultFalse iced=false",
+        "running testDefaultFalse iced=true",
+      )
   }
 
   @Test
   fun nullableEnumNoDefault() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "CoffeeTest.kt",
-        """
+    val result =
+      compile(
+        sourceFile =
+          SourceFile.kotlin(
+            "CoffeeTest.kt",
+            """
         import app.cash.burst.Burst
         import kotlin.test.Test
 
@@ -794,8 +808,8 @@ class BurstKotlinPluginTest {
 
         enum class Espresso { Decaf, Regular, Double }
         """,
-      ),
-    )
+          )
+      )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
     val baseClass = result.classLoader.loadClass("CoffeeTest")
@@ -806,20 +820,18 @@ class BurstKotlinPluginTest {
     baseClass.getMethod("test_Regular").invoke(baseInstance)
     baseClass.getMethod("test_Double").invoke(baseInstance)
     baseClass.getMethod("test_null").invoke(baseInstance)
-    assertThat(baseLog).containsExactly(
-      "running Decaf",
-      "running Regular",
-      "running Double",
-      "running null",
-    )
+    assertThat(baseLog)
+      .containsExactly("running Decaf", "running Regular", "running Double", "running null")
   }
 
   @Test
   fun nullableBooleanNoDefault() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "CoffeeTest.kt",
-        """
+    val result =
+      compile(
+        sourceFile =
+          SourceFile.kotlin(
+            "CoffeeTest.kt",
+            """
         import app.cash.burst.Burst
         import kotlin.test.Test
 
@@ -835,8 +847,8 @@ class BurstKotlinPluginTest {
 
         enum class Espresso { Decaf, Regular, Double }
         """,
-      ),
-    )
+          )
+      )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
     val baseClass = result.classLoader.loadClass("CoffeeTest")
@@ -846,19 +858,17 @@ class BurstKotlinPluginTest {
     baseClass.getMethod("test_false").invoke(baseInstance)
     baseClass.getMethod("test_true").invoke(baseInstance)
     baseClass.getMethod("test_null").invoke(baseInstance)
-    assertThat(baseLog).containsExactly(
-      "running false",
-      "running true",
-      "running null",
-    )
+    assertThat(baseLog).containsExactly("running false", "running true", "running null")
   }
 
   @Test
   fun nullableBurstValuesNotDefault() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "CoffeeTest.kt",
-        """
+    val result =
+      compile(
+        sourceFile =
+          SourceFile.kotlin(
+            "CoffeeTest.kt",
+            """
         import app.cash.burst.Burst
         import app.cash.burst.burstValues
         import kotlin.test.Test
@@ -873,8 +883,8 @@ class BurstKotlinPluginTest {
           }
         }
         """,
-      ),
-    )
+          )
+      )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
     val baseClass = result.classLoader.loadClass("CoffeeTest")
@@ -885,20 +895,17 @@ class BurstKotlinPluginTest {
     baseClass.getMethod("test_16").invoke(baseInstance)
     baseClass.getMethod("test_20").invoke(baseInstance)
     baseClass.getMethod("test_null").invoke(baseInstance)
-    assertThat(baseLog).containsExactly(
-      "running 12",
-      "running 16",
-      "running 20",
-      "running null",
-    )
+    assertThat(baseLog).containsExactly("running 12", "running 16", "running 20", "running null")
   }
 
   @Test
   fun nullableEnumAsDefault() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "CoffeeTest.kt",
-        """
+    val result =
+      compile(
+        sourceFile =
+          SourceFile.kotlin(
+            "CoffeeTest.kt",
+            """
         import app.cash.burst.Burst
         import kotlin.test.Test
 
@@ -914,8 +921,8 @@ class BurstKotlinPluginTest {
 
         enum class Espresso { Decaf, Regular, Double }
         """,
-      ),
-    )
+          )
+      )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
     val baseClass = result.classLoader.loadClass("CoffeeTest")
@@ -926,20 +933,18 @@ class BurstKotlinPluginTest {
     baseClass.getMethod("test_Regular").invoke(baseInstance)
     baseClass.getMethod("test_Double").invoke(baseInstance)
     baseClass.getMethod("test").invoke(baseInstance)
-    assertThat(baseLog).containsExactly(
-      "running Decaf",
-      "running Regular",
-      "running Double",
-      "running null",
-    )
+    assertThat(baseLog)
+      .containsExactly("running Decaf", "running Regular", "running Double", "running null")
   }
 
   @Test
   fun nullableBooleanAsDefault() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "CoffeeTest.kt",
-        """
+    val result =
+      compile(
+        sourceFile =
+          SourceFile.kotlin(
+            "CoffeeTest.kt",
+            """
         import app.cash.burst.Burst
         import kotlin.test.Test
 
@@ -955,8 +960,8 @@ class BurstKotlinPluginTest {
 
         enum class Espresso { Decaf, Regular, Double }
         """,
-      ),
-    )
+          )
+      )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
     val baseClass = result.classLoader.loadClass("CoffeeTest")
@@ -966,19 +971,17 @@ class BurstKotlinPluginTest {
     baseClass.getMethod("test_false").invoke(baseInstance)
     baseClass.getMethod("test_true").invoke(baseInstance)
     baseClass.getMethod("test").invoke(baseInstance)
-    assertThat(baseLog).containsExactly(
-      "running false",
-      "running true",
-      "running null",
-    )
+    assertThat(baseLog).containsExactly("running false", "running true", "running null")
   }
 
   @Test
   fun nullableBurstValuesAsDefault() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "CoffeeTest.kt",
-        """
+    val result =
+      compile(
+        sourceFile =
+          SourceFile.kotlin(
+            "CoffeeTest.kt",
+            """
         import app.cash.burst.Burst
         import app.cash.burst.burstValues
         import kotlin.test.Test
@@ -993,8 +996,8 @@ class BurstKotlinPluginTest {
           }
         }
         """,
-      ),
-    )
+          )
+      )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
     val baseClass = result.classLoader.loadClass("CoffeeTest")
@@ -1005,20 +1008,17 @@ class BurstKotlinPluginTest {
     baseClass.getMethod("test_16").invoke(baseInstance)
     baseClass.getMethod("test_20").invoke(baseInstance)
     baseClass.getMethod("test").invoke(baseInstance)
-    assertThat(baseLog).containsExactly(
-      "running 12",
-      "running 16",
-      "running 20",
-      "running null",
-    )
+    assertThat(baseLog).containsExactly("running 12", "running 16", "running 20", "running null")
   }
 
   @Test
   fun coroutines() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "CoffeeTest.kt",
-        """
+    val result =
+      compile(
+        sourceFile =
+          SourceFile.kotlin(
+            "CoffeeTest.kt",
+            """
         import app.cash.burst.Burst
         import app.cash.burst.burstValues
         import kotlin.test.Test
@@ -1039,8 +1039,8 @@ class BurstKotlinPluginTest {
 
         enum class Espresso { Decaf, Regular, Double }
         """,
-      ),
-    )
+          )
+      )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
     val baseClass = result.classLoader.loadClass("CoffeeTest")
@@ -1048,9 +1048,7 @@ class BurstKotlinPluginTest {
     val baseLog = baseClass.getMethod("getLog").invoke(baseInstance) as MutableList<*>
 
     baseClass.getMethod("test_Decaf").invoke(baseInstance)
-    assertThat(baseLog).containsExactly(
-      "running Decaf",
-    )
+    assertThat(baseLog).containsExactly("running Decaf")
   }
 
   /**
@@ -1059,10 +1057,12 @@ class BurstKotlinPluginTest {
    */
   @Test
   fun coroutinesAndTestComposition() {
-    val result = compile(
-      sourceFile = SourceFile.kotlin(
-        "CoffeeTest.kt",
-        """
+    val result =
+      compile(
+        sourceFile =
+          SourceFile.kotlin(
+            "CoffeeTest.kt",
+            """
         import app.cash.burst.Burst
         import app.cash.burst.burstValues
         import kotlin.test.Test
@@ -1090,8 +1090,8 @@ class BurstKotlinPluginTest {
 
         enum class Espresso { Decaf, Regular, Double }
         """,
-      ),
-    )
+          )
+      )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
     val baseClass = result.classLoader.loadClass("RealCoffeeTest")
@@ -1100,19 +1100,17 @@ class BurstKotlinPluginTest {
 
     baseClass.getMethod("test_Decaf").invoke(baseInstance)
     baseClass.getMethod("anotherTest").invoke(baseInstance)
-    assertThat(baseLog).containsExactly(
-      "running Decaf",
-      "running Double",
-    )
+    assertThat(baseLog).containsExactly("running Decaf", "running Double")
   }
 
   private val Class<*>.testSuffixes: List<String>
-    get() = methods.mapNotNull {
-      when {
-        it.name.startsWith("test_") -> it.name.substring(5)
-        else -> null
+    get() =
+      methods.mapNotNull {
+        when {
+          it.name.startsWith("test_") -> it.name.substring(5)
+          else -> null
+        }
       }
-    }
 }
 
 @ExperimentalCompilerApi
@@ -1120,18 +1118,18 @@ fun compile(
   sourceFiles: List<SourceFile>,
   plugin: CompilerPluginRegistrar = BurstCompilerPluginRegistrar(),
 ): JvmCompilationResult {
-  return KotlinCompilation().apply {
-    sources = sourceFiles
-    compilerPluginRegistrars = listOf(plugin)
-    inheritClassPath = true
-    kotlincArguments += "-Xverify-ir=error"
-    kotlincArguments += "-Xverify-ir-visibility"
-  }.compile()
+  return KotlinCompilation()
+    .apply {
+      sources = sourceFiles
+      compilerPluginRegistrars = listOf(plugin)
+      inheritClassPath = true
+      kotlincArguments += "-Xverify-ir=error"
+      kotlincArguments += "-Xverify-ir-visibility"
+    }
+    .compile()
 }
 
 @ExperimentalCompilerApi
-fun compile(
-  sourceFile: SourceFile,
-): JvmCompilationResult {
+fun compile(sourceFile: SourceFile): JvmCompilationResult {
   return compile(listOf(sourceFile), BurstCompilerPluginRegistrar())
 }

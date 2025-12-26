@@ -22,9 +22,7 @@ import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 
-class GradleTester(
-  projectName: String,
-) {
+class GradleTester(projectName: String) {
   private val projectDir = File("src/test/projects/$projectName")
 
   fun createRunner(vararg taskNames: String): GradleRunner {
@@ -50,20 +48,14 @@ class GradleTester(
     return createRunner("clean", taskName).buildAndFail()
   }
 
-  fun readTestSuite(
-    className: String,
-    testTaskName: String = "test",
-  ): TestSuite = readTestSuite(testSuitePath(className, testTaskName))
+  fun readTestSuite(className: String, testTaskName: String = "test"): TestSuite =
+    readTestSuite(testSuitePath(className, testTaskName))
 
-  fun hasTestSuite(
-    className: String,
-    testTaskName: String = "test",
-  ) = testSuitePath(className, testTaskName).exists()
+  fun hasTestSuite(className: String, testTaskName: String = "test") =
+    testSuitePath(className, testTaskName).exists()
 
-  private fun testSuitePath(
-    className: String,
-    testTaskName: String,
-  ) = projectDir.resolve("lib/build/test-results/$testTaskName/TEST-$className.xml")
+  private fun testSuitePath(className: String, testTaskName: String) =
+    projectDir.resolve("lib/build/test-results/$testTaskName/TEST-$className.xml")
 
   private companion object {
     val versionProperty = "-PburstVersion=${System.getProperty("burstVersion")}"

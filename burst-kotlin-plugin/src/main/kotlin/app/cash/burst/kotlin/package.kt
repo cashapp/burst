@@ -6,8 +6,7 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
 /** Represents a package name without an associated class. */
-@JvmInline
-value class FqPackageName(val fqName: FqName)
+@JvmInline value class FqPackageName(val fqName: FqName)
 
 fun FqPackageName(name: String) = FqPackageName(FqName(name))
 

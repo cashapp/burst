@@ -29,9 +29,7 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet.Companion.COMMON_TEST_
 class BurstPlugin : Plugin<Project> {
   override fun apply(target: Project) {
     var applied = false
-    target.afterEvaluate {
-      check(applied) { "No suitable Kotlin configuration was found" }
-    }
+    target.afterEvaluate { check(applied) { "No suitable Kotlin configuration was found" } }
 
     target.pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
       applied = true
@@ -48,9 +46,7 @@ class BurstPlugin : Plugin<Project> {
       applied = true
       target.pluginManager.apply(BurstKotlinPlugin::class.java)
 
-      target.dependencies {
-        add("testImplementation", "app.cash.burst:burst:$burstVersion")
-      }
+      target.dependencies { add("testImplementation", "app.cash.burst:burst:$burstVersion") }
     }
 
     target.pluginManager.withPlugin("org.jetbrains.kotlin.android") {

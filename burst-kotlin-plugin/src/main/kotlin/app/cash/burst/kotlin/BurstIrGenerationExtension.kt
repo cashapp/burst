@@ -27,60 +27,62 @@ import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.util.functions
 
 @UnsafeDuringIrConstructionAPI // To use IrDeclarationContainer.declarations.
-class BurstIrGenerationExtension(
-  private val messageCollector: MessageCollector,
-) : IrGenerationExtension {
+class BurstIrGenerationExtension(private val messageCollector: MessageCollector) :
+  IrGenerationExtension {
   override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
     // Skip the rewrite if the Burst APIs aren't loaded. We don't expect to find @Burst anywhere.
     val burstApis = BurstApis.maybeCreate(pluginContext) ?: return
     val testFunctionReader = TestFunctionReader(burstApis)
 
-    val transformer = object : IrElementTransformerVoidWithContext() {
-      override fun visitClassNew(declaration: IrClass): IrStatement {
-        val classDeclaration = super.visitClassNew(declaration) as IrClass
-        val classHasAtBurst = classDeclaration.hasAtBurst
+    val transformer =
+      object : IrElementTransformerVoidWithContext() {
+        override fun visitClassNew(declaration: IrClass): IrStatement {
+          val classDeclaration = super.visitClassNew(declaration) as IrClass
+          val classHasAtBurst = classDeclaration.hasAtBurst
 
-        // Return early if there's no @Burst anywhere.
-        if (!classHasAtBurst && classDeclaration.functions.none { it.hasAtBurst }) {
+          // Return early if there's no @Burst anywhere.
+          if (!classHasAtBurst && classDeclaration.functions.none { it.hasAtBurst }) {
+            return classDeclaration
+          }
+
+          if (classHasAtBurst && classDeclaration.modality != Modality.ABSTRACT) {
+            try {
+              ClassSpecializer(
+                  pluginContext = pluginContext,
+                  burstApis = burstApis,
+                  originalParent = currentFile,
+                  original = classDeclaration,
+                )
+                .generateSpecializations()
+            } catch (e: BurstCompilationException) {
+              messageCollector.report(e.severity, e.message, currentFile.locationOf(e.element))
+            }
+          }
+
+          // Snapshot the original functions because the loop mutates them.
+          val originalFunctions = classDeclaration.functions.toList()
+
+          for (function in originalFunctions) {
+            val testFunction = testFunctionReader.readOrNull(function) ?: continue
+            if (!classHasAtBurst && !function.hasAtBurst) continue
+
+            try {
+              val specializer =
+                FunctionSpecializer(
+                  pluginContext = pluginContext,
+                  burstApis = burstApis,
+                  originalParent = classDeclaration,
+                  original = testFunction,
+                )
+              specializer.generateSpecializations()
+            } catch (e: BurstCompilationException) {
+              messageCollector.report(e.severity, e.message, currentFile.locationOf(e.element))
+            }
+          }
+
           return classDeclaration
         }
-
-        if (classHasAtBurst && classDeclaration.modality != Modality.ABSTRACT) {
-          try {
-            ClassSpecializer(
-              pluginContext = pluginContext,
-              burstApis = burstApis,
-              originalParent = currentFile,
-              original = classDeclaration,
-            ).generateSpecializations()
-          } catch (e: BurstCompilationException) {
-            messageCollector.report(e.severity, e.message, currentFile.locationOf(e.element))
-          }
-        }
-
-        // Snapshot the original functions because the loop mutates them.
-        val originalFunctions = classDeclaration.functions.toList()
-
-        for (function in originalFunctions) {
-          val testFunction = testFunctionReader.readOrNull(function) ?: continue
-          if (!classHasAtBurst && !function.hasAtBurst) continue
-
-          try {
-            val specializer = FunctionSpecializer(
-              pluginContext = pluginContext,
-              burstApis = burstApis,
-              originalParent = classDeclaration,
-              original = testFunction,
-            )
-            specializer.generateSpecializations()
-          } catch (e: BurstCompilationException) {
-            messageCollector.report(e.severity, e.message, currentFile.locationOf(e.element))
-          }
-        }
-
-        return classDeclaration
       }
-    }
 
     moduleFragment.transform(transformer, null)
   }

@@ -15,8 +15,7 @@ class BeforeTestInSuperclassTest {
   }
 
   class CircleTest : ShapeTest() {
-    @InterceptTest
-    val interceptor = LoggingInterceptor()
+    @InterceptTest val interceptor = LoggingInterceptor()
 
     @Test
     fun passingTest() {

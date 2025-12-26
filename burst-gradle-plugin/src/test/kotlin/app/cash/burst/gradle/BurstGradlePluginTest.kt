@@ -36,18 +36,12 @@ class BurstGradlePluginTest {
 
   @Test
   fun multiplatformJvm() {
-    multiplatform(
-      testTaskName = "jvmTest",
-      platformName = "jvm",
-    )
+    multiplatform(testTaskName = "jvmTest", platformName = "jvm")
   }
 
   @Test
   fun multiplatformJs() {
-    multiplatform(
-      testTaskName = "jsNodeTest",
-      platformName = "js, node",
-    )
+    multiplatform(testTaskName = "jsNodeTest", platformName = "js, node")
   }
 
   @Test
@@ -76,49 +70,54 @@ class BurstGradlePluginTest {
 
     // Each test class is executed normally with nothing skipped.
     with(tester.readTestSuite("CoffeeTest_Regular", testTaskName)) {
-      assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
-        "basicTest_Milk[$platformName]",
-        "basicTest_None[$platformName]",
-        "basicTest_Oat[$platformName]",
-        "coroutinesTest_Milk[$platformName]",
-        "coroutinesTest_None[$platformName]",
-        "coroutinesTest_Oat[$platformName]",
-      )
+      assertThat(testCases.map { it.name })
+        .containsExactlyInAnyOrder(
+          "basicTest_Milk[$platformName]",
+          "basicTest_None[$platformName]",
+          "basicTest_Oat[$platformName]",
+          "coroutinesTest_Milk[$platformName]",
+          "coroutinesTest_None[$platformName]",
+          "coroutinesTest_Oat[$platformName]",
+        )
 
       val sampleSpecialization = testCases.single { it.name == "basicTest_Milk[$platformName]" }
       assertThat(sampleSpecialization.skipped).isFalse()
 
-      assertThat(systemOut).contains(
-        """
-        |set up Regular
-        |running Regular Oat in coffeeCoroutine
-        |
-        """.trimMargin(),
-        """
-        |set up Regular
-        |running Regular Oat
-        |
-        """.trimMargin(),
-      )
+      assertThat(systemOut)
+        .contains(
+          """
+          |set up Regular
+          |running Regular Oat in coffeeCoroutine
+          |"""
+            .trimMargin(),
+          """
+          |set up Regular
+          |running Regular Oat
+          |"""
+            .trimMargin(),
+        )
     }
 
     if (checkKlibMetadata) {
-      val klib = readKlib(
-        File("src/test/projects/multiplatform").resolve("lib/build/classes/kotlin/$platformName/test/klib/lib_test"),
-      )
+      val klib =
+        readKlib(
+          File("src/test/projects/multiplatform")
+            .resolve("lib/build/classes/kotlin/$platformName/test/klib/lib_test")
+        )
       val klibMetadata = klib.moduleMetadata()
       val coffeeTestMetadata = klibMetadata.classes.first { it.name == "CoffeeTest" }
-      assertThat(coffeeTestMetadata.functions.map { it.name }).containsExactlyInAnyOrder(
-        "setUp",
-        "basicTest",
-        "basicTest_Milk",
-        "basicTest_None",
-        "basicTest_Oat",
-        "coroutinesTest",
-        "coroutinesTest_Milk",
-        "coroutinesTest_None",
-        "coroutinesTest_Oat",
-      )
+      assertThat(coffeeTestMetadata.functions.map { it.name })
+        .containsExactlyInAnyOrder(
+          "setUp",
+          "basicTest",
+          "basicTest_Milk",
+          "basicTest_None",
+          "basicTest_Oat",
+          "coroutinesTest",
+          "coroutinesTest_Milk",
+          "coroutinesTest_None",
+          "coroutinesTest_Oat",
+        )
     }
   }
 
@@ -131,17 +130,18 @@ class BurstGradlePluginTest {
 
     val testSuite = tester.readTestSuite("CoffeeTest")
 
-    assertThat(testSuite.testCases.map { it.name }).containsExactlyInAnyOrder(
-      "test_Decaf_Milk",
-      "test_Decaf_None",
-      "test_Decaf_Oat",
-      "test_Double_Milk",
-      "test_Double_None",
-      "test_Double_Oat",
-      "test_Regular_Milk",
-      "test_Regular_None",
-      "test_Regular_Oat",
-    )
+    assertThat(testSuite.testCases.map { it.name })
+      .containsExactlyInAnyOrder(
+        "test_Decaf_Milk",
+        "test_Decaf_None",
+        "test_Decaf_Oat",
+        "test_Double_Milk",
+        "test_Double_None",
+        "test_Double_Oat",
+        "test_Regular_Milk",
+        "test_Regular_None",
+        "test_Regular_Oat",
+      )
 
     val sampleSpecialization = testSuite.testCases.single { it.name == "test_Regular_Milk" }
     assertThat(sampleSpecialization.skipped).isFalse()
@@ -155,11 +155,8 @@ class BurstGradlePluginTest {
 
     val testSuite = tester.readTestSuite("CoffeeTest")
 
-    assertThat(testSuite.testCases.map { it.name }).containsExactlyInAnyOrder(
-      "test_Milk",
-      "test_None",
-      "test_Oat",
-    )
+    assertThat(testSuite.testCases.map { it.name })
+      .containsExactlyInAnyOrder("test_Milk", "test_None", "test_Oat")
   }
 
   @Test
@@ -175,13 +172,14 @@ class BurstGradlePluginTest {
     val sampleTestTest = sampleTest.testCases.single()
     assertThat(sampleTestTest.name).isEqualTo("test")
     assertThat(sampleTestTest.skipped).isFalse()
-    assertThat(sampleTest.systemOut).isEqualTo(
-      """
-      |set up Regular Milk
-      |running Regular Milk
-      |
-      """.trimMargin(),
-    )
+    assertThat(sampleTest.systemOut)
+      .isEqualTo(
+        """
+        |set up Regular Milk
+        |running Regular Milk
+        |"""
+          .trimMargin()
+      )
   }
 
   @Test
@@ -204,11 +202,8 @@ class BurstGradlePluginTest {
 
     // The original test class runs the default specialization.
     with(tester.readTestSuite("CoffeeTest")) {
-      assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
-        "test",
-        "test_None",
-        "test_Oat",
-      )
+      assertThat(testCases.map { it.name })
+        .containsExactlyInAnyOrder("test", "test_None", "test_Oat")
 
       val defaultFunction = testCases.single { it.name == "test" }
       assertThat(defaultFunction.skipped).isFalse()
@@ -222,11 +217,8 @@ class BurstGradlePluginTest {
 
     // Another test class is executed normally with nothing skipped.
     with(tester.readTestSuite("CoffeeTest_Double")) {
-      assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
-        "test",
-        "test_None",
-        "test_Oat",
-      )
+      assertThat(testCases.map { it.name })
+        .containsExactlyInAnyOrder("test", "test_None", "test_Oat")
 
       val defaultFunction = testCases.single { it.name == "test" }
       assertThat(defaultFunction.skipped).isFalse()
@@ -243,41 +235,35 @@ class BurstGradlePluginTest {
     tester.cleanAndBuild(":lib:test")
 
     with(tester.readTestSuite("CoffeeTest")) {
-      assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
-        "test",
-        "test_12",
-        "test_16",
-      )
-      assertThat(systemOut).isEqualTo(
-        """
-        |set up Decaf
-        |running Decaf 12
-        |set up Decaf
-        |running Decaf 16
-        |set up Decaf
-        |running Decaf 8
-        |
-        """.trimMargin(),
-      )
+      assertThat(testCases.map { it.name }).containsExactlyInAnyOrder("test", "test_12", "test_16")
+      assertThat(systemOut)
+        .isEqualTo(
+          """
+          |set up Decaf
+          |running Decaf 12
+          |set up Decaf
+          |running Decaf 16
+          |set up Decaf
+          |running Decaf 8
+          |"""
+            .trimMargin()
+        )
     }
 
     with(tester.readTestSuite("CoffeeTest_Regular")) {
-      assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
-        "test",
-        "test_12",
-        "test_16",
-      )
-      assertThat(systemOut).isEqualTo(
-        """
-        |set up Regular
-        |running Regular 12
-        |set up Regular
-        |running Regular 16
-        |set up Regular
-        |running Regular 8
-        |
-        """.trimMargin(),
-      )
+      assertThat(testCases.map { it.name }).containsExactlyInAnyOrder("test", "test_12", "test_16")
+      assertThat(systemOut)
+        .isEqualTo(
+          """
+          |set up Regular
+          |running Regular 12
+          |set up Regular
+          |running Regular 16
+          |set up Regular
+          |running Regular 8
+          |"""
+            .trimMargin()
+        )
     }
   }
 
@@ -288,17 +274,18 @@ class BurstGradlePluginTest {
     tester.cleanAndBuild(":lib:test")
 
     with(tester.readTestSuite("CoffeeTest_Regular")) {
-      assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
-        "kotlinTestTest_Milk()",
-        "kotlinTestTest_None()",
-        "kotlinTestTest_Oat()",
-        "orgJunitJupiterApiTest_Milk()",
-        "orgJunitJupiterApiTest_None()",
-        "orgJunitJupiterApiTest_Oat()",
-        "orgJunitTest_Milk",
-        "orgJunitTest_None",
-        "orgJunitTest_Oat",
-      )
+      assertThat(testCases.map { it.name })
+        .containsExactlyInAnyOrder(
+          "kotlinTestTest_Milk()",
+          "kotlinTestTest_None()",
+          "kotlinTestTest_Oat()",
+          "orgJunitJupiterApiTest_Milk()",
+          "orgJunitJupiterApiTest_None()",
+          "orgJunitJupiterApiTest_Oat()",
+          "orgJunitTest_Milk",
+          "orgJunitTest_None",
+          "orgJunitTest_Oat",
+        )
     }
   }
 
@@ -309,17 +296,18 @@ class BurstGradlePluginTest {
     tester.cleanAndBuild(":lib:test")
 
     with(tester.readTestSuite("CoffeeTest")) {
-      assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
-        "kotlinTestTest_Milk()",
-        "kotlinTestTest_None()",
-        "kotlinTestTest_Oat()",
-        "orgJunitJupiterApiTest_Milk()",
-        "orgJunitJupiterApiTest_None()",
-        "orgJunitJupiterApiTest_Oat()",
-        "orgJunitTest_Milk",
-        "orgJunitTest_None",
-        "orgJunitTest_Oat",
-      )
+      assertThat(testCases.map { it.name })
+        .containsExactlyInAnyOrder(
+          "kotlinTestTest_Milk()",
+          "kotlinTestTest_None()",
+          "kotlinTestTest_Oat()",
+          "orgJunitJupiterApiTest_Milk()",
+          "orgJunitJupiterApiTest_None()",
+          "orgJunitJupiterApiTest_Oat()",
+          "orgJunitTest_Milk",
+          "orgJunitTest_None",
+          "orgJunitTest_Oat",
+        )
     }
 
     tester.hasTestSuite("CoffeeTest_Decaf")
@@ -334,18 +322,20 @@ class BurstGradlePluginTest {
     tester.cleanAndBuild(":lib:test")
 
     with(tester.readTestSuite("CoffeeTest")) {
-      assertThat(testCases.map { it.name }).containsExactlyInAnyOrder(
-        "hasFakeOverride",
-        "hasFakeOverride_Oat",
-        "hasRealOverride",
-        "hasRealOverride_Oat",
-      )
-      assertThat(systemOut.trim().lines()).containsExactlyInAnyOrder(
-        "running fakeOverride Milk",
-        "running fakeOverride Oat",
-        "running realOverride Milk",
-        "running realOverride Oat",
-      )
+      assertThat(testCases.map { it.name })
+        .containsExactlyInAnyOrder(
+          "hasFakeOverride",
+          "hasFakeOverride_Oat",
+          "hasRealOverride",
+          "hasRealOverride_Oat",
+        )
+      assertThat(systemOut.trim().lines())
+        .containsExactlyInAnyOrder(
+          "running fakeOverride Milk",
+          "running fakeOverride Oat",
+          "running realOverride Milk",
+          "running realOverride Oat",
+        )
     }
   }
 
@@ -362,11 +352,12 @@ class BurstGradlePluginTest {
     val sampleTestTest = sampleTest.testCases.single()
     assertThat(sampleTestTest.name).isEqualTo("test")
     assertThat(sampleTestTest.skipped).isFalse()
-    assertThat(sampleTest.systemOut).isEqualTo(
-      """
-      |running Decaf
-      |
-      """.trimMargin(),
-    )
+    assertThat(sampleTest.systemOut)
+      .isEqualTo(
+        """
+        |running Decaf
+        |"""
+          .trimMargin()
+      )
   }
 }

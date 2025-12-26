@@ -8,8 +8,7 @@ import kotlin.test.BeforeTest
 
 /** This inherits a test function from the superclass. */
 open class CircleTest : ShapeTest() {
-  @InterceptTest
-  val circleInterceptor = BasicInterceptor("circle")
+  @InterceptTest val circleInterceptor = BasicInterceptor("circle")
 
   @BeforeTest
   fun beforeTestCircle() {

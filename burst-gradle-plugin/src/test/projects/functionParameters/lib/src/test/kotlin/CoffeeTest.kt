@@ -9,6 +9,14 @@ class CoffeeTest {
   }
 }
 
-enum class Espresso { Decaf, Regular, Double }
+enum class Espresso {
+  Decaf,
+  Regular,
+  Double,
+}
 
-enum class Dairy { None, Milk, Oat }
+enum class Dairy {
+  None,
+  Milk,
+  Oat,
+}

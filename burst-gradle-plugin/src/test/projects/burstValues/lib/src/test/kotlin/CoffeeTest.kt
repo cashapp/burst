@@ -4,9 +4,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 @Burst
-class CoffeeTest(
-  private val espresso: String = burstValues("Decaf", "Regular", "Double"),
-) {
+class CoffeeTest(private val espresso: String = burstValues("Decaf", "Regular", "Double")) {
   @BeforeTest
   fun setUp() {
     println("set up $espresso")

@@ -3,8 +3,7 @@ package app.cash.burst.tests
 import app.cash.burst.InterceptTest
 
 class OrgJunitTest {
-  @InterceptTest
-  val interceptor = BasicInterceptor()
+  @InterceptTest val interceptor = BasicInterceptor()
 
   @org.junit.Before
   fun beforeTest() {

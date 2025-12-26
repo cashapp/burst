@@ -26,32 +26,30 @@ import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.util.isClass
 
 @UnsafeDuringIrConstructionAPI // To use IrDeclarationContainer.declarations.
-class TestInterceptorIrGenerationExtension(
-  private val messageCollector: MessageCollector,
-) : IrGenerationExtension {
+class TestInterceptorIrGenerationExtension(private val messageCollector: MessageCollector) :
+  IrGenerationExtension {
   override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
     // Skip the rewrite if the Burst APIs aren't loaded. We don't expect to find @Burst anywhere.
     val burstApis = BurstApis.maybeCreate(pluginContext) ?: return
 
-    val transformer = object : IrElementTransformerVoidWithContext() {
-      override fun visitClassNew(declaration: IrClass): IrStatement {
-        val classDeclaration = super.visitClassNew(declaration) as IrClass
-        if (!classDeclaration.isClass) return classDeclaration
+    val transformer =
+      object : IrElementTransformerVoidWithContext() {
+        override fun visitClassNew(declaration: IrClass): IrStatement {
+          val classDeclaration = super.visitClassNew(declaration) as IrClass
+          if (!classDeclaration.isClass) return classDeclaration
 
-        val input = TestInterceptorsInputReader(burstApis, classDeclaration).read()
-        try {
-          TestInterceptorsValidator(burstApis).validate(input)
-          HierarchyInterceptorInjector(
-            pluginContext = pluginContext,
-            burstApis = burstApis,
-          ).apply(input)
-        } catch (e: BurstCompilationException) {
-          messageCollector.report(e.severity, e.message, currentFile.locationOf(e.element))
+          val input = TestInterceptorsInputReader(burstApis, classDeclaration).read()
+          try {
+            TestInterceptorsValidator(burstApis).validate(input)
+            HierarchyInterceptorInjector(pluginContext = pluginContext, burstApis = burstApis)
+              .apply(input)
+          } catch (e: BurstCompilationException) {
+            messageCollector.report(e.severity, e.message, currentFile.locationOf(e.element))
+          }
+
+          return classDeclaration
         }
-
-        return classDeclaration
       }
-    }
 
     moduleFragment.transform(transformer, null)
   }

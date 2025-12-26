@@ -8,8 +8,7 @@ import kotlin.test.Test
 abstract class InterceptorAndBurstAbstractTest {
   abstract val name: String
 
-  @InterceptTest
-  val interceptor = BasicInterceptor("abstract")
+  @InterceptTest val interceptor = BasicInterceptor("abstract")
 
   @Test
   fun test(condition: Boolean) {

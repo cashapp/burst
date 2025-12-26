@@ -39,7 +39,6 @@ package app.cash.burst
  *
  * Adopt an interceptor in your test by declaring a property of this type (or any subtype) and
  * annotating it `@InterceptTest`:
- *
  * ```
  * class DocumentStorageTest {
  *   @InterceptTest
@@ -59,8 +58,7 @@ fun interface TestInterceptor {
   fun intercept(testFunction: TestFunction)
 }
 
-@Target(AnnotationTarget.PROPERTY)
-annotation class InterceptTest
+@Target(AnnotationTarget.PROPERTY) annotation class InterceptTest
 
 abstract class TestFunction(
   /** The package that this test is defined in, or "" it has none. */
@@ -76,16 +74,13 @@ abstract class TestFunction(
    * Runs the next interceptor in the chain if there is one.
    *
    * If there isn't, it runs the following in sequence:
-   *
-   *  * The `@BeforeTest` functions (if any)
-   *  * The `@Test` function
-   *  * The `@AfterTest` functions (if any)
+   * * The `@BeforeTest` functions (if any)
+   * * The `@Test` function
+   * * The `@AfterTest` functions (if any)
    */
   abstract operator fun invoke()
 
-  /**
-   * Returns the full test name, like `com.example.project.FeatureTest.testMyFeature`.
-   */
+  /** Returns the full test name, like `com.example.project.FeatureTest.testMyFeature`. */
   override fun toString(): String {
     return buildString {
       if (packageName.isNotEmpty()) {

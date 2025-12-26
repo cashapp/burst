@@ -5,11 +5,8 @@ import app.cash.burst.InterceptTest
 import kotlin.test.Test
 
 @Burst
-class InterceptorAndBurstConstructorTest(
-  val condition: Boolean,
-) {
-  @InterceptTest
-  val interceptor = BasicInterceptor("$condition")
+class InterceptorAndBurstConstructorTest(val condition: Boolean) {
+  @InterceptTest val interceptor = BasicInterceptor("$condition")
 
   @Test
   fun test() {

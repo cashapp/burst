@@ -8,8 +8,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class BasicTest {
-  @InterceptTest
-  val interceptor = BasicInterceptor()
+  @InterceptTest val interceptor = BasicInterceptor()
 
   @BeforeTest
   fun setUp() {

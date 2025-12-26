@@ -3,10 +3,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 @Burst
-class CoffeeTest(
-  private val espresso: Espresso,
-  private val dairy: Dairy,
-) {
+class CoffeeTest(private val espresso: Espresso, private val dairy: Dairy) {
   @BeforeTest
   fun setUp() {
     println("set up $espresso $dairy")
@@ -18,6 +15,14 @@ class CoffeeTest(
   }
 }
 
-enum class Espresso { Decaf, Regular, Double }
+enum class Espresso {
+  Decaf,
+  Regular,
+  Double,
+}
 
-enum class Dairy { None, Milk, Oat }
+enum class Dairy {
+  None,
+  Milk,
+  Oat,
+}

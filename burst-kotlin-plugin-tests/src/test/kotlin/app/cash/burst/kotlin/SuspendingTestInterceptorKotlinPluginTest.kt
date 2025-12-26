@@ -28,12 +28,12 @@ import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 class SuspendingTestInterceptorKotlinPluginTest {
   @Test
   fun interceptor() {
-    val log = BurstTester(
-      packageName = "com.example",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "com.example")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         package com.example
 
         import app.cash.burst.InterceptTest
@@ -65,24 +65,25 @@ class SuspendingTestInterceptorKotlinPluginTest {
           SampleTest().happyPath()
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "intercepting com.example.SampleTest.happyPath in happyCoroutine",
-      "running happyPath",
-      "intercepted",
-    )
+    assertThat(log)
+      .containsExactly(
+        "intercepting com.example.SampleTest.happyPath in happyCoroutine",
+        "running happyPath",
+        "intercepted",
+      )
   }
 
   @Test
   fun inlinedInterceptorDeclaration() {
-    val log = BurstTester(
-      packageName = "com.example",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "com.example")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         package com.example
 
         import app.cash.burst.InterceptTest
@@ -110,24 +111,25 @@ class SuspendingTestInterceptorKotlinPluginTest {
           SampleTest().happyPath()
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "intercepting com.example.SampleTest.happyPath in happyCoroutine",
-      "running happyPath",
-      "intercepted",
-    )
+    assertThat(log)
+      .containsExactly(
+        "intercepting com.example.SampleTest.happyPath in happyCoroutine",
+        "running happyPath",
+        "intercepted",
+      )
   }
 
   @Test
   fun useTestScopeInInterceptor() {
-    val log = BurstTester(
-      packageName = "com.example",
-    ).compileAndRun(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val log =
+      BurstTester(packageName = "com.example")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            """
         package com.example
 
         import app.cash.burst.InterceptTest
@@ -159,21 +161,19 @@ class SuspendingTestInterceptorKotlinPluginTest {
           SampleTest().happyPath()
         }
         """,
-      ),
-    )
+          )
+        )
 
-    assertThat(log).containsExactly(
-      "advancing time in interceptor",
-      "advancing time in test",
-    )
+    assertThat(log).containsExactly("advancing time in interceptor", "advancing time in test")
   }
 
   @Test
   fun cannotUseNonCoroutineTestInterceptorWithCoroutineTestInterceptor() {
-    val result = compile(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val result =
+      compile(
+        SourceFile.kotlin(
+          "Main.kt",
+          """
         package com.example
 
         import app.cash.burst.InterceptTest
@@ -200,21 +200,23 @@ class SuspendingTestInterceptorKotlinPluginTest {
           }
         }
         """,
-      ),
-    )
+        )
+      )
 
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
-    assertThat(result.messages).contains(
-      "Main.kt:13:3 Cannot mix non-coroutine TestInterceptors with CoroutineTestInterceptors in the same test",
-    )
+    assertThat(result.messages)
+      .contains(
+        "Main.kt:13:3 Cannot mix non-coroutine TestInterceptors with CoroutineTestInterceptors in the same test"
+      )
   }
 
   @Test
   fun cannotUseNonCoroutineTestInterceptorWithCoroutinesTest() {
-    val result = compile(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val result =
+      compile(
+        SourceFile.kotlin(
+          "Main.kt",
+          """
         package com.example
 
         import app.cash.burst.InterceptTest
@@ -236,21 +238,23 @@ class SuspendingTestInterceptorKotlinPluginTest {
           }
         }
         """,
-      ),
-    )
+        )
+      )
 
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
-    assertThat(result.messages).contains(
-      "Main.kt:18:3 com.example.SampleTest.simpleInterceptor cannot intercept a coroutine test function",
-    )
+    assertThat(result.messages)
+      .contains(
+        "Main.kt:18:3 com.example.SampleTest.simpleInterceptor cannot intercept a coroutine test function"
+      )
   }
 
   @Test
   fun cannotUseCoroutineTestInterceptorWithNonCoroutinesTest() {
-    val result = compile(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val result =
+      compile(
+        SourceFile.kotlin(
+          "Main.kt",
+          """
         package com.example
 
         import app.cash.burst.InterceptTest
@@ -271,21 +275,23 @@ class SuspendingTestInterceptorKotlinPluginTest {
           }
         }
         """,
-      ),
-    )
+        )
+      )
 
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
-    assertThat(result.messages).contains(
-      "Main.kt:17:3 com.example.SampleTest.simpleInterceptor cannot intercept a non-coroutine test function",
-    )
+    assertThat(result.messages)
+      .contains(
+        "Main.kt:17:3 com.example.SampleTest.simpleInterceptor cannot intercept a non-coroutine test function"
+      )
   }
 
   @Test
   fun cannotUseNonCoroutinesTestWithCoroutinesSuperclass() {
-    val result = compile(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val result =
+      compile(
+        SourceFile.kotlin(
+          "Main.kt",
+          """
         package com.example
 
         import app.cash.burst.InterceptTest
@@ -308,21 +314,23 @@ class SuspendingTestInterceptorKotlinPluginTest {
           }
         }
         """,
-      ),
-    )
+        )
+      )
 
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
-    assertThat(result.messages).contains(
-      "Main.kt:19:3 CoroutineTestInterceptor cannot intercept a non-coroutine test function",
-    )
+    assertThat(result.messages)
+      .contains(
+        "Main.kt:19:3 CoroutineTestInterceptor cannot intercept a non-coroutine test function"
+      )
   }
 
   @Test
   fun cannotUseCoroutinesTestWithNonCoroutinesSuperclass() {
-    val result = compile(
-      SourceFile.kotlin(
-        "Main.kt",
-        """
+    val result =
+      compile(
+        SourceFile.kotlin(
+          "Main.kt",
+          """
         package com.example
 
         import app.cash.burst.InterceptTest
@@ -346,12 +354,11 @@ class SuspendingTestInterceptorKotlinPluginTest {
           }
         }
         """,
-      ),
-    )
+        )
+      )
 
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
-    assertThat(result.messages).contains(
-      "Main.kt:20:3 TestInterceptor cannot intercept a coroutine test function",
-    )
+    assertThat(result.messages)
+      .contains("Main.kt:20:3 TestInterceptor cannot intercept a coroutine test function")
   }
 }

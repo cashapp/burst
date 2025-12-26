@@ -33,19 +33,20 @@ class TestInterceptorGradlePluginTest {
 
     with(tester.readTestSuite("app.cash.burst.tests.BasicTest")) {
       assertThat(testCases.single().failureMessage).isNull()
-      assertThat(systemOut).isEqualTo(
-        """
-        |intercepting
-        |  packageName=app.cash.burst.tests
-        |  className=BasicTest
-        |  functionName=passingTest
-        |set up
-        |running
-        |tear down
-        |intercepted
-        |
-        """.trimMargin(),
-      )
+      assertThat(systemOut)
+        .isEqualTo(
+          """
+          |intercepting
+          |  packageName=app.cash.burst.tests
+          |  className=BasicTest
+          |  functionName=passingTest
+          |set up
+          |running
+          |tear down
+          |intercepted
+          |"""
+            .trimMargin()
+        )
     }
   }
 
@@ -56,14 +57,15 @@ class TestInterceptorGradlePluginTest {
 
     with(tester.readTestSuite("app.cash.burst.tests.FailingTest")) {
       assertThat(testCases.single().failureMessage).isNotNull().contains("boom!")
-      assertThat(systemOut).isEqualTo(
-        """
-        |set up
-        |tear down
-        |re-throwing exception: boom!
-        |
-        """.trimMargin(),
-      )
+      assertThat(systemOut)
+        .isEqualTo(
+          """
+          |set up
+          |tear down
+          |re-throwing exception: boom!
+          |"""
+            .trimMargin()
+        )
     }
   }
 
@@ -77,21 +79,20 @@ class TestInterceptorGradlePluginTest {
 
     with(tester.readTestSuite("app.cash.burst.tests.BeforeTestInSuperclassTest${'$'}CircleTest")) {
       assertThat(testCases.single().failureMessage).isNull()
-      assertThat(systemOut).isEqualTo(
-        """
-        |beforeTest
-        |intercepting app.cash.burst.tests.BeforeTestInSuperclassTest.CircleTest.passingTest
-        |running
-        |intercepted app.cash.burst.tests.BeforeTestInSuperclassTest.CircleTest.passingTest
-        |
-        """.trimMargin(),
-      )
+      assertThat(systemOut)
+        .isEqualTo(
+          """
+          |beforeTest
+          |intercepting app.cash.burst.tests.BeforeTestInSuperclassTest.CircleTest.passingTest
+          |running
+          |intercepted app.cash.burst.tests.BeforeTestInSuperclassTest.CircleTest.passingTest
+          |"""
+            .trimMargin()
+        )
     }
   }
 
-  /**
-   * Note that this is different from JUnit 4, where rules enclose superclass' @After functions.
-   */
+  /** Note that this is different from JUnit 4, where rules enclose superclass' @After functions. */
   @Test
   fun afterTestInSuperclass() {
     val tester = GradleTester("interceptor")
@@ -99,15 +100,16 @@ class TestInterceptorGradlePluginTest {
 
     with(tester.readTestSuite("app.cash.burst.tests.AfterTestInSuperclassTest${'$'}CircleTest")) {
       assertThat(testCases.single().failureMessage).isNull()
-      assertThat(systemOut).isEqualTo(
-        """
-        |intercepting app.cash.burst.tests.AfterTestInSuperclassTest.CircleTest.passingTest
-        |running
-        |intercepted app.cash.burst.tests.AfterTestInSuperclassTest.CircleTest.passingTest
-        |afterTest
-        |
-        """.trimMargin(),
-      )
+      assertThat(systemOut)
+        .isEqualTo(
+          """
+          |intercepting app.cash.burst.tests.AfterTestInSuperclassTest.CircleTest.passingTest
+          |running
+          |intercepted app.cash.burst.tests.AfterTestInSuperclassTest.CircleTest.passingTest
+          |afterTest
+          |"""
+            .trimMargin()
+        )
     }
   }
 
@@ -117,20 +119,21 @@ class TestInterceptorGradlePluginTest {
     tester.cleanAndBuild(":lib:test")
 
     with(tester.readTestSuite("app.cash.burst.tests.CircleTest")) {
-      assertThat(systemOut).isEqualTo(
-        """
-        |> intercepting app.cash.burst.tests.CircleTest.testShape
-        |> before test shape
-        |> intercepting app.cash.burst.tests.CircleTest.testShape
-        |> before test circle
-        |  running testShape
-        |< after test circle
-        |< intercepted app.cash.burst.tests.CircleTest.testShape
-        |< after test shape
-        |< intercepted app.cash.burst.tests.CircleTest.testShape
-        |
-        """.trimMargin(),
-      )
+      assertThat(systemOut)
+        .isEqualTo(
+          """
+          |> intercepting app.cash.burst.tests.CircleTest.testShape
+          |> before test shape
+          |> intercepting app.cash.burst.tests.CircleTest.testShape
+          |> before test circle
+          |  running testShape
+          |< after test circle
+          |< intercepted app.cash.burst.tests.CircleTest.testShape
+          |< after test shape
+          |< intercepted app.cash.burst.tests.CircleTest.testShape
+          |"""
+            .trimMargin()
+        )
     }
   }
 
@@ -140,20 +143,21 @@ class TestInterceptorGradlePluginTest {
     tester.cleanAndBuild(":lib:test")
 
     with(tester.readTestSuite("app.cash.burst.tests.BottomTest")) {
-      assertThat(systemOut).isEqualTo(
-        """
-        |> intercepting app.cash.burst.tests.BottomTest.testBottom
-        |  running bottom
-        |< intercepted app.cash.burst.tests.BottomTest.testBottom
-        |> intercepting app.cash.burst.tests.BottomTest.testMiddle
-        |  running middle
-        |< intercepted app.cash.burst.tests.BottomTest.testMiddle
-        |> intercepting app.cash.burst.tests.BottomTest.testTop
-        |  running top
-        |< intercepted app.cash.burst.tests.BottomTest.testTop
-        |
-        """.trimMargin(),
-      )
+      assertThat(systemOut)
+        .isEqualTo(
+          """
+          |> intercepting app.cash.burst.tests.BottomTest.testBottom
+          |  running bottom
+          |< intercepted app.cash.burst.tests.BottomTest.testBottom
+          |> intercepting app.cash.burst.tests.BottomTest.testMiddle
+          |  running middle
+          |< intercepted app.cash.burst.tests.BottomTest.testMiddle
+          |> intercepting app.cash.burst.tests.BottomTest.testTop
+          |  running top
+          |< intercepted app.cash.burst.tests.BottomTest.testTop
+          |"""
+            .trimMargin()
+        )
     }
   }
 
@@ -163,16 +167,17 @@ class TestInterceptorGradlePluginTest {
     tester.cleanAndBuild(":lib:test")
 
     with(tester.readTestSuite("app.cash.burst.tests.KotlinTestTest")) {
-      assertThat(systemOut).isEqualTo(
-        """
-        |intercepting app.cash.burst.tests.KotlinTestTest.kotlinTestTest
-        |@kotlin.test.BeforeTest before test
-        |@kotlin.test.Test running
-        |@kotlin.test.AfterTest after test
-        |intercepted app.cash.burst.tests.KotlinTestTest.kotlinTestTest
-        |
-        """.trimMargin(),
-      )
+      assertThat(systemOut)
+        .isEqualTo(
+          """
+          |intercepting app.cash.burst.tests.KotlinTestTest.kotlinTestTest
+          |@kotlin.test.BeforeTest before test
+          |@kotlin.test.Test running
+          |@kotlin.test.AfterTest after test
+          |intercepted app.cash.burst.tests.KotlinTestTest.kotlinTestTest
+          |"""
+            .trimMargin()
+        )
     }
   }
 
@@ -182,16 +187,17 @@ class TestInterceptorGradlePluginTest {
     tester.cleanAndBuild(":lib:test")
 
     with(tester.readTestSuite("app.cash.burst.tests.OrgJunitTest")) {
-      assertThat(systemOut).isEqualTo(
-        """
-        |intercepting app.cash.burst.tests.OrgJunitTest.orgJunitTest
-        |@org.junit.Before before test
-        |@org.junit.Test running
-        |@org.junit.After after test
-        |intercepted app.cash.burst.tests.OrgJunitTest.orgJunitTest
-        |
-        """.trimMargin(),
-      )
+      assertThat(systemOut)
+        .isEqualTo(
+          """
+          |intercepting app.cash.burst.tests.OrgJunitTest.orgJunitTest
+          |@org.junit.Before before test
+          |@org.junit.Test running
+          |@org.junit.After after test
+          |intercepted app.cash.burst.tests.OrgJunitTest.orgJunitTest
+          |"""
+            .trimMargin()
+        )
     }
   }
 
@@ -201,16 +207,17 @@ class TestInterceptorGradlePluginTest {
     tester.cleanAndBuild(":lib:test")
 
     with(tester.readTestSuite("app.cash.burst.tests.OrgJunitJupiterApiTest")) {
-      assertThat(systemOut).isEqualTo(
-        """
-        |intercepting app.cash.burst.tests.OrgJunitJupiterApiTest.orgJunitJupiterApiTest
-        |@org.junit.jupiter.api.BeforeEach before test
-        |@org.junit.jupiter.api.Test running
-        |@org.junit.jupiter.api.AfterEach after test
-        |intercepted app.cash.burst.tests.OrgJunitJupiterApiTest.orgJunitJupiterApiTest
-        |
-        """.trimMargin(),
-      )
+      assertThat(systemOut)
+        .isEqualTo(
+          """
+          |intercepting app.cash.burst.tests.OrgJunitJupiterApiTest.orgJunitJupiterApiTest
+          |@org.junit.jupiter.api.BeforeEach before test
+          |@org.junit.jupiter.api.Test running
+          |@org.junit.jupiter.api.AfterEach after test
+          |intercepted app.cash.burst.tests.OrgJunitJupiterApiTest.orgJunitJupiterApiTest
+          |"""
+            .trimMargin()
+        )
     }
   }
 
@@ -220,22 +227,24 @@ class TestInterceptorGradlePluginTest {
     tester.cleanAndBuild(":lib:test")
 
     with(tester.readTestSuite("app.cash.burst.tests.InterceptorAndBurstConstructorTest_false")) {
-      assertThat(systemOut).isEqualTo(
-        """
-        |intercepting false app.cash.burst.tests.InterceptorAndBurstConstructorTest_false.test
-        |running false
-        |
-        """.trimMargin(),
-      )
+      assertThat(systemOut)
+        .isEqualTo(
+          """
+          |intercepting false app.cash.burst.tests.InterceptorAndBurstConstructorTest_false.test
+          |running false
+          |"""
+            .trimMargin()
+        )
     }
     with(tester.readTestSuite("app.cash.burst.tests.InterceptorAndBurstConstructorTest_true")) {
-      assertThat(systemOut).isEqualTo(
-        """
-        |intercepting true app.cash.burst.tests.InterceptorAndBurstConstructorTest_true.test
-        |running true
-        |
-        """.trimMargin(),
-      )
+      assertThat(systemOut)
+        .isEqualTo(
+          """
+          |intercepting true app.cash.burst.tests.InterceptorAndBurstConstructorTest_true.test
+          |running true
+          |"""
+            .trimMargin()
+        )
     }
   }
 
@@ -245,15 +254,16 @@ class TestInterceptorGradlePluginTest {
     tester.cleanAndBuild(":lib:test")
 
     with(tester.readTestSuite("app.cash.burst.tests.InterceptorAndBurstFunctionTest")) {
-      assertThat(systemOut).isEqualTo(
-        """
-        |intercepting function app.cash.burst.tests.InterceptorAndBurstFunctionTest.test_true
-        |running true
-        |intercepting function app.cash.burst.tests.InterceptorAndBurstFunctionTest.test_false
-        |running false
-        |
-        """.trimMargin(),
-      )
+      assertThat(systemOut)
+        .isEqualTo(
+          """
+          |intercepting function app.cash.burst.tests.InterceptorAndBurstFunctionTest.test_true
+          |running true
+          |intercepting function app.cash.burst.tests.InterceptorAndBurstFunctionTest.test_false
+          |running false
+          |"""
+            .trimMargin()
+        )
     }
   }
 
@@ -263,15 +273,16 @@ class TestInterceptorGradlePluginTest {
     tester.cleanAndBuild(":lib:test")
 
     with(tester.readTestSuite("app.cash.burst.tests.InterceptorAndBurstSubclassTest")) {
-      assertThat(systemOut).isEqualTo(
-        """
-        |intercepting abstract app.cash.burst.tests.InterceptorAndBurstSubclassTest.test_true
-        |running subclass true
-        |intercepting abstract app.cash.burst.tests.InterceptorAndBurstSubclassTest.test_false
-        |running subclass false
-        |
-        """.trimMargin(),
-      )
+      assertThat(systemOut)
+        .isEqualTo(
+          """
+          |intercepting abstract app.cash.burst.tests.InterceptorAndBurstSubclassTest.test_true
+          |running subclass true
+          |intercepting abstract app.cash.burst.tests.InterceptorAndBurstSubclassTest.test_false
+          |running subclass false
+          |"""
+            .trimMargin()
+        )
     }
   }
 
@@ -297,29 +308,31 @@ class TestInterceptorGradlePluginTest {
     tester.cleanAndBuild(":lib:$testTaskName")
 
     with(tester.readTestSuite("app.cash.burst.tests.BasicTest", testTaskName)) {
-      assertThat(systemOut).isEqualTo(
-        """
-        |intercepting app.cash.burst.tests.BasicTest.passingTest
-        |set up
-        |running
-        |tear down
-        |intercepted
-        |
-        """.trimMargin(),
-      )
+      assertThat(systemOut)
+        .isEqualTo(
+          """
+          |intercepting app.cash.burst.tests.BasicTest.passingTest
+          |set up
+          |running
+          |tear down
+          |intercepted
+          |"""
+            .trimMargin()
+        )
     }
 
     with(tester.readTestSuite("app.cash.burst.tests.CoroutinesTest", testTaskName)) {
-      assertThat(systemOut).isEqualTo(
-        """
-        |intercepting app.cash.burst.tests.CoroutinesTest.passingTest in passingCoroutine
-        |set up
-        |running in passingCoroutine
-        |tear down
-        |intercepted
-        |
-        """.trimMargin(),
-      )
+      assertThat(systemOut)
+        .isEqualTo(
+          """
+          |intercepting app.cash.burst.tests.CoroutinesTest.passingTest in passingCoroutine
+          |set up
+          |running in passingCoroutine
+          |tear down
+          |intercepted
+          |"""
+            .trimMargin()
+        )
     }
   }
 }

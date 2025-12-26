@@ -8,8 +8,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class FailingTest {
-  @InterceptTest
-  val interceptor = CatchingInterceptor()
+  @InterceptTest val interceptor = CatchingInterceptor()
 
   @BeforeTest
   fun setUp() {

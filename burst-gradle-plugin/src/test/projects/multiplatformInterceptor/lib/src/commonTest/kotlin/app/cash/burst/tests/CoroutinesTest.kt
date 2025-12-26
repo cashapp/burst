@@ -19,8 +19,7 @@ import kotlinx.coroutines.test.runTest
  * `TestCoroutineScheduler` to skip these delays.
  */
 class CoroutinesTest {
-  @InterceptTest
-  val interceptor = DelayInterceptor()
+  @InterceptTest val interceptor = DelayInterceptor()
 
   @BeforeTest
   fun setUp() {
@@ -33,13 +32,12 @@ class CoroutinesTest {
   }
 
   @Test
-  fun passingTest() = runTest(CoroutineName("passingCoroutine")) {
-    val deferred = async {
-      println("running in ${coroutineContext[CoroutineName]?.name}")
+  fun passingTest() =
+    runTest(CoroutineName("passingCoroutine")) {
+      val deferred = async { println("running in ${coroutineContext[CoroutineName]?.name}") }
+      delay(1000.milliseconds)
+      deferred.await()
     }
-    delay(1000.milliseconds)
-    deferred.await()
-  }
 
   class DelayInterceptor : CoroutineTestInterceptor {
     override suspend fun intercept(testFunction: CoroutineTestFunction) {
@@ -50,15 +48,11 @@ class CoroutinesTest {
         delay(1000.milliseconds)
         before.await()
 
-        val execute = async {
-          testFunction()
-        }
+        val execute = async { testFunction() }
         delay(1000.milliseconds)
         execute.await()
 
-        val after = async {
-          println("intercepted")
-        }
+        val after = async { println("intercepted") }
         delay(1000.milliseconds)
         before.await()
       }

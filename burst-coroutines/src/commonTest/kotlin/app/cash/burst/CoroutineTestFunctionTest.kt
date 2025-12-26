@@ -24,29 +24,31 @@ import kotlinx.coroutines.test.runTest
 class CoroutineTestFunctionTest {
   @Test
   fun testToString() = runTest {
-    val testFunction = object : CoroutineTestFunction(
-      scope = this,
-      packageName = "app.cash.burst.test",
-      className = "SampleTest",
-      functionName = "happyPath",
-    ) {
-      override suspend fun invoke() {
+    val testFunction =
+      object :
+        CoroutineTestFunction(
+          scope = this,
+          packageName = "app.cash.burst.test",
+          className = "SampleTest",
+          functionName = "happyPath",
+        ) {
+        override suspend fun invoke() {}
       }
-    }
     assertThat(testFunction.toString()).isEqualTo("app.cash.burst.test.SampleTest.happyPath")
   }
 
   @Test
   fun testToStringWithEmptyPackageName() = runTest {
-    val testFunction = object : CoroutineTestFunction(
-      scope = this,
-      packageName = "",
-      className = "SampleTest",
-      functionName = "happyPath",
-    ) {
-      override suspend fun invoke() {
+    val testFunction =
+      object :
+        CoroutineTestFunction(
+          scope = this,
+          packageName = "",
+          className = "SampleTest",
+          functionName = "happyPath",
+        ) {
+        override suspend fun invoke() {}
       }
-    }
     assertThat(testFunction.toString()).isEqualTo("SampleTest.happyPath")
   }
 }

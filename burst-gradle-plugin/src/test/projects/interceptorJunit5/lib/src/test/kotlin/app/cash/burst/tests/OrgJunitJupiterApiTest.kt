@@ -3,8 +3,7 @@ package app.cash.burst.tests
 import app.cash.burst.InterceptTest
 
 class OrgJunitJupiterApiTest {
-  @InterceptTest
-  val interceptor = BasicInterceptor()
+  @InterceptTest val interceptor = BasicInterceptor()
 
   @org.junit.jupiter.api.BeforeEach
   fun beforeTest() {
