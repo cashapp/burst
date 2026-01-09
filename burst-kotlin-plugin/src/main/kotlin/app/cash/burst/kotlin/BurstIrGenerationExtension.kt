@@ -45,20 +45,6 @@ class BurstIrGenerationExtension(private val messageCollector: MessageCollector)
             return classDeclaration
           }
 
-          if (classHasAtBurst && classDeclaration.modality != Modality.ABSTRACT) {
-            try {
-              ClassSpecializer(
-                  pluginContext = pluginContext,
-                  burstApis = burstApis,
-                  originalParent = currentFile,
-                  original = classDeclaration,
-                )
-                .generateSpecializations()
-            } catch (e: BurstCompilationException) {
-              messageCollector.report(e.severity, e.message, currentFile.locationOf(e.element))
-            }
-          }
-
           // Snapshot the original functions because the loop mutates them.
           val originalFunctions = classDeclaration.functions.toList()
 
@@ -75,6 +61,20 @@ class BurstIrGenerationExtension(private val messageCollector: MessageCollector)
                   original = testFunction,
                 )
               specializer.generateSpecializations()
+            } catch (e: BurstCompilationException) {
+              messageCollector.report(e.severity, e.message, currentFile.locationOf(e.element))
+            }
+          }
+
+          if (classHasAtBurst && classDeclaration.modality != Modality.ABSTRACT) {
+            try {
+              ClassSpecializer(
+                  pluginContext = pluginContext,
+                  burstApis = burstApis,
+                  originalParent = currentFile,
+                  original = classDeclaration,
+                )
+                .generateSpecializations()
             } catch (e: BurstCompilationException) {
               messageCollector.report(e.severity, e.message, currentFile.locationOf(e.element))
             }

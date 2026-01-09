@@ -23,6 +23,7 @@ import kotlinx.metadata.klib.KlibModuleMetadata.MetadataLibraryProvider
 import org.jetbrains.kotlin.konan.file.File as KonanFile
 import org.jetbrains.kotlin.library.KotlinLibrary
 import org.jetbrains.kotlin.library.ToolingSingleFileKlibResolveStrategy
+import org.jetbrains.kotlin.library.components.metadata
 import org.jetbrains.kotlin.util.DummyLogger
 
 /** Decode a `.klib` file using APIs from the embeddable compiler. */
@@ -40,12 +41,12 @@ private fun KotlinLibrary.asMetadataLibraryProvider(): MetadataLibraryProvider {
   val original = this
   return object : MetadataLibraryProvider {
     override val moduleHeaderData: ByteArray
-      get() = original.moduleHeaderData
+      get() = original.metadata.moduleHeaderData
 
     override fun packageMetadata(fqName: String, partName: String) =
-      original.packageMetadata(fqName, partName)
+      original.metadata.getPackageFragment(fqName, partName)
 
     override fun packageMetadataParts(fqName: String): Set<String> =
-      original.packageMetadataParts(fqName)
+      original.metadata.getPackageFragmentNames(fqName)
   }
 }
