@@ -198,7 +198,7 @@ internal class FunctionSpecializer(
             }
           returnType =
             when {
-              original is TestFunction.Suspending -> burstApis.runTestSymbol!!.owner.returnType
+              original is TestFunction.Suspending -> original.runTestVariant.owner.returnType
               else -> delegate.returnType
             }
         }
@@ -239,9 +239,11 @@ internal class FunctionSpecializer(
         // Call runTest() with the original's runTest() arguments. The test body calls the delegate.
         is TestFunction.Suspending -> {
           +irReturn(
-              irCall(callee = burstApis.runTestSymbol!!).apply {
+              irCall(callee = original.runTestVariant).apply {
                 arguments.clear()
                 // TODO: patch these arguments with the specialized arguments.
+                // Arg #0 can be either CoroutineContext or TestScope depending on the variant of
+                // runTest being called
                 arguments += original.runTestCall.arguments[0]?.deepCopyWithSymbols(result)
                 arguments += original.runTestCall.arguments[1]?.deepCopyWithSymbols(result)
                 arguments +=
@@ -249,13 +251,14 @@ internal class FunctionSpecializer(
                     context = pluginContext,
                     burstApis = burstApis,
                     original = originalParent,
+                    runTestSymbol = original.runTestVariant,
                   ) { testScope ->
                     callDelegate.arguments += irGet(testScope)
                     +callDelegate
                   }
               }
             )
-            .apply { type = burstApis.runTestSymbol.owner.returnType }
+            .apply { type = original.runTestVariant.owner.returnType }
         }
 
         is TestFunction.NonSuspending -> {

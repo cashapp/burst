@@ -19,6 +19,7 @@ import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
+import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
 import org.jetbrains.kotlin.ir.types.classOrNull
 import org.jetbrains.kotlin.ir.visitors.IrTransformer
 
@@ -31,6 +32,7 @@ sealed interface TestFunction {
   data class Suspending(
     override val function: IrSimpleFunction,
     override val testAnnotation: IrClassSymbol,
+    val runTestVariant: IrFunctionSymbol,
     val runTestCall: IrCall,
   ) : TestFunction
 
@@ -53,7 +55,8 @@ internal class TestFunctionReader(val burstApis: BurstApis) {
     val runTestCall = readRunTestCall(function)
 
     return when {
-      runTestCall != null -> TestFunction.Suspending(function, testAnnotation, runTestCall)
+      runTestCall != null ->
+        TestFunction.Suspending(function, testAnnotation, runTestCall.symbol, runTestCall)
       else -> TestFunction.NonSuspending(function, testAnnotation)
     }
   }

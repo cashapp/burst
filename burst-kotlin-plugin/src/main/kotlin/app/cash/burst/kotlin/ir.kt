@@ -69,6 +69,7 @@ import org.jetbrains.kotlin.ir.expressions.impl.IrInstanceInitializerCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.fromSymbolOwner
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrConstructorSymbol
+import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.symbols.impl.IrSimpleFunctionSymbolImpl
 import org.jetbrains.kotlin.ir.types.starProjectedType
@@ -212,6 +213,7 @@ internal fun irTestBodyLambda(
   context: IrPluginContext,
   burstApis: BurstApis,
   original: IrElement,
+  runTestSymbol: IrFunctionSymbol,
   blockBody: IrBlockBodyBuilder.(testScope: IrValueParameter) -> Unit,
 ): IrFunctionExpression {
   val function =
@@ -234,7 +236,7 @@ internal fun irTestBodyLambda(
   return IrFunctionExpressionImpl(
     startOffset = original.startOffset,
     endOffset = original.endOffset,
-    type = burstApis.runTestSymbol!!.owner.parameters.last().type,
+    type = runTestSymbol.owner.parameters.last().type,
     function = function,
     origin = IrStatementOrigin.Companion.LAMBDA,
   )

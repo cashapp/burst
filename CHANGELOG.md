@@ -7,6 +7,10 @@
 
 * Pass annotation instances to interceptors
 
+**Fixed**
+
+* Support `TestScope.runTest` extension function for `CoroutineTestInterceptor`.
+
 ## [2.12.0-beta1] *(2026-01-12)*
 [2.12.0-beta1]: https://github.com/cashapp/burst/releases/tag/2.12.0-beta1
 
