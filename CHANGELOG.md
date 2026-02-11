@@ -3,8 +3,9 @@
 ## [Unreleased]
 [Unreleased]: https://github.com/cashapp/burst/compare/2.11.0...HEAD
 
-Nothing yet!
+**Added**
 
+* Pass annotation instances to interceptors
 
 ## [2.12.0-beta1] *(2026-01-12)*
 [2.12.0-beta1]: https://github.com/cashapp/burst/releases/tag/2.12.0-beta1

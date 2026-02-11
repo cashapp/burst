@@ -34,6 +34,7 @@ import org.jetbrains.kotlin.ir.types.classOrNull
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.util.hasAnnotation
 import org.jetbrains.kotlin.ir.util.isSubtypeOfClass
+import org.jetbrains.kotlin.ir.util.isTypeParameter
 import org.jetbrains.kotlin.name.ClassId
 
 /** Looks up APIs used by the code rewriters. */
@@ -45,6 +46,8 @@ private constructor(
   val afterTestSymbols: List<IrClassSymbol>,
   /** Null if `kotlinx.coroutines.test` isn't in this build. */
   val runTestSymbol: IrFunctionSymbol?,
+  val listOfSymbol: IrFunctionSymbol,
+  val annotationSymbol: IrClassSymbol,
 ) {
   val burstValues: IrFunctionSymbol = pluginContext.referenceFunctions(burstValuesId).single()
 
@@ -129,12 +132,21 @@ private constructor(
             it.owner.parameters[1].type.classFqName == durationId.asSingleFqName()
         }
 
+      val listOfSymbol =
+        pluginContext.referenceFunctions(listOfId).single {
+          it.owner.parameters.size > 0 && !it.owner.parameters[0].type.isTypeParameter()
+        }
+
+      val annotationSymbol = pluginContext.referenceClass(annotationId) ?: return null
+
       return BurstApis(
         pluginContext = pluginContext,
         testClassSymbols = testClassSymbols,
         beforeTestSymbols = beforeTestSymbols,
         afterTestSymbols = afterTestSymbols,
         runTestSymbol = runTestSymbol,
+        listOfSymbol = listOfSymbol,
+        annotationSymbol = annotationSymbol,
       )
     }
   }
@@ -148,7 +160,9 @@ internal class TestInterceptorApis(
   val testScope: IrPropertySymbol?,
   val packageName: IrPropertySymbol,
   val className: IrPropertySymbol,
+  val classAnnotations: IrPropertySymbol,
   val functionName: IrPropertySymbol,
+  val functionAnnotations: IrPropertySymbol,
   val invoke: IrSimpleFunctionSymbol,
 ) {
   val interceptorType: IrType = interceptor.defaultType
@@ -173,16 +187,24 @@ private fun IrPluginContext.testInterceptorApis(
     testScope = referenceProperties(testFunctionClassId.callableId("scope")).singleOrNull(),
     packageName = referenceProperties(testFunctionClassId.callableId("packageName")).single(),
     className = referenceProperties(testFunctionClassId.callableId("className")).single(),
+    classAnnotations =
+      referenceProperties(testFunctionClassId.callableId("classAnnotations")).single(),
     functionName = referenceProperties(testFunctionClassId.callableId("functionName")).single(),
+    functionAnnotations =
+      referenceProperties(testFunctionClassId.callableId("functionAnnotations")).single(),
     invoke = referenceFunctions(testFunctionClassId.callableId("invoke")).single(),
   )
 }
 
 private val kotlinPackage = FqPackageName("kotlin")
 private val throwableAddSuppressedId = kotlinPackage.callableId("addSuppressed")
+private val annotationId = kotlinPackage.classId("Annotation")
 
 private val kotlinCoroutinePackage = FqPackageName("kotlin.coroutines")
 private val coroutineContextId = kotlinCoroutinePackage.callableId("CoroutineContext")
+
+private val kotlinCollectionsPackage = FqPackageName("kotlin.collections")
+private val listOfId = kotlinCollectionsPackage.callableId("listOf")
 
 private val kotlinTimeFqPackage = FqPackageName("kotlin.time")
 private val durationId = kotlinTimeFqPackage.classId("Duration")

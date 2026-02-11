@@ -33,8 +33,12 @@ abstract class CoroutineTestFunction(
   val packageName: String,
   /** The classes that enclose the test function, separated by '.'. */
   val className: String,
+  /** Annotations applied to the enclosing class of the test function */
+  val classAnnotations: List<Annotation>,
   /** The test function name. */
   val functionName: String,
+  /** Annotations applied to the test function. */
+  val functionAnnotations: List<Annotation>,
 ) {
   /**
    * Runs the next interceptor in the chain if there is one.

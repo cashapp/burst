@@ -27,7 +27,9 @@ class TestFunctionTest {
         TestFunction(
           packageName = "app.cash.burst.test",
           className = "SampleTest",
+          classAnnotations = listOf(),
           functionName = "happyPath",
+          functionAnnotations = listOf(),
         ) {
         override fun invoke() {}
       }
@@ -38,7 +40,13 @@ class TestFunctionTest {
   fun testToStringWithEmptyPackageName() {
     val testFunction =
       object :
-        TestFunction(packageName = "", className = "SampleTest", functionName = "happyPath") {
+        TestFunction(
+          packageName = "",
+          className = "SampleTest",
+          classAnnotations = listOf(),
+          functionName = "happyPath",
+          functionAnnotations = listOf(),
+        ) {
         override fun invoke() {}
       }
     assertThat(testFunction.toString()).isEqualTo("SampleTest.happyPath")

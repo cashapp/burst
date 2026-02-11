@@ -361,4 +361,57 @@ class SuspendingTestInterceptorKotlinPluginTest {
     assertThat(result.messages)
       .contains("Main.kt:20:3 TestInterceptor cannot intercept a coroutine test function")
   }
+
+  @Test
+  fun testFunctionWithAnnotations() {
+    val log =
+      BurstTester(packageName = "com.example")
+        .compileAndRun(
+          SourceFile.kotlin(
+            "Main.kt",
+            $$"""
+        package com.example
+
+        import app.cash.burst.InterceptTest
+        import app.cash.burst.coroutines.CoroutineTestFunction
+        import app.cash.burst.coroutines.CoroutineTestInterceptor
+        import kotlinx.coroutines.test.runTest
+        import kotlin.test.Test
+
+        @Target(AnnotationTarget.FUNCTION, AnnotationTarget.CLASS)
+        annotation class SampleAnnotation(val label: String)
+
+        @SampleAnnotation(label = "classy")
+        class SampleTest {
+          @InterceptTest
+          val interceptor = object : CoroutineTestInterceptor {
+            override suspend fun intercept(testFunction: CoroutineTestFunction) {
+              log("function annotations: ${testFunction.functionAnnotations}")
+              log("class annotations: ${testFunction.classAnnotations}")
+
+              testFunction()
+            }
+          }
+
+          @Test
+          @SampleAnnotation(label = "funky")
+          fun happyPath() = runTest {
+            log("running happyPath")
+          }
+        }
+
+        fun main(vararg args: String) {
+          SampleTest().happyPath()
+        }
+        """,
+          )
+        )
+
+    assertThat(log)
+      .containsExactly(
+        $$"function annotations: [@org.junit.Test(expected=class org.junit.Test$None, timeout=0), @com.example.SampleAnnotation(label=funky)]",
+        "class annotations: [@com.example.SampleAnnotation(label=classy)]",
+        "running happyPath",
+      )
+  }
 }

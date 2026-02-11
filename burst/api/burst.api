@@ -9,8 +9,10 @@ public abstract interface annotation class app/cash/burst/InterceptTest : java/l
 }
 
 public abstract class app/cash/burst/TestFunction {
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/List;)V
+	public final fun getClassAnnotations ()Ljava/util/List;
 	public final fun getClassName ()Ljava/lang/String;
+	public final fun getFunctionAnnotations ()Ljava/util/List;
 	public final fun getFunctionName ()Ljava/lang/String;
 	public final fun getPackageName ()Ljava/lang/String;
 	public abstract fun invoke ()V

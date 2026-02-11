@@ -39,6 +39,7 @@ import org.jetbrains.kotlin.ir.builders.irNull
 import org.jetbrains.kotlin.ir.builders.irReturn
 import org.jetbrains.kotlin.ir.builders.irString
 import org.jetbrains.kotlin.ir.builders.irTemporary
+import org.jetbrains.kotlin.ir.builders.irVararg
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
@@ -300,6 +301,16 @@ internal class InterceptorInjector(
           nameHint = "className",
         )
 
+      val classAnnotationsLocal =
+        irTemporary(
+          value =
+            irCall(testInterceptorApis.classAnnotations.owner.getter!!).apply {
+              origin = IrStatementOrigin.Companion.GET_PROPERTY
+              dispatchReceiver = irGet(function.parameters[1])
+            },
+          nameHint = "classAnnotations",
+        )
+
       val functionNameLocal =
         irTemporary(
           value =
@@ -308,6 +319,16 @@ internal class InterceptorInjector(
               dispatchReceiver = irGet(function.parameters[1])
             },
           nameHint = "functionName",
+        )
+
+      val functionAnnotationsLocal =
+        irTemporary(
+          value =
+            irCall(testInterceptorApis.functionAnnotations.owner.getter!!).apply {
+              origin = IrStatementOrigin.Companion.GET_PROPERTY
+              dispatchReceiver = irGet(function.parameters[1])
+            },
+          nameHint = "functionAnnotations",
         )
 
       var proceed: IrExpression = irBlock {
@@ -366,7 +387,9 @@ internal class InterceptorInjector(
             testScope = testScopeLocal,
             packageName = packageNameLocal,
             className = classNameLocal,
+            classAnnotations = classAnnotationsLocal,
             functionName = functionNameLocal,
+            functionAnnotations = functionAnnotationsLocal,
             proceed = proceed,
           )
         +testFunctionClass
@@ -385,7 +408,9 @@ internal class InterceptorInjector(
             testScope = testScopeLocal,
             packageName = packageNameLocal,
             className = classNameLocal,
+            classAnnotations = classAnnotationsLocal,
             functionName = functionNameLocal,
+            functionAnnotations = functionAnnotationsLocal,
             proceed = proceed,
           )
         +testFunctionClass
@@ -547,7 +572,16 @@ internal class InterceptorInjector(
             dispatchReceiver =
               irGet(original.dispatchReceiverParameter!!).apply { origin = IMPLICIT_ARGUMENT }
           },
+        classAnnotations =
+          irCall(burstApis.listOfSymbol).apply {
+            arguments[0] =
+              irVararg(burstApis.annotationSymbol.defaultType, originalParent.annotations)
+          },
         functionName = irString(original.name.asString()),
+        functionAnnotations =
+          irCall(burstApis.listOfSymbol).apply {
+            arguments[0] = irVararg(burstApis.annotationSymbol.defaultType, original.annotations)
+          },
         buildBody = buildBody,
       )
     +testFunctionClass
@@ -565,7 +599,9 @@ internal class InterceptorInjector(
     testScope: IrValueDeclaration?,
     packageName: IrValueDeclaration,
     className: IrValueDeclaration,
+    classAnnotations: IrValueDeclaration,
     functionName: IrValueDeclaration,
+    functionAnnotations: IrValueDeclaration,
     proceed: IrExpression,
   ): IrClass {
     return createTestFunctionClass(
@@ -573,7 +609,9 @@ internal class InterceptorInjector(
       testScope = testScope?.let { irGet(it) },
       packageName = irGet(packageName),
       className = irGet(className),
+      classAnnotations = irGet(classAnnotations),
       functionName = irGet(functionName),
+      functionAnnotations = irGet(functionAnnotations),
     ) {
       irFunctionBody(context = context) { +proceed }
     }
@@ -585,7 +623,9 @@ internal class InterceptorInjector(
     testScope: IrExpression?,
     packageName: IrExpression,
     className: IrExpression,
+    classAnnotations: IrExpression,
     functionName: IrExpression,
+    functionAnnotations: IrExpression,
     buildBody: IrSimpleFunction.() -> Unit,
   ): IrClass {
     val testFunctionClass =
@@ -614,7 +654,9 @@ internal class InterceptorInjector(
               if (testScope != null) arguments += testScope
               arguments += packageName
               arguments += className
+              arguments += classAnnotations
               arguments += functionName
+              arguments += functionAnnotations
             }
           statements +=
             irInstanceInitializerCall(
