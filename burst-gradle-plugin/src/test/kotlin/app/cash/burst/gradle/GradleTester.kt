@@ -54,8 +54,15 @@ class GradleTester(projectName: String) {
   fun hasTestSuite(className: String, testTaskName: String = "test") =
     testSuitePath(className, testTaskName).exists()
 
-  private fun testSuitePath(className: String, testTaskName: String) =
-    projectDir.resolve("lib/build/test-results/$testTaskName/TEST-$className.xml")
+  private fun testSuitePath(className: String, testTaskName: String): File {
+    val path =
+      when (testTaskName) {
+        "test",
+        "jvmTest" -> "lib/build/test-results/$testTaskName/TEST-$className.xml"
+        else -> "lib/build/test-results/$testTaskName/TEST-$testTaskName.$className.xml"
+      }
+    return projectDir.resolve(path)
+  }
 
   private companion object {
     val versionProperty = "-PburstVersion=${System.getProperty("burstVersion")}"
