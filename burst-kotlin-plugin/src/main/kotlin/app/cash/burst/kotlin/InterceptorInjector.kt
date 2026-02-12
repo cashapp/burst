@@ -498,6 +498,7 @@ internal class InterceptorInjector(
           interceptTestBodyExpression(
             testFunction = original,
             testBodyLambda = runTestCall.arguments[runTestCall.arguments.size - 1]!!,
+            runTestCall = runTestCall,
           )
       }
 
@@ -520,6 +521,7 @@ internal class InterceptorInjector(
   private fun interceptTestBodyExpression(
     testFunction: IrSimpleFunction,
     testBodyLambda: IrExpression,
+    runTestCall: IrCall,
   ): IrFunctionExpression {
     // Create a lambda for the new test body. The new lambda's body creates a `TestFunction` that
     // delegates to the original test body.
@@ -527,6 +529,7 @@ internal class InterceptorInjector(
       context = pluginContext,
       burstApis = burstApis,
       original = originalParent,
+      runTestSymbol = runTestCall.symbol,
     ) { testScope ->
       +callInterceptWithTestBody(original = testFunction, testScope = irGet(testScope)) {
         irFunctionBody(context = context) {

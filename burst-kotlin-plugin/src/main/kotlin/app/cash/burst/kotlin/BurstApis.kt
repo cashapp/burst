@@ -45,7 +45,7 @@ private constructor(
   val beforeTestSymbols: List<IrClassSymbol>,
   val afterTestSymbols: List<IrClassSymbol>,
   /** Null if `kotlinx.coroutines.test` isn't in this build. */
-  val runTestSymbol: IrFunctionSymbol?,
+  val runTestSymbols: List<IrFunctionSymbol>?,
   val listOfSymbol: IrFunctionSymbol,
   val annotationSymbol: IrClassSymbol,
 ) {
@@ -89,7 +89,7 @@ private constructor(
   }
 
   fun isRunTest(irCall: IrCall): Boolean {
-    return runTestSymbol != null && irCall.symbol == runTestSymbol
+    return runTestSymbols != null && irCall.symbol in runTestSymbols
   }
 
   companion object {
@@ -125,12 +125,16 @@ private constructor(
           pluginContext.referenceClass(kotlinAfterTestClassId),
         )
 
-      val runTestSymbol =
-        pluginContext.referenceFunctions(runTestId).singleOrNull {
-          it.owner.parameters.size == 3 &&
-            it.owner.parameters[0].type.classFqName == coroutineContextId.asSingleFqName() &&
-            it.owner.parameters[1].type.classFqName == durationId.asSingleFqName()
-        }
+      val runTestSymbols =
+        pluginContext
+          .referenceFunctions(runTestId)
+          .filter {
+            it.owner.parameters.size == 3 &&
+              (it.owner.parameters[0].type.classFqName == coroutineContextId.asSingleFqName() &&
+                it.owner.parameters[1].type.classFqName == durationId.asSingleFqName() ||
+                it.owner.parameters[0].type.classFqName == testScopeId.asSingleFqName())
+          }
+          .takeIf { it.isNotEmpty() }
 
       val listOfSymbol =
         pluginContext.referenceFunctions(listOfId).single {
@@ -144,7 +148,7 @@ private constructor(
         testClassSymbols = testClassSymbols,
         beforeTestSymbols = beforeTestSymbols,
         afterTestSymbols = afterTestSymbols,
-        runTestSymbol = runTestSymbol,
+        runTestSymbols = runTestSymbols,
         listOfSymbol = listOfSymbol,
         annotationSymbol = annotationSymbol,
       )
