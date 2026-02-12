@@ -30,7 +30,9 @@ class CoroutineTestFunctionTest {
           scope = this,
           packageName = "app.cash.burst.test",
           className = "SampleTest",
+          classAnnotations = listOf(),
           functionName = "happyPath",
+          functionAnnotations = listOf(),
         ) {
         override suspend fun invoke() {}
       }
@@ -45,7 +47,9 @@ class CoroutineTestFunctionTest {
           scope = this,
           packageName = "",
           className = "SampleTest",
+          classAnnotations = listOf(),
           functionName = "happyPath",
+          functionAnnotations = listOf(),
         ) {
         override suspend fun invoke() {}
       }
