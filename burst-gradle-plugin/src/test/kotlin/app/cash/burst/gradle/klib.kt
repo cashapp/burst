@@ -17,14 +17,13 @@ package app.cash.burst.gradle
 
 import java.io.File
 import kotlin.metadata.KmClass
+import kotlin.metadata.internal.konan.file.File as KonanFile
+import kotlin.metadata.internal.library.KotlinLibrary
+import kotlin.metadata.internal.library.ToolingSingleFileKlibResolveStrategy
+import kotlin.metadata.internal.util.DummyLogger
 import kotlinx.metadata.klib.KlibModuleFragmentReadStrategy
 import kotlinx.metadata.klib.KlibModuleMetadata
 import kotlinx.metadata.klib.KlibModuleMetadata.MetadataLibraryProvider
-import org.jetbrains.kotlin.konan.file.File as KonanFile
-import org.jetbrains.kotlin.library.KotlinLibrary
-import org.jetbrains.kotlin.library.ToolingSingleFileKlibResolveStrategy
-import org.jetbrains.kotlin.library.components.metadata
-import org.jetbrains.kotlin.util.DummyLogger
 
 /** Decode a `.klib` file using APIs from the embeddable compiler. */
 fun readKlib(klib: File): KotlinLibrary =
@@ -41,12 +40,12 @@ private fun KotlinLibrary.asMetadataLibraryProvider(): MetadataLibraryProvider {
   val original = this
   return object : MetadataLibraryProvider {
     override val moduleHeaderData: ByteArray
-      get() = original.metadata.moduleHeaderData
+      get() = original.moduleHeaderData
 
     override fun packageMetadata(fqName: String, partName: String) =
-      original.metadata.getPackageFragment(fqName, partName)
+      original.packageMetadata(fqName, partName)
 
     override fun packageMetadataParts(fqName: String): Set<String> =
-      original.metadata.getPackageFragmentNames(fqName)
+      original.packageMetadataParts(fqName)
   }
 }
