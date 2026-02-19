@@ -11,6 +11,7 @@ Nothing yet!
 **Added**
 
 * Pass annotation instances to interceptors
+* Support Kotlin 2.3.20-Beta2
 
 **Fixed**
 
