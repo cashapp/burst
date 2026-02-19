@@ -21,6 +21,7 @@ import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
+import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrarAdapter
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 
 @OptIn(ExperimentalCompilerApi::class, UnsafeDuringIrConstructionAPI::class)
@@ -40,5 +41,6 @@ class BurstCompilerPluginRegistrar : CompilerPluginRegistrar() {
     IrGenerationExtension.registerExtension(
       extension = TestInterceptorIrGenerationExtension(messageCollector)
     )
+    FirExtensionRegistrarAdapter.registerExtension(extension = BurstFirExtensionRegistrar())
   }
 }

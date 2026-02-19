@@ -17,6 +17,8 @@
 
 package app.cash.burst.kotlin
 
+import app.cash.burst.kotlin.BurstApis.Companion.burstAnnotationId
+import app.cash.burst.kotlin.BurstApis.Companion.burstFqPackage
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.declarations.IrAnnotationContainer
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOriginImpl
@@ -153,6 +155,12 @@ private constructor(
         annotationSymbol = annotationSymbol,
       )
     }
+
+    val burstFqPackage = FqPackageName("app.cash.burst")
+    val burstAnnotationId = burstFqPackage.classId("Burst")
+    val burstValuesId = burstFqPackage.callableId("burstValues")
+
+    val testClassIds = listOf(junitTestClassId, junit5TestClassId, kotlinTestClassId)
   }
 }
 
@@ -213,10 +221,7 @@ private val listOfId = kotlinCollectionsPackage.callableId("listOf")
 private val kotlinTimeFqPackage = FqPackageName("kotlin.time")
 private val durationId = kotlinTimeFqPackage.classId("Duration")
 
-private val burstFqPackage = FqPackageName("app.cash.burst")
 private val burstCoroutinesFqPackage = FqPackageName("app.cash.burst.coroutines")
-private val burstAnnotationId = burstFqPackage.classId("Burst")
-private val burstValuesId = burstFqPackage.callableId("burstValues")
 private val interceptTestAnnotationId = burstFqPackage.classId("InterceptTest")
 
 private val junitPackage = FqPackageName("org.junit")
