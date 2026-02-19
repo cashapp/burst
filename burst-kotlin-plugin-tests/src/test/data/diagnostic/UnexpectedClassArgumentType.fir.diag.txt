@@ -1,0 +1,1 @@
+/UnexpectedClassArgumentType.kt:(706,714): error: @Burst parameter must be a boolean, an enum, or have a burstValues() default value

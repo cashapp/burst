@@ -464,7 +464,7 @@ class SuspendingTestInterceptorKotlinPluginTest {
 
     assertThat(log)
       .containsExactly(
-        $$"function annotations: [@org.junit.Test(expected=class org.junit.Test$None, timeout=0), @com.example.SampleAnnotation(label=funky)]",
+        "function annotations: [@org.junit.jupiter.api.Test(), @com.example.SampleAnnotation(label=funky)]",
         "class annotations: [@com.example.SampleAnnotation(label=classy)]",
         "running happyPath",
       )
