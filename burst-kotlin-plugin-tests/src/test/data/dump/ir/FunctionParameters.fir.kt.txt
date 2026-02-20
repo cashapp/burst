@@ -1,0 +1,133 @@
+@Burst
+class CoffeeTest {
+  val log: MutableList<String>
+    field = mutableListOf<String>()
+    get
+
+  constructor() /* primary */ {
+    super/*Any*/()
+    /* <init>() */
+
+  }
+
+  fun test(espresso: Espresso, dairy: Dairy) {
+    plusAssign<String>(/* <this> = <this>.<get-log>(), */ element = "running " + '$' + "espresso " + '$' + "dairy")
+  }
+
+  @Test
+  fun test_Decaf_Milk() {
+    val tmp0_receiver: CoffeeTest = <this>
+    val tmp1_Decaf: Espresso = Espresso.Decaf
+    val tmp2_Milk: Dairy = Dairy.Milk
+    tmp0_receiver.test(espresso = tmp1_Decaf, dairy = tmp2_Milk)
+  }
+
+  @Test
+  fun test_Decaf_None() {
+    val tmp0_receiver: CoffeeTest = <this>
+    val tmp1_Decaf: Espresso = Espresso.Decaf
+    val tmp2_None: Dairy = Dairy.None
+    tmp0_receiver.test(espresso = tmp1_Decaf, dairy = tmp2_None)
+  }
+
+  @Test
+  fun test_Decaf_Oat() {
+    val tmp0_receiver: CoffeeTest = <this>
+    val tmp1_Decaf: Espresso = Espresso.Decaf
+    val tmp2_Oat: Dairy = Dairy.Oat
+    tmp0_receiver.test(espresso = tmp1_Decaf, dairy = tmp2_Oat)
+  }
+
+  @Test
+  fun test_Double_Milk() {
+    val tmp0_receiver: CoffeeTest = <this>
+    val tmp1_Double: Espresso = Espresso.Double
+    val tmp2_Milk: Dairy = Dairy.Milk
+    tmp0_receiver.test(espresso = tmp1_Double, dairy = tmp2_Milk)
+  }
+
+  @Test
+  fun test_Double_None() {
+    val tmp0_receiver: CoffeeTest = <this>
+    val tmp1_Double: Espresso = Espresso.Double
+    val tmp2_None: Dairy = Dairy.None
+    tmp0_receiver.test(espresso = tmp1_Double, dairy = tmp2_None)
+  }
+
+  @Test
+  fun test_Double_Oat() {
+    val tmp0_receiver: CoffeeTest = <this>
+    val tmp1_Double: Espresso = Espresso.Double
+    val tmp2_Oat: Dairy = Dairy.Oat
+    tmp0_receiver.test(espresso = tmp1_Double, dairy = tmp2_Oat)
+  }
+
+  @Test
+  fun test_Regular_Milk() {
+    val tmp0_receiver: CoffeeTest = <this>
+    val tmp1_Regular: Espresso = Espresso.Regular
+    val tmp2_Milk: Dairy = Dairy.Milk
+    tmp0_receiver.test(espresso = tmp1_Regular, dairy = tmp2_Milk)
+  }
+
+  @Test
+  fun test_Regular_None() {
+    val tmp0_receiver: CoffeeTest = <this>
+    val tmp1_Regular: Espresso = Espresso.Regular
+    val tmp2_None: Dairy = Dairy.None
+    tmp0_receiver.test(espresso = tmp1_Regular, dairy = tmp2_None)
+  }
+
+  @Test
+  fun test_Regular_Oat() {
+    val tmp0_receiver: CoffeeTest = <this>
+    val tmp1_Regular: Espresso = Espresso.Regular
+    val tmp2_Oat: Dairy = Dairy.Oat
+    tmp0_receiver.test(espresso = tmp1_Regular, dairy = tmp2_Oat)
+  }
+
+}
+
+enum class Dairy : Enum<Dairy> {
+  None = Dairy()
+
+  Milk = Dairy()
+
+  Oat = Dairy()
+
+  private constructor() /* primary */ {
+    super/*Enum*/<Dairy>()
+    /* <init>() */
+
+  }
+
+  /* static */ fun valueOf(value: String): Dairy /* Synthetic body for ENUM_VALUEOF */
+
+  /* static */ fun values(): Array<Dairy> /* Synthetic body for ENUM_VALUES */
+
+  /* static */ val entries: EnumEntries<Dairy>
+    get(): EnumEntries<Dairy> /* Synthetic body for ENUM_ENTRIES */
+
+}
+
+enum class Espresso : Enum<Espresso> {
+  Decaf = Espresso()
+
+  Regular = Espresso()
+
+  Double = Espresso()
+
+  private constructor() /* primary */ {
+    super/*Enum*/<Espresso>()
+    /* <init>() */
+
+  }
+
+  /* static */ fun valueOf(value: String): Espresso /* Synthetic body for ENUM_VALUEOF */
+
+  /* static */ fun values(): Array<Espresso> /* Synthetic body for ENUM_VALUES */
+
+  /* static */ val entries: EnumEntries<Espresso>
+    get(): EnumEntries<Espresso> /* Synthetic body for ENUM_ENTRIES */
+
+}

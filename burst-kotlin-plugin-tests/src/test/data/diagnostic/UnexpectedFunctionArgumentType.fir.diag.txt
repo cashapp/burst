@@ -1,0 +1,1 @@
+/UnexpectedFunctionArgumentType.kt:(727,735): error: @Burst parameter must be a boolean, an enum, or have a burstValues() default value

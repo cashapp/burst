@@ -55,7 +55,16 @@ configure<SpotlessExtension> {
   kotlin {
     target("**/*.kt")
     ktfmt(libs.ktfmt.get().version).googleStyle()
-    licenseHeaderFile(rootProject.file("gradle/license-header.txt"))
+
+    targetExclude(
+      // These contain diagnostic tags and can't be formatted
+      "burst-kotlin-plugin-tests/src/test/data/diagnostic/**/*.kt"
+    )
+  }
+
+  format("license") {
+    target("**/*.kt")
+    licenseHeaderFile(rootProject.file("gradle/license-header.txt"), "(package |@file|import |// )")
 
     targetExclude(
       // Apache 2-licensed files from AOSP.
