@@ -1,0 +1,1 @@
+/UnexpectedDefaultArgumentValue.kt:(788,803): error: @Burst parameter default must be burstValues(), a constant, null, or absent

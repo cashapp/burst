@@ -1,0 +1,1 @@
+/BurstValuesReferencesEarlierParameter.kt:(836,838): error: @Burst parameter may not reference other parameters

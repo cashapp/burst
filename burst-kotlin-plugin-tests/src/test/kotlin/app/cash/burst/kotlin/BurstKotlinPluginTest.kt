@@ -142,38 +142,6 @@ class BurstKotlinPluginTest {
   }
 
   @Test
-  fun unexpectedDefaultArgumentValue() {
-    val result =
-      compile(
-        sourceFile =
-          SourceFile.kotlin(
-            "CoffeeTest.kt",
-            """
-        import app.cash.burst.Burst
-        import kotlin.test.Test
-
-        val defaultEspresso = Espresso.Regular
-
-        @Burst
-        class CoffeeTest {
-          @Test
-          fun test(espresso: Espresso = defaultEspresso) {
-          }
-        }
-
-        enum class Espresso { Decaf, Regular, Double }
-        """,
-          )
-      )
-    assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
-    assertThat(result.messages)
-      .contains(
-        "CoffeeTest.kt:9:12 " +
-          "@Burst parameter default must be burstValues(), a constant, null, or absent"
-      )
-  }
-
-  @Test
   fun constructorParameters() {
     val result =
       compile(
@@ -668,35 +636,6 @@ class BurstKotlinPluginTest {
     val baseClass = result.classLoader.loadClass("CoffeeTest")
     assertThat(baseClass.testSuffixes).contains("1_a_b_c_d_e_f_g_${"x".repeat(1024 - 16)}")
     assertThat(baseClass.testSuffixes).contains("255_${"x".repeat(1024 - 4)}")
-  }
-
-  @Test
-  fun burstValuesReferencesEarlierParameter() {
-    val result =
-      compile(
-        sourceFile =
-          SourceFile.kotlin(
-            "CoffeeTest.kt",
-            """
-        import app.cash.burst.Burst
-        import app.cash.burst.burstValues
-        import kotlin.test.Test
-
-        @Burst
-        class CoffeeTest {
-          @Test
-          fun test(
-            p1: String = burstValues("a", "b"),
-            p2: String = burstValues("c", p1.uppercase()),
-          ) {
-          }
-        }
-        """,
-          )
-      )
-    assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
-    assertThat(result.messages)
-      .contains("CoffeeTest.kt:10:5 @Burst parameter may not reference other parameters")
   }
 
   @Test

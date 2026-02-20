@@ -21,9 +21,21 @@ public class DiagnosticTestGenerated extends AbstractDiagnosticTest {
   }
 
   @Test
+  @TestMetadata("BurstValuesReferencesEarlierParameter.kt")
+  public void testBurstValuesReferencesEarlierParameter() {
+    runTest("burst-kotlin-plugin-tests/src/test/data/diagnostic/BurstValuesReferencesEarlierParameter.kt");
+  }
+
+  @Test
   @TestMetadata("UnexpectedClassArgumentType.kt")
   public void testUnexpectedClassArgumentType() {
     runTest("burst-kotlin-plugin-tests/src/test/data/diagnostic/UnexpectedClassArgumentType.kt");
+  }
+
+  @Test
+  @TestMetadata("UnexpectedDefaultArgumentValue.kt")
+  public void testUnexpectedDefaultArgumentValue() {
+    runTest("burst-kotlin-plugin-tests/src/test/data/diagnostic/UnexpectedDefaultArgumentValue.kt");
   }
 
   @Test

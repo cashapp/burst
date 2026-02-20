@@ -16,8 +16,10 @@
 package app.cash.burst.kotlin.diagnostic
 
 import app.cash.burst.kotlin.BurstApis
+import org.jetbrains.kotlin.KtSourceElement
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
 import org.jetbrains.kotlin.diagnostics.reportOn
+import org.jetbrains.kotlin.fir.FirElement
 import org.jetbrains.kotlin.fir.analysis.checkers.MppCheckerKind
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirConstructorChecker
@@ -30,10 +32,19 @@ import org.jetbrains.kotlin.fir.declarations.toAnnotationClassId
 import org.jetbrains.kotlin.fir.declarations.utils.isAbstract
 import org.jetbrains.kotlin.fir.declarations.utils.isEnumClass
 import org.jetbrains.kotlin.fir.declarations.utils.isOverride
+import org.jetbrains.kotlin.fir.expressions.FirFunctionCall
+import org.jetbrains.kotlin.fir.expressions.FirPropertyAccessExpression
+import org.jetbrains.kotlin.fir.expressions.FirVarargArgumentsExpression
+import org.jetbrains.kotlin.fir.expressions.arguments
 import org.jetbrains.kotlin.fir.expressions.toResolvedCallableSymbol
 import org.jetbrains.kotlin.fir.isBoolean
 import org.jetbrains.kotlin.fir.resolve.getContainingClass
+import org.jetbrains.kotlin.fir.serialization.constant.hasConstantValue
+import org.jetbrains.kotlin.fir.types.isEnum
+import org.jetbrains.kotlin.fir.types.isNullLiteral
+import org.jetbrains.kotlin.fir.types.resolvedType
 import org.jetbrains.kotlin.fir.types.toRegularClassSymbol
+import org.jetbrains.kotlin.fir.visitors.FirVisitorVoid
 
 internal class ClassConstructorParameterChecker : FirConstructorChecker(MppCheckerKind.Common) {
   context(context: CheckerContext, reporter: DiagnosticReporter)
@@ -65,17 +76,69 @@ internal class FunctionParameterChecker : FirSimpleFunctionChecker(MppCheckerKin
     // We can rely on the super declaration being checked!
     if (declaration.isOverride) return
 
-    declaration.valueParameters.forEach { parameter -> checkParam(parameter) }
+    declaration.valueParameters.forEach { parameter ->
+      checkParam(parameter)
+      checkBurstValuesReferences(parameter, declaration.valueParameters)
+    }
   }
 }
 
 context(context: CheckerContext, reporter: DiagnosticReporter)
 private fun checkParam(declaration: FirValueParameter) {
+  declaration.defaultValue?.let { defaultValue ->
+    val defaultCall = defaultValue.toResolvedCallableSymbol(context.session)
+    if (defaultCall?.callableId == BurstApis.burstValuesId) return
+
+    // Check the default value if it isn't a burstValues() call
+    val isConst = defaultValue.hasConstantValue(context.session)
+    val isEnum = defaultValue.resolvedType.isEnum
+    val isNullLiteral = defaultValue.isNullLiteral
+
+    if (!isConst && !isEnum && !isNullLiteral) {
+      reporter.reportOn(declaration.source, BurstDiagnostics.INVALID_DEFAULT_VALUE)
+    }
+  }
+
   val parameterType = declaration.returnTypeRef.toRegularClassSymbol(context.session) ?: return
   if (parameterType.isEnumClass || parameterType.isBoolean()) return
 
-  val defaultArgument = declaration.defaultValue?.toResolvedCallableSymbol(context.session)
-  if (defaultArgument?.callableId == BurstApis.burstValuesId) return
-
   reporter.reportOn(declaration.source, BurstDiagnostics.INVALID_BURST_ARGUMENT)
+}
+
+context(context: CheckerContext, reporter: DiagnosticReporter)
+private fun checkBurstValuesReferences(
+  declaration: FirValueParameter,
+  otherParameters: List<FirValueParameter>,
+) {
+  val call = declaration.defaultValue as? FirFunctionCall ?: return
+
+  val flattenedArgs =
+    call.arguments.flatMap {
+      when (it) {
+        is FirVarargArgumentsExpression -> it.arguments
+        else -> listOf(it)
+      }
+    }
+  for (arg in flattenedArgs) {
+    arg.accept(
+      ArgumentReferenceChecker(otherParameters) {
+        reporter.reportOn(it, BurstDiagnostics.PARAMETER_REFERENCE_NOT_ALLOWED)
+      }
+    )
+  }
+}
+
+private class ArgumentReferenceChecker(
+  private val otherParameters: List<FirValueParameter>,
+  private val report: (KtSourceElement?) -> Unit,
+) : FirVisitorVoid() {
+  override fun visitElement(element: FirElement) {
+    if (element is FirPropertyAccessExpression) {
+      if (otherParameters.any { it.symbol == element.toResolvedCallableSymbol() }) {
+        report(element.source)
+      }
+    } else {
+      element.acceptChildren(this)
+    }
+  }
 }
