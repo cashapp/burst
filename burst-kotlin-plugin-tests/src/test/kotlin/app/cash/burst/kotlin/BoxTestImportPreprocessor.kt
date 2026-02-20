@@ -24,7 +24,12 @@ import org.jetbrains.kotlin.test.services.isJavaFile
 class BoxTestImportPreprocessor(testServices: TestServices) :
   ReversibleSourceFilePreprocessor(testServices) {
   private val additionalImports =
-    setOf("app.cash.burst.test.*", "assertk.assertThat", "assertk.assertions.*")
+    setOf(
+      "app.cash.burst.test.*",
+      "assertk.assertThat",
+      "assertk.assertions.*",
+      "kotlin.test.assertFailsWith",
+    )
 
   private val additionalImportsString by lazy {
     additionalImports.sorted().joinToString(separator = "\n") { "import $it" }

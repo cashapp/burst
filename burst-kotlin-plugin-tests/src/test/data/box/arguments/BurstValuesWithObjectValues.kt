@@ -13,25 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.burst.test
+import app.cash.burst.Burst
+import app.cash.burst.burstValues
+import kotlin.test.Test
 
-import kotlin.reflect.KClass
+sealed interface BrewStyle
 
-inline fun <reified T> loadClassInstance(specialization: String): T {
-  val clazz = T::class.java.classLoader.loadClass(specialization)
-  val constructor = clazz.getConstructor()
-  return constructor.newInstance() as T
+object Aeropress : BrewStyle
+
+object Espresso : BrewStyle
+
+object Drip : BrewStyle
+
+@Burst
+class CoffeeTest {
+  @Test fun test(style: BrewStyle = burstValues(Drip, Espresso, Aeropress)) {}
 }
 
-inline fun <reified T> T.invokeSpecialization(specialization: String) {
-  T::class.java.getMethod(specialization).invoke(this)
-}
+fun box(): String {
+  assertThat(CoffeeTest::class.testSuffixes).containsExactlyInAnyOrder("Aeropress", "Espresso")
 
-inline val KClass<*>.testSuffixes: List<String>
-  get() =
-    java.methods.mapNotNull {
-      when {
-        it.name.startsWith("test_") -> it.name.substring(5)
-        else -> null
-      }
-    }
+  return "OK"
+}

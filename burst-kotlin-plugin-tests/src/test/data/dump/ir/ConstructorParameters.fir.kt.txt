@@ -1,0 +1,156 @@
+@Burst
+abstract class CoffeeTest {
+  private val espresso: Espresso
+    field = espresso
+    private get
+
+  private val dairy: Dairy
+    field = dairy
+    private get
+
+  val log: MutableList<String>
+    field = mutableListOf<String>()
+    get
+
+  protected constructor(espresso: Espresso, dairy: Dairy) /* primary */ {
+    super/*Any*/()
+    /* <init>() */
+
+  }
+
+  @BeforeEach
+  fun setUp() {
+    plusAssign<String>(/* <this> = <this>.<get-log>(), */ element = "set up " + <this>.<get-espresso>() + " " + <this>.<get-dairy>())
+  }
+
+  @Test
+  fun test() {
+    plusAssign<String>(/* <this> = <this>.<get-log>(), */ element = "running " + <this>.<get-espresso>() + " " + <this>.<get-dairy>())
+  }
+
+}
+
+class CoffeeTest_Decaf_Milk : CoffeeTest {
+  constructor() /* primary */ {
+    super/*CoffeeTest*/(espresso = Espresso.Decaf, dairy = Dairy.Milk)
+    /* <init>() */
+
+  }
+
+}
+
+class CoffeeTest_Decaf_None : CoffeeTest {
+  constructor() /* primary */ {
+    super/*CoffeeTest*/(espresso = Espresso.Decaf, dairy = Dairy.None)
+    /* <init>() */
+
+  }
+
+}
+
+class CoffeeTest_Decaf_Oat : CoffeeTest {
+  constructor() /* primary */ {
+    super/*CoffeeTest*/(espresso = Espresso.Decaf, dairy = Dairy.Oat)
+    /* <init>() */
+
+  }
+
+}
+
+class CoffeeTest_Double_Milk : CoffeeTest {
+  constructor() /* primary */ {
+    super/*CoffeeTest*/(espresso = Espresso.Double, dairy = Dairy.Milk)
+    /* <init>() */
+
+  }
+
+}
+
+class CoffeeTest_Double_None : CoffeeTest {
+  constructor() /* primary */ {
+    super/*CoffeeTest*/(espresso = Espresso.Double, dairy = Dairy.None)
+    /* <init>() */
+
+  }
+
+}
+
+class CoffeeTest_Double_Oat : CoffeeTest {
+  constructor() /* primary */ {
+    super/*CoffeeTest*/(espresso = Espresso.Double, dairy = Dairy.Oat)
+    /* <init>() */
+
+  }
+
+}
+
+class CoffeeTest_Regular_Milk : CoffeeTest {
+  constructor() /* primary */ {
+    super/*CoffeeTest*/(espresso = Espresso.Regular, dairy = Dairy.Milk)
+    /* <init>() */
+
+  }
+
+}
+
+class CoffeeTest_Regular_None : CoffeeTest {
+  constructor() /* primary */ {
+    super/*CoffeeTest*/(espresso = Espresso.Regular, dairy = Dairy.None)
+    /* <init>() */
+
+  }
+
+}
+
+class CoffeeTest_Regular_Oat : CoffeeTest {
+  constructor() /* primary */ {
+    super/*CoffeeTest*/(espresso = Espresso.Regular, dairy = Dairy.Oat)
+    /* <init>() */
+
+  }
+
+}
+
+enum class Dairy : Enum<Dairy> {
+  None = Dairy()
+
+  Milk = Dairy()
+
+  Oat = Dairy()
+
+  private constructor() /* primary */ {
+    super/*Enum*/<Dairy>()
+    /* <init>() */
+
+  }
+
+  /* static */ fun valueOf(value: String): Dairy /* Synthetic body for ENUM_VALUEOF */
+
+  /* static */ fun values(): Array<Dairy> /* Synthetic body for ENUM_VALUES */
+
+  /* static */ val entries: EnumEntries<Dairy>
+    get(): EnumEntries<Dairy> /* Synthetic body for ENUM_ENTRIES */
+
+}
+
+enum class Espresso : Enum<Espresso> {
+  Decaf = Espresso()
+
+  Regular = Espresso()
+
+  Double = Espresso()
+
+  private constructor() /* primary */ {
+    super/*Enum*/<Espresso>()
+    /* <init>() */
+
+  }
+
+  /* static */ fun valueOf(value: String): Espresso /* Synthetic body for ENUM_VALUEOF */
+
+  /* static */ fun values(): Array<Espresso> /* Synthetic body for ENUM_VALUES */
+
+  /* static */ val entries: EnumEntries<Espresso>
+    get(): EnumEntries<Espresso> /* Synthetic body for ENUM_ENTRIES */
+
+}
