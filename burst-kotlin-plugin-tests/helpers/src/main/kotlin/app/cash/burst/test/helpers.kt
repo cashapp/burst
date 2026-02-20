@@ -13,19 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.burst.kotlin
+package app.cash.burst.test
 
-import org.jetbrains.kotlin.generators.dsl.junit5.generateTestGroupSuiteWithJUnit5
+inline fun <reified T> loadClassInstance(specialization: String): T {
+  val clazz = T::class.java.classLoader.loadClass(specialization)
+  val constructor = clazz.getConstructor()
+  return constructor.newInstance() as T
+}
 
-fun main() {
-  generateTestGroupSuiteWithJUnit5 {
-    testGroup(
-      testDataRoot = "burst-kotlin-plugin-tests/src/test/data",
-      testsRoot = "burst-kotlin-plugin-tests/src/test/java",
-    ) {
-      testClass<AbstractIrDumpTest> { model("dump") }
-      testClass<AbstractDiagnosticTest> { model("diagnostic") }
-      testClass<AbstractBoxTest> { model("box") }
-    }
-  }
+inline fun <reified T> T.invokeSpecialization(specialization: String) {
+  T::class.java.getMethod(specialization).invoke(this)
 }

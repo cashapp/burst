@@ -13,19 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.burst.kotlin
+import app.cash.burst.Burst
+import kotlin.test.Test
 
-import org.jetbrains.kotlin.generators.dsl.junit5.generateTestGroupSuiteWithJUnit5
+@Burst
+class CoffeeTest {
+  val log = mutableListOf<String>()
 
-fun main() {
-  generateTestGroupSuiteWithJUnit5 {
-    testGroup(
-      testDataRoot = "burst-kotlin-plugin-tests/src/test/data",
-      testsRoot = "burst-kotlin-plugin-tests/src/test/java",
-    ) {
-      testClass<AbstractIrDumpTest> { model("dump") }
-      testClass<AbstractDiagnosticTest> { model("diagnostic") }
-      testClass<AbstractBoxTest> { model("box") }
-    }
+  @Test
+  fun test(espresso: Espresso, dairy: Dairy) {
+    log += "running $espresso $dairy"
   }
+}
+
+enum class Espresso {
+  Decaf,
+  Regular,
+  Double,
+}
+
+enum class Dairy {
+  None,
+  Milk,
+  Oat,
+}
+
+fun box(): String {
+  val instance = CoffeeTest().apply { invokeSpecialization("test_Regular_Milk") }
+
+  assertThat(instance.log).containsExactly("running Regular Milk")
+
+  return "OK"
 }
