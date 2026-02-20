@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026 Cash App
+ * Copyright (C) $YEAR Cash App
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,25 +13,3 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.burst.tests
-
-import app.cash.burst.InterceptTest
-
-class KotlinTestTest {
-  @InterceptTest val interceptor = BasicInterceptor()
-
-  @kotlin.test.BeforeTest
-  fun beforeTest() {
-    println("@kotlin.test.BeforeTest before test")
-  }
-
-  @kotlin.test.AfterTest
-  fun afterTest() {
-    println("@kotlin.test.AfterTest after test")
-  }
-
-  @kotlin.test.Test
-  fun kotlinTestTest() {
-    println("@kotlin.test.Test running")
-  }
-}

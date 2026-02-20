@@ -55,6 +55,12 @@ configure<SpotlessExtension> {
   kotlin {
     target("**/*.kt")
     ktfmt(libs.ktfmt.get().version).googleStyle()
+    licenseHeaderFile(rootProject.file("gradle/license-header.txt"))
+
+    targetExclude(
+      // Apache 2-licensed files from AOSP.
+      "burst-kotlin-plugin/src/main/kotlin/app/cash/burst/kotlin/cartesianProduct.kt",
+    )
   }
 }
 
