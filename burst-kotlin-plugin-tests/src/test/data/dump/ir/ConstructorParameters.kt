@@ -13,25 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.burst.test
+import app.cash.burst.Burst
+import kotlin.test.BeforeTest
+import kotlin.test.Test
 
-import kotlin.reflect.KClass
+@Burst
+class CoffeeTest(private val espresso: Espresso, private val dairy: Dairy) {
+  val log = mutableListOf<String>()
 
-inline fun <reified T> loadClassInstance(specialization: String): T {
-  val clazz = T::class.java.classLoader.loadClass(specialization)
-  val constructor = clazz.getConstructor()
-  return constructor.newInstance() as T
+  @BeforeTest
+  fun setUp() {
+    log += "set up $espresso $dairy"
+  }
+
+  @Test
+  fun test() {
+    log += "running $espresso $dairy"
+  }
 }
 
-inline fun <reified T> T.invokeSpecialization(specialization: String) {
-  T::class.java.getMethod(specialization).invoke(this)
+enum class Espresso {
+  Decaf,
+  Regular,
+  Double,
 }
 
-inline val KClass<*>.testSuffixes: List<String>
-  get() =
-    java.methods.mapNotNull {
-      when {
-        it.name.startsWith("test_") -> it.name.substring(5)
-        else -> null
-      }
-    }
+enum class Dairy {
+  None,
+  Milk,
+  Oat,
+}

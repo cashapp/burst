@@ -31,6 +31,12 @@ public class IrDumpTestGenerated extends AbstractIrDumpTest {
     }
 
     @Test
+    @TestMetadata("ConstructorParameters.kt")
+    public void testConstructorParameters() {
+      runTest("burst-kotlin-plugin-tests/src/test/data/dump/ir/ConstructorParameters.kt");
+    }
+
+    @Test
     @TestMetadata("FunctionParameters.kt")
     public void testFunctionParameters() {
       runTest("burst-kotlin-plugin-tests/src/test/data/dump/ir/FunctionParameters.kt");
