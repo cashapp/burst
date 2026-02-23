@@ -19,6 +19,8 @@ dependencies {
   burstRuntimeClasspath(projects.burst)
   burstRuntimeClasspath(projects.burstCoroutines)
   burstRuntimeClasspath(kotlin("test-junit5"))
+  burstRuntimeClasspath(libs.assertk)
+  burstRuntimeClasspath(projects.burstKotlinPluginTests.helpers)
 
   testRuntimeOnly(kotlin("reflect"))
   testRuntimeOnly(kotlin("test"))
