@@ -19,11 +19,16 @@ import org.jetbrains.kotlin.com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.diagnostics.KtDiagnosticFactoryToRendererMap
 import org.jetbrains.kotlin.diagnostics.KtDiagnosticsContainer
 import org.jetbrains.kotlin.diagnostics.SourceElementPositioningStrategies.NAME_IDENTIFIER
+import org.jetbrains.kotlin.diagnostics.SourceElementPositioningStrategies.PARAMETER_DEFAULT_VALUE
 import org.jetbrains.kotlin.diagnostics.error0
 import org.jetbrains.kotlin.diagnostics.rendering.BaseDiagnosticRendererFactory
 
 object BurstDiagnostics : KtDiagnosticsContainer() {
   val INVALID_BURST_ARGUMENT by error0<PsiElement>(NAME_IDENTIFIER)
+
+  val INVALID_DEFAULT_VALUE by error0<PsiElement>(PARAMETER_DEFAULT_VALUE)
+
+  val PARAMETER_REFERENCE_NOT_ALLOWED by error0<PsiElement>(NAME_IDENTIFIER)
 
   override fun getRendererFactory(): BaseDiagnosticRendererFactory {
     return BurstErrorMessages
@@ -35,6 +40,16 @@ object BurstDiagnostics : KtDiagnosticsContainer() {
         map.put(
           INVALID_BURST_ARGUMENT,
           "@Burst parameter must be a boolean, an enum, or have a burstValues() default value",
+        )
+
+        map.put(
+          INVALID_DEFAULT_VALUE,
+          "@Burst parameter default must be burstValues(), a constant, null, or absent",
+        )
+
+        map.put(
+          PARAMETER_REFERENCE_NOT_ALLOWED,
+          "@Burst parameter may not reference other parameters",
         )
       }
   }
