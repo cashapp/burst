@@ -15,20 +15,20 @@
  */
 package app.cash.burst.kotlin.diagnostic
 
-import org.jetbrains.kotlin.com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.diagnostics.KtDiagnosticFactoryToRendererMap
 import org.jetbrains.kotlin.diagnostics.KtDiagnosticsContainer
 import org.jetbrains.kotlin.diagnostics.SourceElementPositioningStrategies.NAME_IDENTIFIER
 import org.jetbrains.kotlin.diagnostics.SourceElementPositioningStrategies.PARAMETER_DEFAULT_VALUE
 import org.jetbrains.kotlin.diagnostics.error0
 import org.jetbrains.kotlin.diagnostics.rendering.BaseDiagnosticRendererFactory
+import org.jetbrains.kotlin.psi.KtElement
 
 object BurstDiagnostics : KtDiagnosticsContainer() {
-  val INVALID_BURST_ARGUMENT by error0<PsiElement>(NAME_IDENTIFIER)
+  val INVALID_BURST_ARGUMENT by error0<KtElement>(NAME_IDENTIFIER)
 
-  val INVALID_DEFAULT_VALUE by error0<PsiElement>(PARAMETER_DEFAULT_VALUE)
+  val INVALID_DEFAULT_VALUE by error0<KtElement>(PARAMETER_DEFAULT_VALUE)
 
-  val PARAMETER_REFERENCE_NOT_ALLOWED by error0<PsiElement>(NAME_IDENTIFIER)
+  val PARAMETER_REFERENCE_NOT_ALLOWED by error0<KtElement>(NAME_IDENTIFIER)
 
   override fun getRendererFactory(): BaseDiagnosticRendererFactory {
     return BurstErrorMessages
