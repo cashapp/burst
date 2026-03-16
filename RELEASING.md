@@ -34,7 +34,7 @@ Releasing
       gradle.properties
     git commit -am "Prepare next development version"
 
-    git push && git push --tags
+    git push --follow-tags
     ```
 
 5. Wait for [GitHub Actions][github_actions] to build and promote the release.
