@@ -1,35 +1,50 @@
 # Change Log
 
 ## [Unreleased]
-[Unreleased]: https://github.com/cashapp/burst/compare/2.11.0...HEAD
+[Unreleased]: https://github.com/cashapp/burst/compare/2.12.0...HEAD
 
 Nothing yet!
+
+
+## [2.12.0]
+[2.12.0]: https://github.com/cashapp/burst/releases/2.12.0
+
+**Added**
+
+* Pass annotation instances to interceptors.
+* Support Kotlin 2.3.20.
+
+**Fixed**
+
+* Support `TestScope.runTest` extension function for `CoroutineTestInterceptor`.
+
 
 ## [2.12.0-beta2]
 [2.12.0-beta2]: https://github.com/cashapp/burst/releases/2.12.0-beta2
 
 **Added**
 
-* Pass annotation instances to interceptors
-* Support Kotlin 2.3.20-Beta2
+* Pass annotation instances to interceptors.
+* Support Kotlin 2.3.20-Beta2.
 
 **Fixed**
 
 * Support `TestScope.runTest` extension function for `CoroutineTestInterceptor`.
+
 
 ## [2.12.0-beta1] *(2026-01-12)*
 [2.12.0-beta1]: https://github.com/cashapp/burst/releases/tag/2.12.0-beta1
 
 **Added**
 
-* Support Kotlin 2.3.20-Beta1
+* Support Kotlin 2.3.20-Beta1.
 
 
 ## [2.11.0] *(2025-12-16)*
 [2.11.0]: https://github.com/cashapp/burst/releases/tag/2.11.0
 **Added**
 
-* Support Kotlin 2.3.0
+* Support Kotlin 2.3.0.
 
 
 ## [2.11.0-beta1] *(2025-10-14)*
@@ -37,7 +52,7 @@ Nothing yet!
 
 **Added**
 
-* Support Kotlin 2.3.0-Beta1
+* Support Kotlin 2.3.0-Beta1.
 
 
 ## [2.10.2] *(2025-09-22)*
