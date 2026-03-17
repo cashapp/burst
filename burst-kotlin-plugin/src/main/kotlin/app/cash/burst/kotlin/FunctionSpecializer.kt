@@ -134,15 +134,14 @@ internal class FunctionSpecializer(
     val specializations = specializations(pluginContext, burstApis, valueParameters)
     val indexOfDefaultSpecialization = specializations.indexOfFirst { it.isDefault }
 
-    val functions =
-      specializations.mapIndexed { index, specialization ->
-        createFunction(
-          originalDispatchReceiver = originalDispatchReceiver,
-          specialization = specialization,
-          isDefaultSpecialization = index == indexOfDefaultSpecialization,
-          delegate = delegate,
-        )
-      }
+    val functions = specializations.mapIndexed { index, specialization ->
+      createFunction(
+        originalDispatchReceiver = originalDispatchReceiver,
+        specialization = specialization,
+        isDefaultSpecialization = index == indexOfDefaultSpecialization,
+        delegate = delegate,
+      )
+    }
 
     // Add new declarations.
     for (function in functions) {
