@@ -1043,13 +1043,12 @@ class BurstKotlinPluginTest {
   }
 
   private val Class<*>.testSuffixes: List<String>
-    get() =
-      methods.mapNotNull {
-        when {
-          it.name.startsWith("test_") -> it.name.substring(5)
-          else -> null
-        }
+    get() = methods.mapNotNull {
+      when {
+        it.name.startsWith("test_") -> it.name.substring(5)
+        else -> null
       }
+    }
 }
 
 @ExperimentalCompilerApi

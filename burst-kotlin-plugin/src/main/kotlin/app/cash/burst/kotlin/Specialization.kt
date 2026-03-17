@@ -39,14 +39,13 @@ internal fun specializations(
   burstApis: BurstApis,
   parameters: List<IrValueParameter>,
 ): List<Specialization> {
-  val parameterArguments =
-    parameters.map { parameter ->
-      pluginContext.allPossibleArguments(parameter, burstApis).also { arguments ->
-        for (argument in arguments) {
-          argument.accept(ArgumentValidator(parameters, parameter), Unit)
-        }
+  val parameterArguments = parameters.map { parameter ->
+    pluginContext.allPossibleArguments(parameter, burstApis).also { arguments ->
+      for (argument in arguments) {
+        argument.accept(ArgumentValidator(parameters, parameter), Unit)
       }
     }
+  }
 
   val specializations =
     parameterArguments.cartesianProduct().map { arguments ->
