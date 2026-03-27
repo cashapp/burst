@@ -3,7 +3,9 @@
 ## [Unreleased]
 [Unreleased]: https://github.com/cashapp/burst/compare/2.12.0...HEAD
 
-Nothing yet!
+**Fixed**
+
+* Fix incorrect "invalid burst argument" error on methods not annotated with a test annotation
 
 
 ## [2.12.0]
