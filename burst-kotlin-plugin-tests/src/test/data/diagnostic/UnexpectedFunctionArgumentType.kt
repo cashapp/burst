@@ -22,4 +22,7 @@ class CoffeeTest {
   @Test
   fun test(<!INVALID_BURST_ARGUMENT!>espresso<!>: String) {
   }
+
+  fun notATest(matcha: String) {
+  }
 }

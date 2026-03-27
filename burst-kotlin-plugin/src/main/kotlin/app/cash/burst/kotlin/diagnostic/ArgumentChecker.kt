@@ -71,7 +71,7 @@ internal class FunctionParameterChecker : FirSimpleFunctionChecker(MppCheckerKin
         it.toAnnotationClassId(context.session) in BurstApis.testClassIds
       }
 
-    if (!isInBurstClass && !isTestAnnotated) return
+    if (!isInBurstClass || !isTestAnnotated) return
 
     // We can rely on the super declaration being checked!
     if (declaration.isOverride) return
