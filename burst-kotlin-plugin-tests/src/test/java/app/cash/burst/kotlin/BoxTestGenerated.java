@@ -5,6 +5,7 @@ package app.cash.burst.kotlin;
 import com.intellij.testFramework.TestDataPath;
 import org.jetbrains.kotlin.test.util.KtTestUtil;
 import org.jetbrains.kotlin.test.TestMetadata;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -20,15 +21,85 @@ public class BoxTestGenerated extends AbstractBoxTest {
     KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("burst-kotlin-plugin-tests/src/test/data/box"), Pattern.compile("^(.+)\\.kt$"), null, true);
   }
 
-  @Test
-  @TestMetadata("ConstructorParameters.kt")
-  public void testConstructorParameters() {
-    runTest("burst-kotlin-plugin-tests/src/test/data/box/ConstructorParameters.kt");
-  }
+  @Nested
+  @TestMetadata("burst-kotlin-plugin-tests/src/test/data/box/arguments")
+  @TestDataPath("$PROJECT_ROOT")
+  public class Arguments {
+    @Test
+    public void testAllFilesPresentInArguments() {
+      KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("burst-kotlin-plugin-tests/src/test/data/box/arguments"), Pattern.compile("^(.+)\\.kt$"), null, true);
+    }
 
-  @Test
-  @TestMetadata("FunctionParameters.kt")
-  public void testFunctionParameters() {
-    runTest("burst-kotlin-plugin-tests/src/test/data/box/FunctionParameters.kt");
+    @Test
+    @TestMetadata("BurstValues.kt")
+    public void testBurstValues() {
+      runTest("burst-kotlin-plugin-tests/src/test/data/box/arguments/BurstValues.kt");
+    }
+
+    @Test
+    @TestMetadata("BurstValuesHasReasonableSymbolName.kt")
+    public void testBurstValuesHasReasonableSymbolName() {
+      runTest("burst-kotlin-plugin-tests/src/test/data/box/arguments/BurstValuesHasReasonableSymbolName.kt");
+    }
+
+    @Test
+    @TestMetadata("BurstValuesJustOne.kt")
+    public void testBurstValuesJustOne() {
+      runTest("burst-kotlin-plugin-tests/src/test/data/box/arguments/BurstValuesJustOne.kt");
+    }
+
+    @Test
+    @TestMetadata("BurstValuesWithEnumValues.kt")
+    public void testBurstValuesWithEnumValues() {
+      runTest("burst-kotlin-plugin-tests/src/test/data/box/arguments/BurstValuesWithEnumValues.kt");
+    }
+
+    @Test
+    @TestMetadata("BurstValuesWithInlineClassDeclarations.kt")
+    public void testBurstValuesWithInlineClassDeclarations() {
+      runTest("burst-kotlin-plugin-tests/src/test/data/box/arguments/BurstValuesWithInlineClassDeclarations.kt");
+    }
+
+    @Test
+    @TestMetadata("BurstValuesWithInlineFunctions.kt")
+    public void testBurstValuesWithInlineFunctions() {
+      runTest("burst-kotlin-plugin-tests/src/test/data/box/arguments/BurstValuesWithInlineFunctions.kt");
+    }
+
+    @Test
+    @TestMetadata("BurstValuesWithNameCollisions.kt")
+    public void testBurstValuesWithNameCollisions() {
+      runTest("burst-kotlin-plugin-tests/src/test/data/box/arguments/BurstValuesWithNameCollisions.kt");
+    }
+
+    @Test
+    @TestMetadata("BurstValuesWithObjectValues.kt")
+    public void testBurstValuesWithObjectValues() {
+      runTest("burst-kotlin-plugin-tests/src/test/data/box/arguments/BurstValuesWithObjectValues.kt");
+    }
+
+    @Test
+    @TestMetadata("BurstValuesWithOverlyLongNames.kt")
+    public void testBurstValuesWithOverlyLongNames() {
+      runTest("burst-kotlin-plugin-tests/src/test/data/box/arguments/BurstValuesWithOverlyLongNames.kt");
+    }
+
+    @Test
+    @TestMetadata("ConstructorParameters.kt")
+    public void testConstructorParameters() {
+      runTest("burst-kotlin-plugin-tests/src/test/data/box/arguments/ConstructorParameters.kt");
+    }
+
+    @Test
+    @TestMetadata("DefaultArgumentsHonored.kt")
+    public void testDefaultArgumentsHonored() {
+      runTest("burst-kotlin-plugin-tests/src/test/data/box/arguments/DefaultArgumentsHonored.kt");
+    }
+
+    @Test
+    @TestMetadata("FunctionParameters.kt")
+    public void testFunctionParameters() {
+      runTest("burst-kotlin-plugin-tests/src/test/data/box/arguments/FunctionParameters.kt");
+    }
   }
 }
