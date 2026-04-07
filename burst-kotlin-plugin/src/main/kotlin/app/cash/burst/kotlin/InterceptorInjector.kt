@@ -67,7 +67,6 @@ import org.jetbrains.kotlin.ir.util.parentClassOrNull
 import org.jetbrains.kotlin.ir.util.patchDeclarationParents
 import org.jetbrains.kotlin.ir.util.superClass
 import org.jetbrains.kotlin.name.Name
-import org.jetbrains.kotlin.util.capitalizeDecapitalize.capitalizeAsciiOnly
 
 /**
  * This starts with an interceptor property like this:
@@ -383,7 +382,6 @@ internal class InterceptorInjector(
       for (interceptor in interceptorProperties.reversed()) {
         val testFunctionClass =
           createTestFunctionClass(
-            nameHint = "${interceptor.name.asString().capitalizeAsciiOnly()}TestFunction",
             testScope = testScopeLocal,
             packageName = packageNameLocal,
             className = classNameLocal,
@@ -404,7 +402,6 @@ internal class InterceptorInjector(
       if (superclassIntercept != null) {
         val testFunctionClass =
           createTestFunctionClass(
-            nameHint = "CallSuperTestFunction",
             testScope = testScopeLocal,
             packageName = packageNameLocal,
             className = classNameLocal,
@@ -563,7 +560,6 @@ internal class InterceptorInjector(
 
     val testFunctionClass =
       createTestFunctionClass(
-        nameHint = "${original.name.asString().capitalizeAsciiOnly()}TestFunction",
         testScope = testScope,
         packageName =
           irCall(testFunctionPackageNameGetterSymbol).apply {
@@ -598,7 +594,6 @@ internal class InterceptorInjector(
   }
 
   private fun IrBlockBodyBuilder.createTestFunctionClass(
-    nameHint: String,
     testScope: IrValueDeclaration?,
     packageName: IrValueDeclaration,
     className: IrValueDeclaration,
@@ -608,7 +603,6 @@ internal class InterceptorInjector(
     proceed: IrExpression,
   ): IrClass {
     return createTestFunctionClass(
-      nameHint = nameHint,
       testScope = testScope?.let { irGet(it) },
       packageName = irGet(packageName),
       className = irGet(className),
@@ -622,7 +616,6 @@ internal class InterceptorInjector(
 
   /** Create a subclass of `TestFunction` and returns its constructor. */
   private fun createTestFunctionClass(
-    nameHint: String,
     testScope: IrExpression?,
     packageName: IrExpression,
     className: IrExpression,
@@ -635,7 +628,6 @@ internal class InterceptorInjector(
       pluginContext.irFactory
         .buildClass {
           initDefaults(originalParent)
-          name = Name.identifier(nameHint)
           visibility = DescriptorVisibilities.LOCAL
         }
         .apply {

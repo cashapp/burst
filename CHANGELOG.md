@@ -5,6 +5,10 @@
 
 Nothing yet!
 
+**Changed**
+
+* `TestFunction` implementations passed into `TestInterceptor`s are now generated as anonymous objects.
+
 ## [2.12.1]
 [2.12.1]: https://github.com/cashapp/burst/releases/2.12.1
 

@@ -1,0 +1,95 @@
+class SampleTest : TestInterceptor {
+  val log: MutableList<String>
+    field = mutableListOf<String>()
+    get
+
+  @InterceptTest
+  val interceptor: TestInterceptor
+    field = { // BLOCK
+      local class <no name provided> : TestInterceptor {
+        constructor() /* primary */ {
+          super/*Any*/()
+          /* <init>() */
+
+        }
+
+        override fun intercept(testFunction: TestFunction) {
+          plusAssign<String>(/* <this> = <this>.<get-log>(), */ element = "intercepting " + testFunction)
+          testFunction.invoke()
+          plusAssign<String>(/* <this> = <this>.<get-log>(), */ element = "intercepted")
+        }
+
+      }
+
+      <no name provided>()
+    }
+    get
+
+  constructor() /* primary */ {
+    super/*Any*/()
+    /* <init>() */
+
+  }
+
+  protected open fun burstTestFunctionClassName(): String {
+    return "SampleTest"
+  }
+
+  protected open fun burstTestFunctionPackageName(): String {
+    return ""
+  }
+
+  @Test
+  fun happyPath() {
+    local class <no name provided> : TestFunction {
+      constructor() /* primary */ {
+        super/*TestFunction*/(packageName = <this>.burstTestFunctionPackageName(), className = <this>.burstTestFunctionClassName(), classAnnotations = listOf</* null */>(elements = []), functionName = "happyPath", functionAnnotations = listOf</* null */>(elements = [Test]))
+        /* <init>() */
+
+      }
+
+      override fun invoke() {
+        plusAssign<String>(/* <this> = <this>.<get-log>(), */ element = "running happyPath")
+      }
+
+    }
+
+    <this>.intercept(testFunction = <no name provided>())
+  }
+
+  override fun intercept(testFunction: TestFunction) {
+    val tmp_0: String = testFunction.<get-packageName>()
+    val tmp_1: String = testFunction.<get-className>()
+    val tmp_2: List<Annotation> = testFunction.<get-classAnnotations>()
+    val tmp_3: String = testFunction.<get-functionName>()
+    val tmp_4: List<Annotation> = testFunction.<get-functionAnnotations>()
+    local class <no name provided> : TestFunction {
+      constructor() /* primary */ {
+        super/*TestFunction*/(packageName = tmp_0, className = tmp_1, classAnnotations = tmp_2, functionName = tmp_3, functionAnnotations = tmp_4)
+        /* <init>() */
+
+      }
+
+      override fun invoke() {
+        { // BLOCK
+          var tmp_5: Throwable? = null
+          try { // BLOCK
+            testFunction.invoke()
+          }
+          catch (e: Throwable)when {
+            EQEQ(arg0 = tmp_5, arg1 = null) -> tmp_5 = e
+            else -> addSuppressed(/* <this> = tmp_5, */ exception = e)
+          }
+
+          when {
+            EQEQ(arg0 = tmp_5, arg1 = null).not() -> throw tmp_5
+          }
+        }
+      }
+
+    }
+
+    <this>.<get-interceptor>().intercept(testFunction = <no name provided>())
+  }
+
+}
