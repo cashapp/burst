@@ -15,6 +15,10 @@ import java.util.regex.Pattern;
 @TestMetadata("burst-kotlin-plugin-tests/src/test/data/diagnostic")
 @TestDataPath("$PROJECT_ROOT")
 public class DiagnosticTestGenerated extends AbstractDiagnosticTest {
+  private void run(String fileName) {
+    runTest("burst-kotlin-plugin-tests/src/test/data/diagnostic/" + fileName);
+  }
+
   @Test
   public void testAllFilesPresentInDiagnostic() {
     KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("burst-kotlin-plugin-tests/src/test/data/diagnostic"), Pattern.compile("^(.+)\\.kt$"), null, true);
@@ -23,24 +27,24 @@ public class DiagnosticTestGenerated extends AbstractDiagnosticTest {
   @Test
   @TestMetadata("BurstValuesReferencesEarlierParameter.kt")
   public void testBurstValuesReferencesEarlierParameter() {
-    runTest("burst-kotlin-plugin-tests/src/test/data/diagnostic/BurstValuesReferencesEarlierParameter.kt");
+    run("BurstValuesReferencesEarlierParameter.kt");
   }
 
   @Test
   @TestMetadata("UnexpectedClassArgumentType.kt")
   public void testUnexpectedClassArgumentType() {
-    runTest("burst-kotlin-plugin-tests/src/test/data/diagnostic/UnexpectedClassArgumentType.kt");
+    run("UnexpectedClassArgumentType.kt");
   }
 
   @Test
   @TestMetadata("UnexpectedDefaultArgumentValue.kt")
   public void testUnexpectedDefaultArgumentValue() {
-    runTest("burst-kotlin-plugin-tests/src/test/data/diagnostic/UnexpectedDefaultArgumentValue.kt");
+    run("UnexpectedDefaultArgumentValue.kt");
   }
 
   @Test
   @TestMetadata("UnexpectedFunctionArgumentType.kt")
   public void testUnexpectedFunctionArgumentType() {
-    runTest("burst-kotlin-plugin-tests/src/test/data/diagnostic/UnexpectedFunctionArgumentType.kt");
+    run("UnexpectedFunctionArgumentType.kt");
   }
 }
