@@ -55,14 +55,14 @@ import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
 import org.jetbrains.kotlin.ir.declarations.IrVariable
 import org.jetbrains.kotlin.ir.declarations.createBlockBody
+import org.jetbrains.kotlin.ir.expressions.IrAnnotation
 import org.jetbrains.kotlin.ir.expressions.IrCall
-import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
 import org.jetbrains.kotlin.ir.expressions.IrDelegatingConstructorCall
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrFunctionExpression
 import org.jetbrains.kotlin.ir.expressions.IrInstanceInitializerCall
 import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
-import org.jetbrains.kotlin.ir.expressions.impl.IrConstructorCallImpl
+import org.jetbrains.kotlin.ir.expressions.impl.IrAnnotationImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrDelegatingConstructorCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrFunctionExpressionImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrInstanceInitializerCallImpl
@@ -125,8 +125,8 @@ fun IrValueParameterBuilder.initDefaults(original: IrElement) {
   this.endOffset = original.endOffset.toSyntheticIfUnknown()
 }
 
-fun IrClassSymbol.asAnnotation(): IrConstructorCall {
-  return IrConstructorCallImpl.fromSymbolOwner(
+fun IrClassSymbol.asAnnotation(): IrAnnotation {
+  return IrAnnotationImpl.fromSymbolOwner(
     type = starProjectedType,
     constructorSymbol = constructors.single(),
   )
