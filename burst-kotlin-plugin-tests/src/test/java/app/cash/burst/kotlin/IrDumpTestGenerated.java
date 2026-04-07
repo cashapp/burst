@@ -16,6 +16,10 @@ import java.util.regex.Pattern;
 @TestMetadata("burst-kotlin-plugin-tests/src/test/data/dump")
 @TestDataPath("$PROJECT_ROOT")
 public class IrDumpTestGenerated extends AbstractIrDumpTest {
+  private void run(String fileName) {
+    runTest("burst-kotlin-plugin-tests/src/test/data/dump/" + fileName);
+  }
+
   @Test
   public void testAllFilesPresentInDump() {
     KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("burst-kotlin-plugin-tests/src/test/data/dump"), Pattern.compile("^(.+)\\.kt$"), null, true);
@@ -25,6 +29,10 @@ public class IrDumpTestGenerated extends AbstractIrDumpTest {
   @TestMetadata("burst-kotlin-plugin-tests/src/test/data/dump/ir")
   @TestDataPath("$PROJECT_ROOT")
   public class Ir {
+    private void run(String fileName) {
+      runTest("burst-kotlin-plugin-tests/src/test/data/dump/ir/" + fileName);
+    }
+
     @Test
     public void testAllFilesPresentInIr() {
       KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("burst-kotlin-plugin-tests/src/test/data/dump/ir"), Pattern.compile("^(.+)\\.kt$"), null, true);
@@ -33,13 +41,19 @@ public class IrDumpTestGenerated extends AbstractIrDumpTest {
     @Test
     @TestMetadata("ConstructorParameters.kt")
     public void testConstructorParameters() {
-      runTest("burst-kotlin-plugin-tests/src/test/data/dump/ir/ConstructorParameters.kt");
+      run("ConstructorParameters.kt");
     }
 
     @Test
     @TestMetadata("FunctionParameters.kt")
     public void testFunctionParameters() {
-      runTest("burst-kotlin-plugin-tests/src/test/data/dump/ir/FunctionParameters.kt");
+      run("FunctionParameters.kt");
+    }
+
+    @Test
+    @TestMetadata("TestInterceptor.kt")
+    public void testTestInterceptor() {
+      run("TestInterceptor.kt");
     }
   }
 }
