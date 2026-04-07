@@ -18,6 +18,7 @@ package app.cash.burst.kotlin
 import java.io.File
 import java.io.File.pathSeparator
 import java.io.File.separator
+import org.jetbrains.kotlin.platform.wasm.WasmTarget
 import org.jetbrains.kotlin.test.services.KotlinStandardLibrariesPathProvider
 
 object ClasspathBasedStandardLibrariesPathProvider : KotlinStandardLibrariesPathProvider {
@@ -70,6 +71,14 @@ object ClasspathBasedStandardLibrariesPathProvider : KotlinStandardLibrariesPath
   override fun defaultJsStdlib(): File = getFile("kotlin-stdlib-js")
 
   override fun kotlinTestJsKLib(): File = getFile("kotlin-test-js")
+
+  override fun fullWasmStdlib(target: WasmTarget): File {
+    TODO("Not yet implemented")
+  }
+
+  override fun kotlinTestWasmKLib(target: WasmTarget): File {
+    TODO("Not yet implemented")
+  }
 
   override fun scriptingPluginFilesForTests(): Collection<File> {
     TODO("KT-67573")

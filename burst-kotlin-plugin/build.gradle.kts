@@ -13,10 +13,6 @@ dependencies {
   compileOnly(kotlin("stdlib"))
 }
 
-kotlin {
-  compilerOptions.freeCompilerArgs.add("-Xcontext-parameters")
-}
-
 buildConfig {
   useKotlinOutput {
     internalVisibility = true
