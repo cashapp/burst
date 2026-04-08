@@ -55,5 +55,11 @@ public class IrDumpTestGenerated extends AbstractIrDumpTest {
     public void testTestInterceptor() {
       run("TestInterceptor.kt");
     }
+
+    @Test
+    @TestMetadata("TestInterceptor.kt")
+    public void testTestInterceptor() {
+      runTest("burst-kotlin-plugin-tests/src/test/data/dump/ir/TestInterceptor.kt");
+    }
   }
 }
