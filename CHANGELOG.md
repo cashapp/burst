@@ -11,6 +11,19 @@
 
 * `TestFunction` implementations passed into `TestInterceptor`s are now generated as anonymous objects.
 
+
+## [2.13.0-beta1]
+[2.13.0-beta1]: https://github.com/cashapp/burst/releases/2.13.0-beta1
+
+**Added**
+
+* Support Kotlin 2.4.0-Beta1.
+
+**Changed**
+
+* `TestFunction` implementations passed into `TestInterceptor`s are now generated as anonymous objects.
+
+
 ## [2.12.1]
 [2.12.1]: https://github.com/cashapp/burst/releases/2.12.1
 
