@@ -21,7 +21,7 @@ import org.gradle.api.provider.SetProperty
 
 abstract class BurstExtension @Inject constructor(objectFactory: ObjectFactory) {
   /**
-   * A list of Kotlin source sets by name which will transformed by the Burst compiler plugin. If
+   * A list of Kotlin source sets by name which will be transformed by the Burst compiler plugin. If
    * not set or empty, all source sets will be transformed.
    */
   val includedSourceSets: SetProperty<String> =
