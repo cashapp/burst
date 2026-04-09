@@ -23,7 +23,16 @@ import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 
 /** Configures the Burst Kotlin compiler plugin. Added by [BurstPlugin] once Kotlin is detected. */
 internal class BurstKotlinPlugin : KotlinCompilerPluginSupportPlugin {
-  override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean = true
+  override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean {
+    val project = kotlinCompilation.target.project
+    val extension = project.extensions.getByType(BurstExtension::class.java)
+    val includedSourceSets = extension.includedSourceSets.orNull
+    return if (!includedSourceSets.isNullOrEmpty()) {
+      kotlinCompilation.defaultSourceSet.name in includedSourceSets
+    } else {
+      true
+    }
+  }
 
   override fun getCompilerPluginId(): String = BuildConfig.KOTLIN_PLUGIN_ID
 
