@@ -264,7 +264,7 @@ By default the Burst compiler plugin transforms all source sets. This behavior c
 ```kotlin {
 // build.gradle.kts
 burst {
-  includedSourceSets.set(listOf("test", "androidTest", "commonTest")) // only transform these test source sets
+  includedSourceSets.set(listOf("test", "androidTest")) // only transform these test source sets
 }
 ```
 
