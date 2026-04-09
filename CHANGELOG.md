@@ -6,6 +6,7 @@
 **Added**
 
 * Support Kotlin 2.4.0-Beta1.
+* Support configuring the source sets to apply the compiler plugin to.
 
 
 ## [2.13.0-beta1]
