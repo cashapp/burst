@@ -339,6 +339,23 @@ class BurstGradlePluginTest {
   }
 
   @Test
+  fun includedSourceSets() {
+    val tester = GradleTester("includedSourceSets")
+    tester.cleanAndBuild(":lib:test")
+
+    // test source set is transformed by Burst — specializations generated.
+    with(tester.readTestSuite("CoffeeTest")) {
+      assertThat(testCases.map { it.name })
+        .containsExactlyInAnyOrder("test_None", "test_Milk", "test_Oat")
+    }
+
+    // main source set is not transformed by Burst — no specialization methods on MainCoffeeTest.
+    with(tester.readTestSuite("IncludedSourceSetsTest")) {
+      assertThat(systemOut).contains("specialized methods: []")
+    }
+  }
+
+  @Test
   fun valueClassConstructor() {
     val tester = GradleTester("valueClassConstructor")
 

@@ -259,6 +259,15 @@ plugins {
 }
 ```
 
+By default the Burst compiler plugin transforms all source sets. This behavior can be customized by configuring the `burst` extension:
+
+```kotlin {
+// build.gradle.kts
+burst {
+  includedSourceSets.set(listOf("test", "androidTest")) // only transform these test source sets
+}
+```
+
 ### Compatibility
 
 Since Kotlin compiler plugins are an unstable API, certain versions of Burst only work with
