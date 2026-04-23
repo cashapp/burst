@@ -46,6 +46,7 @@ private constructor(
   private val testClassSymbols: List<IrClassSymbol>,
   val beforeTestSymbols: List<IrClassSymbol>,
   val afterTestSymbols: List<IrClassSymbol>,
+  val ignoreClassSymbols: List<IrClassSymbol>,
   /** Null if `kotlinx.coroutines.test` isn't in this build. */
   val runTestSymbols: List<IrFunctionSymbol>?,
   val listOfSymbol: IrFunctionSymbol,
@@ -90,6 +91,12 @@ private constructor(
       .firstOrNull { it in afterTestSymbols }
   }
 
+  fun findIgnoreAnnotation(function: IrAnnotationContainer): IrClassSymbol? {
+    return function.annotations
+      .mapNotNull { it.type.classOrNull }
+      .firstOrNull { it in ignoreClassSymbols }
+  }
+
   fun isRunTest(irCall: IrCall): Boolean {
     return runTestSymbols != null && irCall.symbol in runTestSymbols
   }
@@ -127,6 +134,13 @@ private constructor(
           pluginContext.referenceClass(kotlinAfterTestClassId),
         )
 
+      val ignoreSymbols =
+        listOfNotNull(
+          pluginContext.referenceClass(junitIgnoreClassId),
+          pluginContext.referenceClass(junit5DisabledClassId),
+          pluginContext.referenceClass(kotlinIgnoreClassId),
+        )
+
       val runTestSymbols =
         pluginContext
           .referenceFunctions(runTestId)
@@ -150,6 +164,7 @@ private constructor(
         testClassSymbols = testClassSymbols,
         beforeTestSymbols = beforeTestSymbols,
         afterTestSymbols = afterTestSymbols,
+        ignoreClassSymbols = ignoreSymbols,
         runTestSymbols = runTestSymbols,
         listOfSymbol = listOfSymbol,
         annotationSymbol = annotationSymbol,
@@ -228,14 +243,17 @@ private val junitPackage = FqPackageName("org.junit")
 private val junitTestClassId = junitPackage.classId("Test")
 private val junitBeforeTestClassId = junitPackage.classId("Before")
 private val junitAfterTestClassId = junitPackage.classId("After")
+private val junitIgnoreClassId = junitPackage.classId("Ignore")
 private val junit5Package = FqPackageName("org.junit.jupiter.api")
 private val junit5BeforeEachClassId = junit5Package.classId("BeforeEach")
 private val junit5AfterEachClassId = junit5Package.classId("AfterEach")
 private val junit5TestClassId = junit5Package.classId("Test")
+private val junit5DisabledClassId = junit5Package.classId("Disabled")
 private val kotlinTestPackage = FqPackageName("kotlin.test")
 private val kotlinTestClassId = kotlinTestPackage.classId("Test")
 private val kotlinBeforeTestClassId = kotlinTestPackage.classId("BeforeTest")
 private val kotlinAfterTestClassId = kotlinTestPackage.classId("AfterTest")
+private val kotlinIgnoreClassId = kotlinTestPackage.classId("Ignore")
 
 private val kotlinJvmFqPackage = FqPackageName("kotlin.jvm")
 private val jvmInlineAnnotationId = kotlinJvmFqPackage.classId("JvmInline")

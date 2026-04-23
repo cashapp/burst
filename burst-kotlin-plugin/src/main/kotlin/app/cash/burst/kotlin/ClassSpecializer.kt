@@ -24,6 +24,7 @@ import org.jetbrains.kotlin.ir.builders.declarations.buildClass
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrConstructor
 import org.jetbrains.kotlin.ir.declarations.IrFile
+import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrTypeSystemContextImpl
 import org.jetbrains.kotlin.ir.types.getClass
@@ -118,16 +119,26 @@ internal class ClassSpecializer(
       original.modality = Modality.ABSTRACT
     }
 
+    val ignoreAnnotation = burstApis.findIgnoreAnnotation(original)
+
     // Add a subclass for each specialization.
     for ((index, specialization) in specializations.withIndex()) {
       // Don't generate code for the default specialization; we only want to run it once.
       if (index == indexOfDefaultSpecialization) continue
 
-      createSubclass(superConstructor = onlyConstructor, specialization = specialization)
+      createSubclass(
+        superConstructor = onlyConstructor,
+        specialization = specialization,
+        ignoreAnnotation = ignoreAnnotation,
+      )
     }
   }
 
-  private fun createSubclass(superConstructor: IrConstructor, specialization: Specialization) {
+  private fun createSubclass(
+    superConstructor: IrConstructor,
+    specialization: Specialization,
+    ignoreAnnotation: IrClassSymbol?,
+  ) {
     val created =
       original.factory
         .buildClass {
@@ -155,6 +166,10 @@ internal class ClassSpecializer(
             irInstanceInitializerCall(context = pluginContext, classSymbol = created.symbol)
         }
       }
+
+    if (ignoreAnnotation != null) {
+      created.annotations += ignoreAnnotation.asAnnotation()
+    }
 
     originalParent.addDeclaration(created)
     created.addFakeOverrides(irTypeSystemContext)

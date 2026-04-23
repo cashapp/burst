@@ -6,6 +6,7 @@
 **Added**
 
 * Support Kotlin 2.4.0-Beta1.
+* `@Ignore` and `@Disabled` annotations are propagated to function and class specializations.
 
 
 ## [2.13.0-beta1]

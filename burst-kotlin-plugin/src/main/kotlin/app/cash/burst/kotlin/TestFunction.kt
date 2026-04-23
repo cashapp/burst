@@ -27,11 +27,13 @@ import org.jetbrains.kotlin.ir.visitors.IrTransformer
 sealed interface TestFunction {
   val function: IrSimpleFunction
   val testAnnotation: IrClassSymbol
+  val ignoreAnnotation: IrClassSymbol?
 
   /** A test that calls `runTest()` in its body. */
   data class Suspending(
     override val function: IrSimpleFunction,
     override val testAnnotation: IrClassSymbol,
+    override val ignoreAnnotation: IrClassSymbol?,
     val runTestVariant: IrFunctionSymbol,
     val runTestCall: IrCall,
   ) : TestFunction
@@ -40,6 +42,7 @@ sealed interface TestFunction {
   data class NonSuspending(
     override val function: IrSimpleFunction,
     override val testAnnotation: IrClassSymbol,
+    override val ignoreAnnotation: IrClassSymbol?,
   ) : TestFunction
 
   /** Drop `@Test` from this function's annotations. */
@@ -53,11 +56,18 @@ internal class TestFunctionReader(val burstApis: BurstApis) {
   fun readOrNull(function: IrSimpleFunction): TestFunction? {
     val testAnnotation = burstApis.findTestAnnotation(function) ?: return null
     val runTestCall = readRunTestCall(function)
+    val ignoreAnnotation = burstApis.findIgnoreAnnotation(function)
 
     return when {
       runTestCall != null ->
-        TestFunction.Suspending(function, testAnnotation, runTestCall.symbol, runTestCall)
-      else -> TestFunction.NonSuspending(function, testAnnotation)
+        TestFunction.Suspending(
+          function,
+          testAnnotation,
+          ignoreAnnotation,
+          runTestCall.symbol,
+          runTestCall,
+        )
+      else -> TestFunction.NonSuspending(function, testAnnotation, ignoreAnnotation)
     }
   }
 

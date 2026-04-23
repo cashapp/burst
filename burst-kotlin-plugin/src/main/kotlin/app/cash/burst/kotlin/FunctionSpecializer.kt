@@ -209,6 +209,9 @@ internal class FunctionSpecializer(
         }
 
     result.annotations += original.testAnnotation.asAnnotation()
+    original.ignoreAnnotation?.let { annotationSymbol ->
+      result.annotations += annotationSymbol.asAnnotation()
+    }
 
     result.irFunctionBody(context = pluginContext) {
       val receiverLocal =
