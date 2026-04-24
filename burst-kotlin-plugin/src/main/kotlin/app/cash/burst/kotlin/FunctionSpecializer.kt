@@ -209,6 +209,7 @@ internal class FunctionSpecializer(
         }
 
     result.annotations += original.testAnnotation.asAnnotation()
+    result.annotations += original.function.annotations.map { it.deepCopyWithSymbols() }
 
     result.irFunctionBody(context = pluginContext) {
       val receiverLocal =

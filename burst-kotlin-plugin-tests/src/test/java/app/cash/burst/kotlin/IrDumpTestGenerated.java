@@ -51,6 +51,12 @@ public class IrDumpTestGenerated extends AbstractIrDumpTest {
     }
 
     @Test
+    @TestMetadata("IgnoreAnnotation.kt")
+    public void testIgnoreAnnotation() {
+      run("IgnoreAnnotation.kt");
+    }
+
+    @Test
     @TestMetadata("TestInterceptor.kt")
     public void testTestInterceptor() {
       run("TestInterceptor.kt");

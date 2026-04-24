@@ -26,10 +26,12 @@ import org.jetbrains.kotlin.ir.declarations.IrConstructor
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrTypeSystemContextImpl
+import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.util.addFakeOverrides
 import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.createThisReceiverParameter
+import org.jetbrains.kotlin.ir.util.deepCopyWithSymbols
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.name.Name
 
@@ -139,6 +141,12 @@ internal class ClassSpecializer(
           superTypes = listOf(original.defaultType)
           createThisReceiverParameter()
         }
+
+    val burstFqName = BurstApis.burstAnnotationId.asSingleFqName()
+    created.annotations +=
+      original.annotations
+        .filter { it.type.classFqName != burstFqName }
+        .map { it.deepCopyWithSymbols() }
 
     created
       .addConstructor { initDefaults(original) }
