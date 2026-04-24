@@ -1,0 +1,118 @@
+@Burst
+@Disabled
+abstract class Coffee2Test {
+  private val espresso: Espresso
+    field = espresso
+    private get
+
+  val log: MutableList<String>
+    field = mutableListOf<String>()
+    get
+
+  protected constructor(espresso: Espresso) /* primary */ {
+    super/*Any*/()
+    /* <init>() */
+
+  }
+
+  @Test
+  fun test() {
+    plusAssign<String>(/* <this> = <this>.<get-log>(), */ element = "running " + <this>.<get-espresso>())
+  }
+
+}
+
+@Disabled
+class Coffee2Test_Decaf : Coffee2Test {
+  constructor() /* primary */ {
+    super/*Coffee2Test*/(espresso = Espresso.Decaf)
+    /* <init>() */
+
+  }
+
+}
+
+@Disabled
+class Coffee2Test_Double : Coffee2Test {
+  constructor() /* primary */ {
+    super/*Coffee2Test*/(espresso = Espresso.Double)
+    /* <init>() */
+
+  }
+
+}
+
+@Disabled
+class Coffee2Test_Regular : Coffee2Test {
+  constructor() /* primary */ {
+    super/*Coffee2Test*/(espresso = Espresso.Regular)
+    /* <init>() */
+
+  }
+
+}
+
+@Burst
+class CoffeeTest {
+  val log: MutableList<String>
+    field = mutableListOf<String>()
+    get
+
+  constructor() /* primary */ {
+    super/*Any*/()
+    /* <init>() */
+
+  }
+
+  @Disabled
+  fun test(espresso: Espresso) {
+    plusAssign<String>(/* <this> = <this>.<get-log>(), */ element = "running " + espresso)
+  }
+
+  @Test
+  @Disabled
+  fun test_Decaf() {
+    val tmp0_receiver: CoffeeTest = <this>
+    val tmp1_Decaf: Espresso = Espresso.Decaf
+    tmp0_receiver.test(espresso = tmp1_Decaf)
+  }
+
+  @Test
+  @Disabled
+  fun test_Double() {
+    val tmp0_receiver: CoffeeTest = <this>
+    val tmp1_Double: Espresso = Espresso.Double
+    tmp0_receiver.test(espresso = tmp1_Double)
+  }
+
+  @Test
+  @Disabled
+  fun test_Regular() {
+    val tmp0_receiver: CoffeeTest = <this>
+    val tmp1_Regular: Espresso = Espresso.Regular
+    tmp0_receiver.test(espresso = tmp1_Regular)
+  }
+
+}
+
+enum class Espresso : Enum<Espresso> {
+  Decaf = Espresso()
+
+  Regular = Espresso()
+
+  Double = Espresso()
+
+  private constructor() /* primary */ {
+    super/*Enum*/<Espresso>()
+    /* <init>() */
+
+  }
+
+  /* static */ fun valueOf(value: String): Espresso /* Synthetic body for ENUM_VALUEOF */
+
+  /* static */ fun values(): Array<Espresso> /* Synthetic body for ENUM_VALUES */
+
+  /* static */ val entries: EnumEntries<Espresso>
+    get(): EnumEntries<Espresso> /* Synthetic body for ENUM_ENTRIES */
+
+}

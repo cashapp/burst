@@ -6,6 +6,7 @@
 **Added**
 
 * Support Kotlin 2.4.0-Beta1.
+* Annotations, e.g. `@Ignore`, on functions and classes are correctly propagated.
 
 
 ## [2.13.0-beta1]
