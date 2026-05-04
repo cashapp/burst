@@ -15,7 +15,7 @@
  */
 import kotlin.test.Test
 
-class IncludedSourceSetsTest {
+class CompilationFilterTest {
   @Test
   fun mainSourceSetNotTransformed() {
     val specializedMethods =

@@ -340,7 +340,7 @@ class BurstGradlePluginTest {
 
   @Test
   fun compilationFilter() {
-    val tester = GradleTester("includedSourceSets")
+    val tester = GradleTester("compilationFilter")
     tester.cleanAndBuild(":lib:test")
 
     // test source set is transformed by Burst — specializations generated.
@@ -350,7 +350,7 @@ class BurstGradlePluginTest {
     }
 
     // main source set is not transformed by Burst — no specialization methods on MainCoffeeTest.
-    with(tester.readTestSuite("IncludedSourceSetsTest")) {
+    with(tester.readTestSuite("CompilationFilterTest")) {
       assertThat(systemOut).contains("specialized methods: []")
     }
   }
