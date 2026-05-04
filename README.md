@@ -265,7 +265,7 @@ by configuring the `burst` extension with a `compilationFilter`:
 ```kotlin {
 // build.gradle.kts
 burst {
-  compilationFilter.set { it.defaultSourceSet.name == "test" }
+  compilationFilter.set { it.name == KotlinCompilation.TEST_COMPILATION_NAME }
 }
 ```
 
