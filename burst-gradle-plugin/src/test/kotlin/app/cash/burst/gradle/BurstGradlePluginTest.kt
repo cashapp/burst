@@ -339,7 +339,7 @@ class BurstGradlePluginTest {
   }
 
   @Test
-  fun includedSourceSets() {
+  fun compilationFilter() {
     val tester = GradleTester("includedSourceSets")
     tester.cleanAndBuild(":lib:test")
 

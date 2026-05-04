@@ -15,17 +15,12 @@
  */
 package app.cash.burst.gradle
 
-import javax.inject.Inject
-import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.Property
+import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 
-abstract class BurstExtension @Inject constructor(objectFactory: ObjectFactory) {
-  /**
-   * A filter that determines which Kotlin compilations the Burst compiler plugin is applied to. By
-   * default, Burst is applied to all compilations.
-   */
-  val compilationFilter: Property<BurstCompilationFilter> =
-    objectFactory
-      .property(BurstCompilationFilter::class.java)
-      .convention(BurstCompilationFilter.ALL)
+fun interface BurstCompilationFilter {
+  fun check(compilation: KotlinCompilation<*>): Boolean
+
+  companion object {
+    val ALL: BurstCompilationFilter = BurstCompilationFilter { true }
+  }
 }

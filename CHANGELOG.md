@@ -7,7 +7,7 @@
 
 * Support Kotlin 2.4.0-Beta1.
 * Annotations, e.g. `@Ignore`, on functions and classes are correctly propagated.
-* Support configuring the source sets the compiler plugin will run on.
+* Support configuring the compilations Burst transforms via `compilationFilter`.
 
 
 ## [2.13.0-beta1]

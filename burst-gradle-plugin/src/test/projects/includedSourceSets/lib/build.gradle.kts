@@ -4,7 +4,7 @@ plugins {
 }
 
 burst {
-  includedSourceSets.set(listOf("test"))
+  compilationFilter.set { it.defaultSourceSet.name == "test" }
 }
 
 dependencies {
