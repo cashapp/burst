@@ -1,6 +1,6 @@
 [versions]
 kotlin = "2.4.0-Beta2"
-kotlinx-coroutines = "1.10.2"
+kotlinx-coroutines = "1.11.0"
 
 [libraries]
 android-gradlePlugin = "com.android.tools.build:gradle:9.2.1"
