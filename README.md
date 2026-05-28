@@ -259,6 +259,16 @@ plugins {
 }
 ```
 
+By default the Burst compiler plugin transforms all compilations. This behavior can be customized
+by configuring the `burst` extension with a `compilationFilter`:
+
+```kotlin {
+// build.gradle.kts
+burst {
+  compilationFilter.set { it.name == KotlinCompilation.TEST_COMPILATION_NAME }
+}
+```
+
 ### Compatibility
 
 Since Kotlin compiler plugins are an unstable API, certain versions of Burst only work with
