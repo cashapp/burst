@@ -1,12 +1,18 @@
 # Change Log
 
 ## [Unreleased]
-[Unreleased]: https://github.com/cashapp/burst/compare/2.12.2...HEAD
+[Unreleased]: https://github.com/cashapp/burst/compare/2.13.0...HEAD
+
+Nothing yet!
+
+
+## [2.13.0]
+[2.13.0]: https://github.com/cashapp/burst/releases/2.13.0
 
 **Added**
 
-* Support Kotlin 2.4.0-Beta1.
-* Annotations, e.g. `@Ignore`, on functions and classes are correctly propagated.
+* Support Kotlin 2.4.0.
+* Annotations (e.g. `@Ignore`) on functions and classes are correctly propagated.
 
 
 ## [2.13.0-beta1]
