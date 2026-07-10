@@ -39,6 +39,18 @@ public class BoxTestGenerated extends AbstractBoxTest {
     }
 
     @Test
+    @TestMetadata("BooleanDefaultValues.kt")
+    public void testBooleanDefaultValues() {
+      run("BooleanDefaultValues.kt");
+    }
+
+    @Test
+    @TestMetadata("BooleanParameters.kt")
+    public void testBooleanParameters() {
+      run("BooleanParameters.kt");
+    }
+
+    @Test
     @TestMetadata("BurstValues.kt")
     public void testBurstValues() {
       run("BurstValues.kt");
@@ -108,6 +120,68 @@ public class BoxTestGenerated extends AbstractBoxTest {
     @TestMetadata("FunctionParameters.kt")
     public void testFunctionParameters() {
       run("FunctionParameters.kt");
+    }
+
+    @Test
+    @TestMetadata("NullableBooleanAsDefault.kt")
+    public void testNullableBooleanAsDefault() {
+      run("NullableBooleanAsDefault.kt");
+    }
+
+    @Test
+    @TestMetadata("NullableBooleanNoDefault.kt")
+    public void testNullableBooleanNoDefault() {
+      run("NullableBooleanNoDefault.kt");
+    }
+
+    @Test
+    @TestMetadata("NullableBurstValuesAsDefault.kt")
+    public void testNullableBurstValuesAsDefault() {
+      run("NullableBurstValuesAsDefault.kt");
+    }
+
+    @Test
+    @TestMetadata("NullableBurstValuesNoDefault.kt")
+    public void testNullableBurstValuesNoDefault() {
+      run("NullableBurstValuesNoDefault.kt");
+    }
+
+    @Test
+    @TestMetadata("NullableEnumAsDefault.kt")
+    public void testNullableEnumAsDefault() {
+      run("NullableEnumAsDefault.kt");
+    }
+
+    @Test
+    @TestMetadata("NullableEnumNoDefault.kt")
+    public void testNullableEnumNoDefault() {
+      run("NullableEnumNoDefault.kt");
+    }
+  }
+
+  @Nested
+  @TestMetadata("burst-kotlin-plugin-tests/src/test/data/box/coroutines")
+  @TestDataPath("$PROJECT_ROOT")
+  public class Coroutines {
+    private void run(String fileName) {
+      runTest("burst-kotlin-plugin-tests/src/test/data/box/coroutines/" + fileName);
+    }
+
+    @Test
+    public void testAllFilesPresentInCoroutines() {
+      KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("burst-kotlin-plugin-tests/src/test/data/box/coroutines"), Pattern.compile("^(.+)\\.kt$"), null, true);
+    }
+
+    @Test
+    @TestMetadata("Coroutines.kt")
+    public void testCoroutines() {
+      run("Coroutines.kt");
+    }
+
+    @Test
+    @TestMetadata("CoroutinesAndTestComposition.kt")
+    public void testCoroutinesAndTestComposition() {
+      run("CoroutinesAndTestComposition.kt");
     }
   }
 }
