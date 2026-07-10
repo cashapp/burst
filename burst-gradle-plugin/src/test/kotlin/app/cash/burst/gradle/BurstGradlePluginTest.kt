@@ -194,6 +194,14 @@ class BurstGradlePluginTest {
   }
 
   @Test
+  fun androidRobolectric() {
+    val tester = GradleTester("androidRobolectric")
+    val build = tester.createRunner("clean", ":lib:test").build()
+
+    assertThat(build.output).contains("running Double Milk")
+  }
+
+  @Test
   fun defaultArguments() {
     val tester = GradleTester("defaultArguments")
 
