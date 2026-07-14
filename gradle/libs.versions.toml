@@ -18,7 +18,7 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 kotlinx-metadata-klib = { module = "org.jetbrains.kotlinx:kotlinx-metadata-klib", version = "0.0.6" }
 ktfmt = "com.facebook:ktfmt:0.64"
 mavenPublish-gradle-plugin = { module = "com.vanniktech:gradle-maven-publish-plugin", version = "0.37.0" }
-robolectric = "org.robolectric:robolectric:4.16"
+robolectric = "org.robolectric:robolectric:4.16.1"
 
 [plugins]
 buildconfig = { id = "com.github.gmazzo.buildconfig", version = "6.0.10" }
