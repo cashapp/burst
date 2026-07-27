@@ -22,6 +22,6 @@ robolectric = "org.robolectric:robolectric:4.16.1"
 
 [plugins]
 buildconfig = { id = "com.github.gmazzo.buildconfig", version = "6.0.10" }
-spotless = { id = "com.diffplug.spotless", version = "8.8.0" }
+spotless = { id = "com.diffplug.spotless", version = "8.9.0" }
 dokka = { id = "org.jetbrains.dokka", version = "2.2.0" }
 burst-kotlin = { id = "app.cash.burst.kotlin" }
