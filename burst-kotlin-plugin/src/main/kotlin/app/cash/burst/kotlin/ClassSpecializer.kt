@@ -33,6 +33,7 @@ import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.createThisReceiverParameter
 import org.jetbrains.kotlin.ir.util.deepCopyWithSymbols
 import org.jetbrains.kotlin.ir.util.defaultType
+import org.jetbrains.kotlin.ir.util.patchDeclarationParents
 import org.jetbrains.kotlin.name.Name
 
 /**
@@ -162,6 +163,9 @@ internal class ClassSpecializer(
           statements +=
             irInstanceInitializerCall(context = pluginContext, classSymbol = created.symbol)
         }
+        // The argument expressions are deep copies that still point at the original constructor.
+        // Adopt any declarations they contain, like lambdas, into this constructor.
+        patchDeclarationParents()
       }
 
     originalParent.addDeclaration(created)
@@ -191,6 +195,9 @@ internal class ClassSpecializer(
                 }
               }
           }
+          // The argument expressions are deep copies that still point at the original constructor.
+          // Adopt any declarations they contain, like lambdas, into this constructor.
+          patchDeclarationParents()
         }
     pluginContext.metadataDeclarationRegistrar.registerConstructorAsMetadataVisible(constructor)
   }
