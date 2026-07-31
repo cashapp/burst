@@ -87,6 +87,12 @@ public class BoxTestGenerated extends AbstractBoxTest {
     }
 
     @Test
+    @TestMetadata("BurstValuesWithInlineFunctionsInConstructor.kt")
+    public void testBurstValuesWithInlineFunctionsInConstructor() {
+      run("BurstValuesWithInlineFunctionsInConstructor.kt");
+    }
+
+    @Test
     @TestMetadata("BurstValuesWithNameCollisions.kt")
     public void testBurstValuesWithNameCollisions() {
       run("BurstValuesWithNameCollisions.kt");
