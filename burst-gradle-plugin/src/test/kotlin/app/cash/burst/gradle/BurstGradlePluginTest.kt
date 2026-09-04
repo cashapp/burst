@@ -77,6 +77,9 @@ class BurstGradlePluginTest {
           "coroutinesTest_Milk[$platformName]",
           "coroutinesTest_None[$platformName]",
           "coroutinesTest_Oat[$platformName]",
+          "coroutinesInHelperTest_Milk[$platformName]",
+          "coroutinesInHelperTest_None[$platformName]",
+          "coroutinesInHelperTest_Oat[$platformName]",
         )
 
       val sampleSpecialization = testCases.single { it.name == "basicTest_Milk[$platformName]" }
@@ -94,6 +97,12 @@ class BurstGradlePluginTest {
           |running Regular Oat
           |"""
             .trimMargin(),
+          """
+          |set up Regular
+          |running Regular Oat in helper
+          |tear down Regular
+          |"""
+            .trimMargin(),
         )
     }
 
@@ -108,6 +117,7 @@ class BurstGradlePluginTest {
       assertThat(coffeeTestMetadata.functions.map { it.name })
         .containsExactlyInAnyOrder(
           "setUp",
+          "tearDown",
           "basicTest",
           "basicTest_Milk",
           "basicTest_None",
@@ -116,6 +126,10 @@ class BurstGradlePluginTest {
           "coroutinesTest_Milk",
           "coroutinesTest_None",
           "coroutinesTest_Oat",
+          "coroutinesInHelperTest",
+          "coroutinesInHelperTest_Milk",
+          "coroutinesInHelperTest_None",
+          "coroutinesInHelperTest_Oat",
         )
     }
   }

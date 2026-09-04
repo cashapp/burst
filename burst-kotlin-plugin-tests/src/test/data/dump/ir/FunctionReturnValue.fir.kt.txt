@@ -1,0 +1,60 @@
+@Burst
+class CoffeeTest {
+  constructor() /* primary */ {
+    super/*Any*/()
+    /* <init>() */
+
+  }
+
+  private fun brew(espresso: Espresso): String {
+    return "brewing " + espresso
+  }
+
+  fun test(espresso: Espresso): String {
+    return <this>.brew(espresso = espresso)
+  }
+
+  @Test
+  fun test_Decaf(): String {
+    val tmp0_receiver: CoffeeTest = <this>
+    val tmp1_Decaf: Espresso = Espresso.Decaf
+    return tmp0_receiver.test(espresso = tmp1_Decaf)
+  }
+
+  @Test
+  fun test_Double(): String {
+    val tmp0_receiver: CoffeeTest = <this>
+    val tmp1_Double: Espresso = Espresso.Double
+    return tmp0_receiver.test(espresso = tmp1_Double)
+  }
+
+  @Test
+  fun test_Regular(): String {
+    val tmp0_receiver: CoffeeTest = <this>
+    val tmp1_Regular: Espresso = Espresso.Regular
+    return tmp0_receiver.test(espresso = tmp1_Regular)
+  }
+
+}
+
+enum class Espresso : Enum<Espresso> {
+  Decaf = Espresso()
+
+  Regular = Espresso()
+
+  Double = Espresso()
+
+  private constructor() /* primary */ {
+    super/*Enum*/<Espresso>()
+    /* <init>() */
+
+  }
+
+  /* static */ fun valueOf(value: String): Espresso /* Synthetic body for ENUM_VALUEOF */
+
+  /* static */ fun values(): Array<Espresso> /* Synthetic body for ENUM_VALUES */
+
+  /* static */ val entries: EnumEntries<Espresso>
+    get(): EnumEntries<Espresso> /* Synthetic body for ENUM_ENTRIES */
+
+}

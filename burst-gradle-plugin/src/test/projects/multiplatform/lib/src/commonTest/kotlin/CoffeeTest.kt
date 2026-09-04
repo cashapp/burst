@@ -15,12 +15,15 @@
  */
 import app.cash.burst.Burst
 import kotlin.coroutines.coroutineContext
+import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 
 @Burst
@@ -28,6 +31,11 @@ class CoffeeTest(private val espresso: Espresso) {
   @BeforeTest
   fun setUp() {
     println("set up $espresso")
+  }
+
+  @AfterTest
+  fun tearDown() {
+    println("tear down $espresso")
   }
 
   @Test
@@ -44,7 +52,20 @@ class CoffeeTest(private val espresso: Espresso) {
       delay(1000.milliseconds)
       deferred.await()
     }
+
+  /**
+   * This test doesn't call `runTest()` directly, so Burst can't inline it. On Kotlin/JS the
+   * returned `TestResult` is a `Promise` that the test framework must receive to await the test.
+   */
+  @Test
+  fun coroutinesInHelperTest(dairy: Dairy) = runCoffeeTest {
+    delay(1000.milliseconds)
+    println("running $espresso $dairy in helper")
+  }
 }
+
+private fun runCoffeeTest(testBody: suspend TestScope.() -> Unit): TestResult =
+  runTest(testBody = testBody)
 
 enum class Espresso {
   Decaf,

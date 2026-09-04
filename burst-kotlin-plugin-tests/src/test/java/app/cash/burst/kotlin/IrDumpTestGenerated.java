@@ -51,6 +51,12 @@ public class IrDumpTestGenerated extends AbstractIrDumpTest {
     }
 
     @Test
+    @TestMetadata("FunctionReturnValue.kt")
+    public void testFunctionReturnValue() {
+      run("FunctionReturnValue.kt");
+    }
+
+    @Test
     @TestMetadata("IgnoreAnnotation.kt")
     public void testIgnoreAnnotation() {
       run("IgnoreAnnotation.kt");
