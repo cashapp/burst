@@ -30,6 +30,7 @@ import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
+import org.jetbrains.kotlin.ir.types.isUnit
 import org.jetbrains.kotlin.ir.util.deepCopyWithSymbols
 import org.jetbrains.kotlin.ir.util.patchDeclarationParents
 import org.jetbrains.kotlin.name.Name
@@ -262,7 +263,12 @@ internal class FunctionSpecializer(
         }
 
         is TestFunction.NonSuspending -> {
-          +callDelegate
+          when {
+            // Return the delegate's result. On Kotlin/JS, a test may return a `TestResult` (a
+            // `Promise`) that the test framework must receive in order to await the test.
+            !delegate.returnType.isUnit() -> +irReturn(callDelegate)
+            else -> +callDelegate
+          }
         }
       }
     }
