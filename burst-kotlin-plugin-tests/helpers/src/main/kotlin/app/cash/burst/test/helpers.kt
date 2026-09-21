@@ -23,8 +23,8 @@ inline fun <reified T> loadClassInstance(specialization: String): T {
   return constructor.newInstance() as T
 }
 
-inline fun <reified T> T.invokeSpecialization(specialization: String) {
-  T::class.java.getMethod(specialization).invoke(this)
+inline fun <reified T> T.invokeSpecialization(specialization: String): Any? {
+  return T::class.java.getMethod(specialization).invoke(this)
 }
 
 inline val KClass<*>.testSuffixes: List<String>

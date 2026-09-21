@@ -183,5 +183,11 @@ public class BoxTestGenerated extends AbstractBoxTest {
     public void testCoroutinesAndTestComposition() {
       run("CoroutinesAndTestComposition.kt");
     }
+
+    @Test
+    @TestMetadata("CoroutinesInHelperFunction.kt")
+    public void testCoroutinesInHelperFunction() {
+      run("CoroutinesInHelperFunction.kt");
+    }
   }
 }

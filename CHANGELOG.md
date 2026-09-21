@@ -3,7 +3,13 @@
 ## [Unreleased]
 [Unreleased]: https://github.com/cashapp/burst/compare/2.13.0...HEAD
 
-Nothing yet!
+**Fixed**
+
+* Generated specializations of a parameterized `@Test` function now return the original function's
+  result when its return type is not `Unit`. Previously the result was discarded, so a test that
+  returned `TestResult` from a helper that calls `runTest()` completed immediately on Kotlin/JS
+  without awaiting its body, or crashed with a `ClassCastException` in the presence of an
+  `@AfterTest` function.
 
 
 ## [2.13.0]
