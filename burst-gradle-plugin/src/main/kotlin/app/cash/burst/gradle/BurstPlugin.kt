@@ -49,6 +49,12 @@ class BurstPlugin : Plugin<Project> {
       target.dependencies { add("testImplementation", "app.cash.burst:burst:$burstVersion") }
     }
 
+    target.pluginManager.withPlugin("org.gradle.java-test-fixtures") {
+      target.dependencies {
+        add("testFixturesImplementation", "app.cash.burst:burst:$burstVersion")
+      }
+    }
+
     target.pluginManager.withPlugin("org.jetbrains.kotlin.android") {
       applied = true
       target.pluginManager.apply(BurstKotlinPlugin::class.java)

@@ -34,6 +34,12 @@ class BurstGradlePluginTest {
   }
 
   @Test
+  fun testFixtures() {
+    val tester = GradleTester("testFixtures")
+    tester.cleanAndBuild(":lib:testFixturesClasses")
+  }
+
+  @Test
   fun multiplatformJvm() {
     multiplatform(testTaskName = "jvmTest", platformName = "jvm")
   }
