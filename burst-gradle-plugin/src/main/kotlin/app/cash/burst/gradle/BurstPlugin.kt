@@ -28,6 +28,8 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet.Companion.COMMON_TEST_
 @Suppress("unused") // Created reflectively by Gradle.
 class BurstPlugin : Plugin<Project> {
   override fun apply(target: Project) {
+    target.extensions.create("burst", BurstExtension::class.java)
+
     var applied = false
     target.afterEvaluate { check(applied) { "No suitable Kotlin configuration was found" } }
 

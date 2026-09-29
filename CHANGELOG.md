@@ -3,6 +3,10 @@
 ## [Unreleased]
 [Unreleased]: https://github.com/cashapp/burst/compare/2.13.0...HEAD
 
+**Added**
+
+* Support configuring the compilations Burst transforms via `compilationFilter`.
+
 **Fixed**
 
 * Generated specializations of a parameterized `@Test` function now return the original function's
