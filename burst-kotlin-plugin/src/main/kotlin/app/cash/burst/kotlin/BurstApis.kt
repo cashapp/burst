@@ -49,6 +49,7 @@ private constructor(
   /** Null if `kotlinx.coroutines.test` isn't in this build. */
   val runTestSymbols: List<IrFunctionSymbol>?,
   val listOfSymbol: IrFunctionSymbol,
+  val listSymbol: IrClassSymbol,
   val annotationSymbol: IrClassSymbol,
 ) {
   val burstValues: IrFunctionSymbol = pluginContext.referenceFunctions(burstValuesId).single()
@@ -143,6 +144,8 @@ private constructor(
           it.owner.parameters.size > 0 && !it.owner.parameters[0].type.isTypeParameter()
         }
 
+      val listSymbol = pluginContext.referenceClass(listClassId) ?: return null
+
       val annotationSymbol = pluginContext.referenceClass(annotationId) ?: return null
 
       return BurstApis(
@@ -152,6 +155,7 @@ private constructor(
         afterTestSymbols = afterTestSymbols,
         runTestSymbols = runTestSymbols,
         listOfSymbol = listOfSymbol,
+        listSymbol = listSymbol,
         annotationSymbol = annotationSymbol,
       )
     }
@@ -217,6 +221,7 @@ private val coroutineContextId = kotlinCoroutinePackage.callableId("CoroutineCon
 
 private val kotlinCollectionsPackage = FqPackageName("kotlin.collections")
 private val listOfId = kotlinCollectionsPackage.callableId("listOf")
+private val listClassId = kotlinCollectionsPackage.classId("List")
 
 private val kotlinTimeFqPackage = FqPackageName("kotlin.time")
 private val durationId = kotlinTimeFqPackage.classId("Duration")

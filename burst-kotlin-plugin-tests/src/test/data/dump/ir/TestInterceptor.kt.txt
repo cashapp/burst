@@ -43,7 +43,7 @@ class SampleTest : TestInterceptor {
   fun happyPath() {
     local class <no name provided> : TestFunction {
       constructor() /* primary */ {
-        super/*TestFunction*/(packageName = <this>.burstTestFunctionPackageName(), className = <this>.burstTestFunctionClassName(), classAnnotations = listOf</* null */>(elements = []), functionName = "happyPath", functionAnnotations = listOf</* null */>(elements = [Test]))
+        super/*TestFunction*/(packageName = <this>.burstTestFunctionPackageName(), className = <this>.burstTestFunctionClassName(), classAnnotations = listOf<Annotation>(elements = []), functionName = "happyPath", functionAnnotations = listOf<Annotation>(elements = [Test]))
         /* <init>() */
 
       }

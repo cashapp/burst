@@ -108,11 +108,11 @@ enum class Espresso : Enum<Espresso> {
 
   }
 
-  /* static */ fun valueOf(value: String): Espresso /* Synthetic body for ENUM_VALUEOF */
+  companion fun valueOf(value: String): Espresso /* Synthetic body for ENUM_VALUEOF */
 
-  /* static */ fun values(): Array<Espresso> /* Synthetic body for ENUM_VALUES */
+  companion fun values(): Array<Espresso> /* Synthetic body for ENUM_VALUES */
 
-  /* static */ val entries: EnumEntries<Espresso>
-    get(): EnumEntries<Espresso> /* Synthetic body for ENUM_ENTRIES */
+  companion val entries: EnumEntries<Espresso>
+    companion get(): EnumEntries<Espresso> /* Synthetic body for ENUM_ENTRIES */
 
 }
