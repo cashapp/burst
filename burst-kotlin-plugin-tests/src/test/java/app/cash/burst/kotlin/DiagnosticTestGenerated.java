@@ -25,6 +25,12 @@ public class DiagnosticTestGenerated extends AbstractDiagnosticTest {
   }
 
   @Test
+  @TestMetadata("BurstValuesJustOne.kt")
+  public void testBurstValuesJustOne() {
+    run("BurstValuesJustOne.kt");
+  }
+
+  @Test
   @TestMetadata("BurstValuesReferencesEarlierParameter.kt")
   public void testBurstValuesReferencesEarlierParameter() {
     run("BurstValuesReferencesEarlierParameter.kt");

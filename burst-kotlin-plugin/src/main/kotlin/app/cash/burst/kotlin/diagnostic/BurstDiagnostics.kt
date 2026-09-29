@@ -21,6 +21,7 @@ import org.jetbrains.kotlin.diagnostics.SourceElementPositioningStrategies.NAME_
 import org.jetbrains.kotlin.diagnostics.SourceElementPositioningStrategies.PARAMETER_DEFAULT_VALUE
 import org.jetbrains.kotlin.diagnostics.error0
 import org.jetbrains.kotlin.diagnostics.rendering.BaseDiagnosticRendererFactory
+import org.jetbrains.kotlin.diagnostics.warning0
 import org.jetbrains.kotlin.psi.KtElement
 
 object BurstDiagnostics : KtDiagnosticsContainer() {
@@ -29,6 +30,8 @@ object BurstDiagnostics : KtDiagnosticsContainer() {
   val INVALID_DEFAULT_VALUE by error0<KtElement>(PARAMETER_DEFAULT_VALUE)
 
   val PARAMETER_REFERENCE_NOT_ALLOWED by error0<KtElement>(NAME_IDENTIFIER)
+
+  val BURST_VALUES_WITH_SINGLE_ARGUMENT by warning0<KtElement>(PARAMETER_DEFAULT_VALUE)
 
   override fun getRendererFactory(): BaseDiagnosticRendererFactory {
     return BurstErrorMessages
@@ -50,6 +53,11 @@ object BurstDiagnostics : KtDiagnosticsContainer() {
         map.put(
           PARAMETER_REFERENCE_NOT_ALLOWED,
           "@Burst parameter may not reference other parameters",
+        )
+
+        map.put(
+          BURST_VALUES_WITH_SINGLE_ARGUMENT,
+          "burstValues() should have more than one argument",
         )
       }
   }
