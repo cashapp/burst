@@ -19,7 +19,7 @@ import kotlin.test.Test
 
 @Burst
 class CoffeeTest(
-  private val greeting: () -> String = burstValues({ "Hello" }, { "Yo" }, { "Hi" }),
+  private val greeting: () -> String = burstValues({ "Hello" }, { "Yo" }, { "Hi" })
 ) {
   val log = mutableListOf<String>()
 
