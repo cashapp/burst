@@ -20,7 +20,7 @@ import app.cash.burst.kotlin.diagnostic.FunctionParameterChecker
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.DeclarationCheckers
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirConstructorChecker
-import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirSimpleFunctionChecker
+import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirNamedFunctionChecker
 import org.jetbrains.kotlin.fir.analysis.extensions.FirAdditionalCheckersExtension
 
 class BurstDeclarationCheckerExtension(session: FirSession) :
@@ -30,7 +30,7 @@ class BurstDeclarationCheckerExtension(session: FirSession) :
       override val constructorCheckers: Set<FirConstructorChecker> =
         setOf(ClassConstructorParameterChecker())
 
-      override val simpleFunctionCheckers: Set<FirSimpleFunctionChecker> =
-        setOf(FunctionParameterChecker())
+      override val namedFunctionCheckers: Set<FirNamedFunctionChecker>
+        get() = setOf(FunctionParameterChecker())
     }
 }

@@ -5,6 +5,7 @@
 
 **Added**
 
+* Support Kotlin 2.4.20.
 * Support configuring the compilations Burst transforms via `compilationFilter`.
 
 **Fixed**

@@ -63,6 +63,12 @@ public class IrDumpTestGenerated extends AbstractIrDumpTest {
     }
 
     @Test
+    @TestMetadata("InterceptorAndBurstConstructor.kt")
+    public void testInterceptorAndBurstConstructor() {
+      run("InterceptorAndBurstConstructor.kt");
+    }
+
+    @Test
     @TestMetadata("TestInterceptor.kt")
     public void testTestInterceptor() {
       run("TestInterceptor.kt");

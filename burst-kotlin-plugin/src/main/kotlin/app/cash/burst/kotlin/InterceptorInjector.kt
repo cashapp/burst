@@ -56,6 +56,7 @@ import org.jetbrains.kotlin.ir.types.IrTypeSystemContextImpl
 import org.jetbrains.kotlin.ir.types.classOrNull
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.makeNullable
+import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.addFakeOverrides
 import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.createThisReceiverParameter
@@ -536,6 +537,7 @@ internal class InterceptorInjector(
             .apply {
               arguments[0] = testBodyLambda
               arguments[1] = irGet(testScope)
+              type = pluginContext.irBuiltIns.unitType
             }
         }
       }
@@ -573,13 +575,17 @@ internal class InterceptorInjector(
           },
         classAnnotations =
           irCall(burstApis.listOfSymbol).apply {
+            typeArguments[0] = burstApis.annotationSymbol.defaultType
             arguments[0] =
               irVararg(burstApis.annotationSymbol.defaultType, originalParent.annotations)
+            type = burstApis.listSymbol.typeWith(burstApis.annotationSymbol.defaultType)
           },
         functionName = irString(original.name.asString()),
         functionAnnotations =
           irCall(burstApis.listOfSymbol).apply {
+            typeArguments[0] = burstApis.annotationSymbol.defaultType
             arguments[0] = irVararg(burstApis.annotationSymbol.defaultType, original.annotations)
+            type = burstApis.listSymbol.typeWith(burstApis.annotationSymbol.defaultType)
           },
         buildBody = buildBody,
       )

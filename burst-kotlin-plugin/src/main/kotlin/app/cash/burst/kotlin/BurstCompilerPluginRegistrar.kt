@@ -21,6 +21,7 @@ import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
+import org.jetbrains.kotlin.config.MessageCollectorAccess
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrarAdapter
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 
@@ -32,6 +33,7 @@ class BurstCompilerPluginRegistrar : CompilerPluginRegistrar() {
   override val supportsK2: Boolean
     get() = true
 
+  @OptIn(MessageCollectorAccess::class)
   override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
     val messageCollector =
       configuration.get(CommonConfigurationKeys.MESSAGE_COLLECTOR_KEY, MessageCollector.NONE)

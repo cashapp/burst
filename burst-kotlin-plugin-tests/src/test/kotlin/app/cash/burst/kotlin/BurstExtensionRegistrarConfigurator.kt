@@ -19,6 +19,7 @@ import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.CompilerConfiguration
+import org.jetbrains.kotlin.config.MessageCollectorAccess
 import org.jetbrains.kotlin.config.messageCollector
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrarAdapter
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
@@ -33,7 +34,7 @@ fun TestConfigurationBuilder.configurePlugin() {
   useCustomRuntimeClasspathProviders(::BurstRuntimeClasspathProvider)
 }
 
-@OptIn(UnsafeDuringIrConstructionAPI::class)
+@OptIn(UnsafeDuringIrConstructionAPI::class, MessageCollectorAccess::class)
 class BurstExtensionRegistrarConfigurator(testServices: TestServices) :
   EnvironmentConfigurator(testServices) {
   @OptIn(ExperimentalCompilerApi::class)

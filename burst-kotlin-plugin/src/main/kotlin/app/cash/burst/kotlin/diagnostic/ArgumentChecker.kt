@@ -23,7 +23,7 @@ import org.jetbrains.kotlin.fir.FirElement
 import org.jetbrains.kotlin.fir.analysis.checkers.MppCheckerKind
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirConstructorChecker
-import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirSimpleFunctionChecker
+import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirNamedFunctionChecker
 import org.jetbrains.kotlin.fir.declarations.FirConstructor
 import org.jetbrains.kotlin.fir.declarations.FirNamedFunction
 import org.jetbrains.kotlin.fir.declarations.FirValueParameter
@@ -60,7 +60,7 @@ internal class ClassConstructorParameterChecker : FirConstructorChecker(MppCheck
   }
 }
 
-internal class FunctionParameterChecker : FirSimpleFunctionChecker(MppCheckerKind.Common) {
+internal class FunctionParameterChecker : FirNamedFunctionChecker(MppCheckerKind.Common) {
   context(context: CheckerContext, reporter: DiagnosticReporter)
   override fun check(declaration: FirNamedFunction) {
     val isInBurstClass =

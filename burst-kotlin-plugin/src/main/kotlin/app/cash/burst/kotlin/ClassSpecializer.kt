@@ -170,6 +170,7 @@ internal class ClassSpecializer(
 
     originalParent.addDeclaration(created)
     created.addFakeOverrides(irTypeSystemContext)
+    pluginContext.metadataDeclarationRegistrar.registerClassAsMetadataVisible(created)
   }
 
   private fun createNoArgsConstructor(

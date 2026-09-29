@@ -1,0 +1,201 @@
+class BasicInterceptor : TestInterceptor {
+  val name: String
+    field = name
+    get
+
+  constructor(name: String) /* primary */ {
+    super/*Any*/()
+    /* <init>() */
+
+  }
+
+  override fun intercept(testFunction: TestFunction) {
+    println(message = "intercepting " + <this>.<get-name>() + " " + testFunction)
+    testFunction.invoke()
+  }
+
+}
+
+@Burst
+abstract class InterceptorAndBurstConstructorTest : TestInterceptor {
+  val condition: Boolean
+    field = condition
+    get
+
+  @InterceptTest
+  val interceptor: BasicInterceptor
+    field = BasicInterceptor(name = <this>.<get-condition>())
+    get
+
+  protected constructor(condition: Boolean) /* primary */ {
+    super/*Any*/()
+    /* <init>() */
+
+  }
+
+  protected open fun burstTestFunctionClassName(): String {
+    return "InterceptorAndBurstConstructorTest"
+  }
+
+  protected open fun burstTestFunctionPackageName(): String {
+    return ""
+  }
+
+  override fun intercept(testFunction: TestFunction) {
+    val tmp_0: String = testFunction.<get-packageName>()
+    val tmp_1: String = testFunction.<get-className>()
+    val tmp_2: List<Annotation> = testFunction.<get-classAnnotations>()
+    val tmp_3: String = testFunction.<get-functionName>()
+    val tmp_4: List<Annotation> = testFunction.<get-functionAnnotations>()
+    local class <no name provided> : TestFunction {
+      constructor() /* primary */ {
+        super/*TestFunction*/(packageName = tmp_0, className = tmp_1, classAnnotations = tmp_2, functionName = tmp_3, functionAnnotations = tmp_4)
+        /* <init>() */
+
+      }
+
+      override fun invoke() {
+        { // BLOCK
+          var tmp_5: Throwable? = null
+          try { // BLOCK
+            testFunction.invoke()
+          }
+          catch (e: Throwable)when {
+            EQEQ(arg0 = tmp_5, arg1 = null) -> tmp_5 = e
+            else -> addSuppressed(/* <this> = tmp_5, */ exception = e)
+          }
+
+          when {
+            EQEQ(arg0 = tmp_5, arg1 = null).not() -> throw tmp_5
+          }
+        }
+      }
+
+    }
+
+    <this>.<get-interceptor>().intercept(testFunction = <no name provided>())
+  }
+
+  @Test
+  fun test() {
+    local class <no name provided> : TestFunction {
+      constructor() /* primary */ {
+        super/*TestFunction*/(packageName = <this>.burstTestFunctionPackageName(), className = <this>.burstTestFunctionClassName(), classAnnotations = listOf<Annotation>(elements = [Burst]), functionName = "test", functionAnnotations = listOf<Annotation>(elements = [Test]))
+        /* <init>() */
+
+      }
+
+      override fun invoke() {
+        println(message = "running " + <this>.<get-condition>())
+      }
+
+    }
+
+    <this>.intercept(testFunction = <no name provided>())
+  }
+
+}
+
+class InterceptorAndBurstConstructorTest_false : InterceptorAndBurstConstructorTest, TestInterceptor {
+  constructor() /* primary */ {
+    super/*InterceptorAndBurstConstructorTest*/(condition = false)
+    /* <init>() */
+
+  }
+
+  protected override fun burstTestFunctionClassName(): String {
+    return "InterceptorAndBurstConstructorTest_false"
+  }
+
+  protected override fun burstTestFunctionPackageName(): String {
+    return ""
+  }
+
+  override fun intercept(testFunction: TestFunction) {
+    val tmp_6: String = testFunction.<get-packageName>()
+    val tmp_7: String = testFunction.<get-className>()
+    val tmp_8: List<Annotation> = testFunction.<get-classAnnotations>()
+    val tmp_9: String = testFunction.<get-functionName>()
+    val tmp_10: List<Annotation> = testFunction.<get-functionAnnotations>()
+    local class <no name provided> : TestFunction {
+      constructor() /* primary */ {
+        super/*TestFunction*/(packageName = tmp_6, className = tmp_7, classAnnotations = tmp_8, functionName = tmp_9, functionAnnotations = tmp_10)
+        /* <init>() */
+
+      }
+
+      override fun invoke() {
+        { // BLOCK
+          var tmp_11: Throwable? = null
+          try { // BLOCK
+            testFunction.invoke()
+          }
+          catch (e: Throwable)when {
+            EQEQ(arg0 = tmp_11, arg1 = null) -> tmp_11 = e
+            else -> addSuppressed(/* <this> = tmp_11, */ exception = e)
+          }
+
+          when {
+            EQEQ(arg0 = tmp_11, arg1 = null).not() -> throw tmp_11
+          }
+        }
+      }
+
+    }
+
+    super<InterceptorAndBurstConstructorTest>.intercept(testFunction = <no name provided>())
+  }
+
+}
+
+class InterceptorAndBurstConstructorTest_true : InterceptorAndBurstConstructorTest, TestInterceptor {
+  constructor() /* primary */ {
+    super/*InterceptorAndBurstConstructorTest*/(condition = true)
+    /* <init>() */
+
+  }
+
+  protected override fun burstTestFunctionClassName(): String {
+    return "InterceptorAndBurstConstructorTest_true"
+  }
+
+  protected override fun burstTestFunctionPackageName(): String {
+    return ""
+  }
+
+  override fun intercept(testFunction: TestFunction) {
+    val tmp_12: String = testFunction.<get-packageName>()
+    val tmp_13: String = testFunction.<get-className>()
+    val tmp_14: List<Annotation> = testFunction.<get-classAnnotations>()
+    val tmp_15: String = testFunction.<get-functionName>()
+    val tmp_16: List<Annotation> = testFunction.<get-functionAnnotations>()
+    local class <no name provided> : TestFunction {
+      constructor() /* primary */ {
+        super/*TestFunction*/(packageName = tmp_12, className = tmp_13, classAnnotations = tmp_14, functionName = tmp_15, functionAnnotations = tmp_16)
+        /* <init>() */
+
+      }
+
+      override fun invoke() {
+        { // BLOCK
+          var tmp_17: Throwable? = null
+          try { // BLOCK
+            testFunction.invoke()
+          }
+          catch (e: Throwable)when {
+            EQEQ(arg0 = tmp_17, arg1 = null) -> tmp_17 = e
+            else -> addSuppressed(/* <this> = tmp_17, */ exception = e)
+          }
+
+          when {
+            EQEQ(arg0 = tmp_17, arg1 = null).not() -> throw tmp_17
+          }
+        }
+      }
+
+    }
+
+    super<InterceptorAndBurstConstructorTest>.intercept(testFunction = <no name provided>())
+  }
+
+}
