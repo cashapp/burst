@@ -213,7 +213,7 @@ You’ll also need this Gradle dependency:
 
 ```kotlin
 dependencies {
-  testImplementation("app.cash.burst:burst-coroutines:2.13.0")
+  testImplementation("app.cash.burst:burst-coroutines:2.14.0")
   ...
 }
 ```
@@ -245,7 +245,7 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-    classpath("app.cash.burst:burst-gradle-plugin:2.13.0")
+    classpath("app.cash.burst:burst-gradle-plugin:2.14.0")
   }
 }
 ```
@@ -276,6 +276,7 @@ certain versions of Kotlin.
 
 | Kotlin          | Burst           |
 |-----------------|-----------------|
+| 2.4.20          | 2.14.0          |
 | 2.4.0           | 2.13.0          |
 | 2.3.20          | 2.12.0 - 2.12.2 |
 | 2.3.0 - 2.3.10  | 2.11.0          |

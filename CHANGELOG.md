@@ -1,12 +1,18 @@
 # Change Log
 
 ## [Unreleased]
-[Unreleased]: https://github.com/cashapp/burst/compare/2.13.0...HEAD
+[Unreleased]: https://github.com/cashapp/burst/compare/2.14.0...HEAD
+
+Nothing yet!
+
+## [2.14.0]
+[2.14.0]: https://github.com/cashapp/burst/releases/2.14.0
 
 **Added**
 
 * Support Kotlin 2.4.20.
 * Support configuring the compilations Burst transforms via `compilationFilter`.
+* Add Burst to testFixture source sets.
 
 **Fixed**
 
@@ -15,6 +21,7 @@
   returned `TestResult` from a helper that calls `runTest()` completed immediately on Kotlin/JS
   without awaiting its body, or crashed with a `ClassCastException` in the presence of an
   `@AfterTest` function.
+* Fix platform declaration clash for `burstValues` declared with lambdas on the JVM.
 
 
 ## [2.13.0]
