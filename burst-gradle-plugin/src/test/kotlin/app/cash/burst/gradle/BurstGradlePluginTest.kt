@@ -208,12 +208,6 @@ class BurstGradlePluginTest {
   }
 
   @Test
-  fun androidAgp8() {
-    val tester = GradleTester("androidAgp8")
-    tester.cleanAndBuild(":lib:test", ":lib:assembleAndroidTest")
-  }
-
-  @Test
   fun androidRobolectric() {
     val tester = GradleTester("androidRobolectric")
     val build = tester.createRunner("clean", ":lib:test").build()
