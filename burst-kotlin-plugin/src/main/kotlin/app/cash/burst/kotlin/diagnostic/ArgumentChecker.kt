@@ -87,7 +87,16 @@ context(context: CheckerContext, reporter: DiagnosticReporter)
 private fun checkParam(declaration: FirValueParameter) {
   declaration.defaultValue?.let { defaultValue ->
     val defaultCall = defaultValue.toResolvedCallableSymbol(context.session)
-    if (defaultCall?.callableId == BurstApis.burstValuesId) return
+    if (defaultCall?.callableId == BurstApis.burstValuesId) {
+      val call = defaultValue as? FirFunctionCall
+      if (call?.flattenedArguments()?.size == 1) {
+        reporter.reportOn(
+          declaration.source,
+          BurstDiagnostics.BURST_VALUES_WITH_SINGLE_ARGUMENT,
+        )
+      }
+      return
+    }
 
     // Check the default value if it isn't a burstValues() call
     val isConst = defaultValue.hasConstantValue(context.session)
@@ -112,19 +121,19 @@ private fun checkBurstValuesReferences(
 ) {
   val call = declaration.defaultValue as? FirFunctionCall ?: return
 
-  val flattenedArgs =
-    call.arguments.flatMap {
-      when (it) {
-        is FirVarargArgumentsExpression -> it.arguments
-        else -> listOf(it)
-      }
-    }
-  for (arg in flattenedArgs) {
+  for (arg in call.flattenedArguments()) {
     arg.accept(
       ArgumentReferenceChecker(otherParameters) {
         reporter.reportOn(it, BurstDiagnostics.PARAMETER_REFERENCE_NOT_ALLOWED)
       }
     )
+  }
+}
+
+private fun FirFunctionCall.flattenedArguments() = arguments.flatMap {
+  when (it) {
+    is FirVarargArgumentsExpression -> it.arguments
+    else -> listOf(it)
   }
 }
 
